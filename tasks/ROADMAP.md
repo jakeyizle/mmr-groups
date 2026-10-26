@@ -39,7 +39,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] API test harness (`@cloudflare/vitest-plugin`)
 - [ ] Playwright harness + test-login route (AUTH-008) → T-006
 - [ ] GitHub Actions: checks, preview + production deploy, migrations → T-007
-- [ ] Spike: guarded-batch optimistic concurrency in D1 (PLAN §5) → T-008
+- [x] Spike: guarded-batch optimistic concurrency in D1 (PLAN §5)
 
 ## M1 — Auth & groups (AUTH, GROUP, ROLE, PLAYER)
 

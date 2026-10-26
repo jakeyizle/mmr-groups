@@ -208,7 +208,7 @@ audit_events     id, group_id, actor_user_id, action, entity_type, entity_id,
 - `matches.teams`: `[{ playerIds: string[], score: number | null, rank: number }]`. JSON keeps a match to one row (fewer statements/params, trivial snapshot). Player references are checked by the API; "player has matches" uses `json_each`.
 - `recorded_by_player_id` (not user ID) so snapshots never expose users.
 - Every mutation, its audit row(s), and the `groups.version` bump are one `db.batch()` (atomic).
-- **Optimistic concurrency:** match edit/delete requires the match's `version` (`If-Match`). The batch is a guarded `UPDATE/DELETE … WHERE id = ? AND version = ?` followed by statements conditioned on `changes() = 1`, so a stale write changes nothing; the API returns 412 and the client refetches. Claims use `UPDATE players SET user_id = ? WHERE id = ? AND user_id IS NULL` (first claim wins). New matches can't conflict. (Verify the `changes()` pattern in the M0 spike.)
+- **Optimistic concurrency:** match edit/delete requires the match's `version` (`If-Match`). `guardedBatch()` (`packages/api/src/db/guarded-batch.ts`): a guarded `UPDATE/DELETE … WHERE id = ? AND version = ?`, then the audit row inserted `WHERE changes() = 1` (the commit marker), then follow-ups and the group bump conditioned on the marker existing, so a stale write changes nothing; the API returns 412 and the client refetches. Claims use `UPDATE players SET user_id = ? WHERE id = ? AND user_id IS NULL` (first claim wins). New matches can't conflict.
 - Players with matches can't be deleted (rename instead).
 
 ---
