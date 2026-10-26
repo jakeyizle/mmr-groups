@@ -2,12 +2,42 @@ import { newId } from "@mmr/core";
 import { env } from "cloudflare:workers";
 
 import { app } from "../src";
+import { createSession, SESSION_COOKIE } from "../src/auth/session";
 import { getDb, schema } from "../src/db";
 
 export const db = getDb(env.DB);
 
 export function request(path: string, init?: RequestInit) {
   return app.request(path, init, env);
+}
+
+/** Starts a session for `userId`; pass the token to `api()`. */
+export async function signIn(userId: string, now?: Date) {
+  return (await createSession(db, userId, now)).token;
+}
+
+/**
+ * Like the web client: JSON body + CSRF header on every request, and the session
+ * cookie when `session` is given.
+ */
+export function api(
+  path: string,
+  {
+    method = "GET",
+    json,
+    session,
+  }: { method?: string; json?: unknown; session?: string } = {},
+) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Requested-With": "fetch",
+  };
+  if (session) headers.Cookie = `${SESSION_COOKIE}=${session}`;
+  return request(path, {
+    method,
+    headers,
+    body: json === undefined ? undefined : JSON.stringify(json),
+  });
 }
 
 const now = () => new Date().toISOString();

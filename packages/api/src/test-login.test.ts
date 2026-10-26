@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 
 import { db, request } from "../test/helpers";
-import type { Bindings } from ".";
+import type { Bindings } from "./env";
 import { hashSessionToken, SESSION_COOKIE } from "./auth/session";
 import { authSessions, users } from "./db/schema";
 import { testLogin } from "./test-login";
@@ -25,9 +25,13 @@ const login = (body: unknown, vars: Partial<Bindings> = {}) =>
 
 describe("test login", () => {
   it("is not part of the production app", { tags: ["AUTH-008"] }, async () => {
+    // A well-formed request (passes CSRF), so only a missing route can explain 404.
     const res = await request("/api/test/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "fetch",
+      },
       body: JSON.stringify({ name: "Eve", email: "eve@example.com" }),
     });
     expect(res.status).toBe(404);

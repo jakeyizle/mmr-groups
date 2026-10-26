@@ -1,7 +1,7 @@
 import { newId } from "@mmr/core";
 import { Hono } from "hono";
 
-import type { Bindings } from ".";
+import type { Bindings } from "./env";
 import { createSession, setSessionCookie } from "./auth/session";
 import { getDb } from "./db";
 import { users } from "./db/schema";

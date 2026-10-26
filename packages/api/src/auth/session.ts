@@ -1,8 +1,10 @@
+import { eq } from "drizzle-orm";
 import type { Context } from "hono";
-import { setCookie } from "hono/cookie";
+import { deleteCookie, setCookie } from "hono/cookie";
 
 import type { Db } from "../db";
-import { authSessions } from "../db/schema";
+import { authSessions, users } from "../db/schema";
+import type { SessionUser } from "../env";
 
 export const SESSION_COOKIE = "session";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -44,6 +46,51 @@ export async function createSession(db: Db, userId: string, now = new Date()) {
   return { token, expiresAt };
 }
 
+/**
+ * The session's user, or null if the token is unknown or expired. When less than
+ * SESSION_EXTEND_BELOW_MS remains, the expiry is pushed out and `extendedTo` is set
+ * so the caller can refresh the cookie.
+ */
+export async function validateSession(db: Db, token: string, now = new Date()) {
+  const id = await hashSessionToken(token);
+  const [row] = await db
+    .select({
+      expiresAt: authSessions.expiresAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        isSiteAdmin: users.isSiteAdmin,
+      },
+    })
+    .from(authSessions)
+    .innerJoin(users, eq(users.id, authSessions.userId))
+    .where(eq(authSessions.id, id));
+  if (!row) return null;
+
+  const expiresAt = new Date(row.expiresAt);
+  if (expiresAt <= now) {
+    await db.delete(authSessions).where(eq(authSessions.id, id));
+    return null;
+  }
+
+  let extendedTo: Date | undefined;
+  if (expiresAt.getTime() - now.getTime() < SESSION_EXTEND_BELOW_MS) {
+    extendedTo = new Date(now.getTime() + SESSION_TTL_MS);
+    await db
+      .update(authSessions)
+      .set({ expiresAt: extendedTo.toISOString() })
+      .where(eq(authSessions.id, id));
+  }
+  return { user: row.user satisfies SessionUser, extendedTo };
+}
+
+export async function invalidateSession(db: Db, token: string) {
+  await db
+    .delete(authSessions)
+    .where(eq(authSessions.id, await hashSessionToken(token)));
+}
+
 export function setSessionCookie(c: Context, token: string, expires: Date) {
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true,
@@ -53,4 +100,8 @@ export function setSessionCookie(c: Context, token: string, expires: Date) {
     path: "/",
     expires,
   });
+}
+
+export function clearSessionCookie(c: Context) {
+  deleteCookie(c, SESSION_COOKIE, { path: "/" });
 }
