@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GGidRouteRouteImport } from './routes/g/$gid/route'
 import { Route as GroupsNewRouteImport } from './routes/groups/new'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as GGidIndexRouteImport } from './routes/g/$gid/index'
@@ -33,6 +34,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GGidRouteRoute = GGidRouteRouteImport.update({
+  id: '/g/$gid',
+  path: '/g/$gid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroupsNewRoute = GroupsNewRouteImport.update({
   id: '/groups/new',
   path: '/groups/new',
@@ -44,54 +50,55 @@ const JoinCodeRoute = JoinCodeRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const GGidIndexRoute = GGidIndexRouteImport.update({
-  id: '/g/$gid/',
-  path: '/g/$gid/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidAuditRoute = GGidAuditRouteImport.update({
-  id: '/g/$gid/audit',
-  path: '/g/$gid/audit',
-  getParentRoute: () => rootRouteImport,
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidSettingsRoute = GGidSettingsRouteImport.update({
-  id: '/g/$gid/settings',
-  path: '/g/$gid/settings',
-  getParentRoute: () => rootRouteImport,
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidStatsRoute = GGidStatsRouteImport.update({
-  id: '/g/$gid/stats',
-  path: '/g/$gid/stats',
-  getParentRoute: () => rootRouteImport,
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidTeamsRoute = GGidTeamsRouteImport.update({
-  id: '/g/$gid/teams',
-  path: '/g/$gid/teams',
-  getParentRoute: () => rootRouteImport,
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidMatchesIndexRoute = GGidMatchesIndexRouteImport.update({
-  id: '/g/$gid/matches/',
-  path: '/g/$gid/matches/',
-  getParentRoute: () => rootRouteImport,
+  id: '/matches/',
+  path: '/matches/',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidMatchesMidRoute = GGidMatchesMidRouteImport.update({
-  id: '/g/$gid/matches/$mid',
-  path: '/g/$gid/matches/$mid',
-  getParentRoute: () => rootRouteImport,
+  id: '/matches/$mid',
+  path: '/matches/$mid',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidMatchesNewRoute = GGidMatchesNewRouteImport.update({
-  id: '/g/$gid/matches/new',
-  path: '/g/$gid/matches/new',
-  getParentRoute: () => rootRouteImport,
+  id: '/matches/new',
+  path: '/matches/new',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 const GGidPlayersPidRoute = GGidPlayersPidRouteImport.update({
-  id: '/g/$gid/players/$pid',
-  path: '/g/$gid/players/$pid',
-  getParentRoute: () => rootRouteImport,
+  id: '/players/$pid',
+  path: '/players/$pid',
+  getParentRoute: () => GGidRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/g/$gid': typeof GGidRouteRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/join/$code': typeof JoinCodeRoute
   '/g/$gid/audit': typeof GGidAuditRoute
@@ -123,6 +130,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/g/$gid': typeof GGidRouteRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/join/$code': typeof JoinCodeRoute
   '/g/$gid/audit': typeof GGidAuditRoute
@@ -140,6 +148,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/g/$gid'
     | '/groups/new'
     | '/join/$code'
     | '/g/$gid/audit'
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/g/$gid'
     | '/groups/new'
     | '/join/$code'
     | '/g/$gid/audit'
@@ -186,17 +196,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  GGidRouteRoute: typeof GGidRouteRouteWithChildren
   GroupsNewRoute: typeof GroupsNewRoute
   JoinCodeRoute: typeof JoinCodeRoute
-  GGidAuditRoute: typeof GGidAuditRoute
-  GGidSettingsRoute: typeof GGidSettingsRoute
-  GGidStatsRoute: typeof GGidStatsRoute
-  GGidTeamsRoute: typeof GGidTeamsRoute
-  GGidIndexRoute: typeof GGidIndexRoute
-  GGidMatchesMidRoute: typeof GGidMatchesMidRoute
-  GGidMatchesNewRoute: typeof GGidMatchesNewRoute
-  GGidPlayersPidRoute: typeof GGidPlayersPidRoute
-  GGidMatchesIndexRoute: typeof GGidMatchesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -215,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$gid': {
+      id: '/g/$gid'
+      path: '/g/$gid'
+      fullPath: '/g/$gid'
+      preLoaderRoute: typeof GGidRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/groups/new': {
       id: '/groups/new'
       path: '/groups/new'
@@ -231,75 +240,83 @@ declare module '@tanstack/react-router' {
     }
     '/g/$gid/': {
       id: '/g/$gid/'
-      path: '/g/$gid'
+      path: '/'
       fullPath: '/g/$gid/'
       preLoaderRoute: typeof GGidIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/audit': {
       id: '/g/$gid/audit'
-      path: '/g/$gid/audit'
+      path: '/audit'
       fullPath: '/g/$gid/audit'
       preLoaderRoute: typeof GGidAuditRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/settings': {
       id: '/g/$gid/settings'
-      path: '/g/$gid/settings'
+      path: '/settings'
       fullPath: '/g/$gid/settings'
       preLoaderRoute: typeof GGidSettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/stats': {
       id: '/g/$gid/stats'
-      path: '/g/$gid/stats'
+      path: '/stats'
       fullPath: '/g/$gid/stats'
       preLoaderRoute: typeof GGidStatsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/teams': {
       id: '/g/$gid/teams'
-      path: '/g/$gid/teams'
+      path: '/teams'
       fullPath: '/g/$gid/teams'
       preLoaderRoute: typeof GGidTeamsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/matches/': {
       id: '/g/$gid/matches/'
-      path: '/g/$gid/matches'
+      path: '/matches'
       fullPath: '/g/$gid/matches/'
       preLoaderRoute: typeof GGidMatchesIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/matches/$mid': {
       id: '/g/$gid/matches/$mid'
-      path: '/g/$gid/matches/$mid'
+      path: '/matches/$mid'
       fullPath: '/g/$gid/matches/$mid'
       preLoaderRoute: typeof GGidMatchesMidRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/matches/new': {
       id: '/g/$gid/matches/new'
-      path: '/g/$gid/matches/new'
+      path: '/matches/new'
       fullPath: '/g/$gid/matches/new'
       preLoaderRoute: typeof GGidMatchesNewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
     '/g/$gid/players/$pid': {
       id: '/g/$gid/players/$pid'
-      path: '/g/$gid/players/$pid'
+      path: '/players/$pid'
       fullPath: '/g/$gid/players/$pid'
       preLoaderRoute: typeof GGidPlayersPidRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GGidRouteRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
-  GroupsNewRoute: GroupsNewRoute,
-  JoinCodeRoute: JoinCodeRoute,
+interface GGidRouteRouteChildren {
+  GGidAuditRoute: typeof GGidAuditRoute
+  GGidSettingsRoute: typeof GGidSettingsRoute
+  GGidStatsRoute: typeof GGidStatsRoute
+  GGidTeamsRoute: typeof GGidTeamsRoute
+  GGidIndexRoute: typeof GGidIndexRoute
+  GGidMatchesMidRoute: typeof GGidMatchesMidRoute
+  GGidMatchesNewRoute: typeof GGidMatchesNewRoute
+  GGidPlayersPidRoute: typeof GGidPlayersPidRoute
+  GGidMatchesIndexRoute: typeof GGidMatchesIndexRoute
+}
+
+const GGidRouteRouteChildren: GGidRouteRouteChildren = {
   GGidAuditRoute: GGidAuditRoute,
   GGidSettingsRoute: GGidSettingsRoute,
   GGidStatsRoute: GGidStatsRoute,
@@ -309,6 +326,18 @@ const rootRouteChildren: RootRouteChildren = {
   GGidMatchesNewRoute: GGidMatchesNewRoute,
   GGidPlayersPidRoute: GGidPlayersPidRoute,
   GGidMatchesIndexRoute: GGidMatchesIndexRoute,
+}
+
+const GGidRouteRouteWithChildren = GGidRouteRoute._addFileChildren(
+  GGidRouteRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  GGidRouteRoute: GGidRouteRouteWithChildren,
+  GroupsNewRoute: GroupsNewRoute,
+  JoinCodeRoute: JoinCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

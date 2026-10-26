@@ -1,6 +1,7 @@
 import type { AppType } from "@mmr/api";
 import { queryOptions } from "@tanstack/react-query";
-import { hc, type InferResponseType } from "hono/client";
+import { type ClientResponse, hc, type InferResponseType } from "hono/client";
+import type { SuccessStatusCode } from "hono/utils/http-status";
 
 /** Every request carries the CSRF headers the API requires on mutations (PLAN §7). */
 export const client = hc<AppType>("/", {
@@ -21,13 +22,19 @@ export class ApiError extends Error {
   }
 }
 
-/** Unwraps a Hono client response: JSON on success, `ApiError` otherwise. */
-export async function unwrap<T>(res: {
-  ok: boolean;
-  status: number;
-  json: () => Promise<T>;
-}): Promise<T> {
-  if (res.ok) return res.json();
+/** The body type of the response variants that can be 2xx. */
+type SuccessBody<R> =
+  R extends ClientResponse<infer T, infer S, "json">
+    ? [Extract<S, SuccessStatusCode>] extends [never]
+      ? never
+      : T
+    : never;
+
+/** Unwraps a Hono client response: the JSON body on 2xx, `ApiError` otherwise. */
+export async function unwrap<R extends ClientResponse<unknown, number, "json">>(
+  res: R,
+): Promise<SuccessBody<R>> {
+  if (res.ok) return (await res.json()) as SuccessBody<R>;
   const body = (await res.json().catch(() => ({}))) as {
     error?: { code: string; message: string; details?: unknown };
   };

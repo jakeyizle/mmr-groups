@@ -48,7 +48,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Groups API: create, list, settings, delete, transfer
 - [x] Players API: add, rename, role, remove, unlink
 - [x] Web shell: router, layout, auth state, query client
-- [ ] Group create + settings UI → T-015
+- [x] Group create + settings UI
 - [ ] Players & roles UI → T-016
 
 ## M2 — Matches & ratings (MATCH, RATE, BOARD, AUDIT)
@@ -71,7 +71,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [ ] Invite link API + settings UI
 - [ ] Claim/join API, leave
-- [ ] Join flow UI
+- [ ] Join flow UI (+ E2E for transfer ownership, GROUP-008, once members can join)
 
 ## M5 — Insights (STATS, TEAMS)
 

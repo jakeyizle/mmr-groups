@@ -11,7 +11,9 @@ test(
     await expect(page.getByText("Ann Example")).toBeVisible();
 
     await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Sign in", exact: true }),
+    ).toBeVisible();
 
     // The server session is gone, not just the client state.
     const me = await page.request.get("/api/me");
