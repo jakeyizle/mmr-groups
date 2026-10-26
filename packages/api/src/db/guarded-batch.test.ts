@@ -179,12 +179,16 @@ describe("claiming a player", () => {
     expect(player?.userId).toBe(winner);
   });
 
-  it("a user can't hold two players in one group", async () => {
-    const playerId = await addUnclaimed("Dan");
-    await expect(claim(playerId, userId)).rejects.toMatchObject({
-      cause: { message: expect.stringMatching(/UNIQUE/) as unknown },
-    });
-  });
+  it(
+    "a user can't hold two players in one group",
+    { tags: ["PLAYER-009"] },
+    async () => {
+      const playerId = await addUnclaimed("Dan");
+      await expect(claim(playerId, userId)).rejects.toMatchObject({
+        cause: { message: expect.stringMatching(/UNIQUE/) as unknown },
+      });
+    },
+  );
 });
 
 describe("db.batch", () => {

@@ -47,3 +47,28 @@ export const updateGroupSchema = z.strictObject(settings).partial();
 export type UpdateGroupInput = z.input<typeof updateGroupSchema>;
 
 export const transferSchema = z.strictObject({ playerId: z.string() });
+
+export const addPlayersSchema = z.strictObject({
+  players: z
+    .array(
+      z.strictObject({
+        name: nameSchema,
+        /** Unclaimed players can only be recorder or viewer; defaults to the group's default role. */
+        role: settings.defaultRole.optional(),
+      }),
+    )
+    .min(1)
+    .max(50),
+});
+export type AddPlayersInput = z.input<typeof addPlayersSchema>;
+
+export const updatePlayerSchema = z
+  .strictObject({
+    displayName: nameSchema,
+    role: z.enum(["owner", "admin", "recorder", "viewer"]),
+  })
+  .partial()
+  .refine((v) => v.displayName !== undefined || v.role !== undefined, {
+    message: "Nothing to change",
+  });
+export type UpdatePlayerInput = z.input<typeof updatePlayerSchema>;

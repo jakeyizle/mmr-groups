@@ -12,41 +12,9 @@ import { groups, players } from "../db/schema";
 import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import {
-  authorize,
-  type Group,
-  groupAccess,
-  type GroupEnv,
-  type Player,
-} from "./access";
-
-/** Group fields any viewer may see (no invite code). */
-export function serializeGroup(g: Group) {
-  return {
-    id: g.id,
-    name: g.name,
-    description: g.description,
-    visibility: g.visibility,
-    isDemo: g.isDemo,
-    teamFormat: g.teamFormat,
-    scoringMode: g.scoringMode,
-    allowTies: g.allowTies,
-    defaultRole: g.defaultRole,
-    ratingConfig: g.ratingConfig,
-    version: g.version,
-    createdAt: g.createdAt,
-  };
-}
-
-/** Never exposes user IDs: only whether the player is claimed. */
-export function serializePlayer(p: Player) {
-  return {
-    id: p.id,
-    displayName: p.displayName,
-    role: p.role,
-    linked: p.userId !== null,
-  };
-}
+import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
+import { playersRoutes } from "./players";
+import { serializeGroup, serializePlayer } from "./serialize";
 
 const groupRoutes = new Hono<GroupEnv>()
   .use(groupAccess)
@@ -171,7 +139,8 @@ const groupRoutes = new Hono<GroupEnv>()
         return apiError(c, 409, "conflict", "Ownership changed concurrently");
       return c.json({ ok: true });
     },
-  );
+  )
+  .route("/players", playersRoutes);
 
 export const groupsRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {
