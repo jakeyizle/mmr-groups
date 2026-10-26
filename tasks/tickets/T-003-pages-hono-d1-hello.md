@@ -1,10 +1,12 @@
 # T-003: Pages + Hono + D1 "hello", deployed
+
 Status: ready
 Milestone: M0
 Scenarios: —
 Depends on: T-001
 
 ## Notes
+
 - PLAN §4. `apps/web`: Vite + React + TS minimal page that calls `/api/health` and shows the result.
 - `packages/api`: Hono app exporting `app` and `type AppType`; `GET /api/health` runs `select 1` on D1 and returns `{ ok: true }`.
 - `apps/web/functions/api/[[route]].ts` → `handle(app)` from `hono/cloudflare-pages`.
@@ -13,5 +15,6 @@ Depends on: T-001
 - Local dev: `pnpm dev` runs Vite with the API reachable (via `wrangler pages dev` proxying Vite, or Vite proxy to `wrangler pages dev`; pick the simpler one that works).
 
 ## Done when
+
 - `https://<project>.pages.dev` shows the page and `/api/health` returns `{ ok: true }` from D1
 - Same works locally with `pnpm dev`

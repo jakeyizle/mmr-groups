@@ -20,6 +20,7 @@ Behavior is specified as Given/When/Then scenarios in `scenarios/*.md`, one file
 
 ```md
 ### MATCH-007: Editing a match's participants recalculates ratings
+
 - **Given** a group with matches M1, M2, M3 in that order
 - **And** Dave played in M1
 - **When** an admin replaces Dave with Dan in M1
@@ -33,43 +34,45 @@ Behavior is specified as Given/When/Then scenarios in `scenarios/*.md`, one file
 
 Every test that verifies a scenario carries the scenario ID as a tag. A test may cover several scenarios; a scenario may be covered at several levels.
 
-| Runner | Syntax |
-|---|---|
+| Runner             | Syntax                                                       |
+| ------------------ | ------------------------------------------------------------ |
 | Playwright (≥1.42) | `test('edit recalcs', { tag: '@MATCH-007' }, async () => …)` |
-| Vitest (≥4.1) | `test('edit recalcs', { tags: ['MATCH-007'] }, () => …)` |
+| Vitest (≥4.1)      | `test('edit recalcs', { tags: ['MATCH-007'] }, () => …)`     |
 
 Vitest requires tags to be declared in `test.tags` and rejects unknown tags by default (`strictTags`). `vitest.config.ts` builds the tag list by parsing `scenarios/*.md` (shared parser in `scripts/scenarios.ts`), so a test referencing a nonexistent ID fails. Filtering: `vitest --tags-filter=MATCH-007`, `playwright test --grep @MATCH-007`.
 
 ### `pnpm scenarios:check` (runs in CI)
 
 `scripts/check-scenarios.ts`:
+
 1. Parses scenario IDs from `scenarios/*.md`; **fails** on duplicate IDs or malformed headings.
 2. Scans Playwright test files for `@ID` tags; **fails** on unknown IDs (Vitest already enforces this).
 3. Reports scenarios with no tagged test (Vitest + Playwright) — warning during development; `--strict` makes uncovered non-stretch scenarios an error (enabled at MVP).
 
 ### Scenario files
 
-| File | Prefix | Covers |
-|---|---|---|
-| `auth.md` | AUTH | Google sign-in, sessions, sign-out |
-| `groups.md` | GROUP | Create group, settings, delete, transfer ownership |
-| `roles.md` | ROLE | Role permissions, site admin |
-| `players.md` | PLAYER | Add/rename/remove/unlink players, assign roles |
-| `joining.md` | JOIN | Invite links, claiming players, leaving |
-| `match-entry.md` | MATCH | Batch match entry, validation, ordering |
-| `match-editing.md` | EDIT | Editing/deleting matches |
-| `ratings.md` | RATE | Rating engine, decay, provisional, display |
-| `leaderboard.md` | BOARD | Leaderboard, match history with deltas |
-| `stats.md` | STATS | Player and group stats |
-| `team-generator.md` | TEAMS | Balanced team generation |
-| `audit.md` | AUDIT | Audit log |
-| `visibility.md` | VIS | Public vs private groups, data exposure, demo |
+| File                | Prefix | Covers                                             |
+| ------------------- | ------ | -------------------------------------------------- |
+| `auth.md`           | AUTH   | Google sign-in, sessions, sign-out                 |
+| `groups.md`         | GROUP  | Create group, settings, delete, transfer ownership |
+| `roles.md`          | ROLE   | Role permissions, site admin                       |
+| `players.md`        | PLAYER | Add/rename/remove/unlink players, assign roles     |
+| `joining.md`        | JOIN   | Invite links, claiming players, leaving            |
+| `match-entry.md`    | MATCH  | Batch match entry, validation, ordering            |
+| `match-editing.md`  | EDIT   | Editing/deleting matches                           |
+| `ratings.md`        | RATE   | Rating engine, decay, provisional, display         |
+| `leaderboard.md`    | BOARD  | Leaderboard, match history with deltas             |
+| `stats.md`          | STATS  | Player and group stats                             |
+| `team-generator.md` | TEAMS  | Balanced team generation                           |
+| `audit.md`          | AUDIT  | Audit log                                          |
+| `visibility.md`     | VIS    | Public vs private groups, data exposure, demo      |
 
 ---
 
 ## 2. Scope
 
 **MVP**
+
 - Google sign-in
 - Groups with fixed per-group roles (owner ⊇ admin ⊇ recorder ⊇ viewer)
 - Players (rated entities; optionally linked to a user)
@@ -100,38 +103,39 @@ Vitest requires tags to be declared in `test.tags` and rejects unknown tags by d
 - **Player** — a rated entity in one group, with a display name and a **role**. Optionally linked to one user; a user has at most one player per group. Every group member is a player.
 - **Role** (per player, fixed; each role includes everything below it):
 
-| Capability | owner | admin | recorder | viewer |
-|---|:-:|:-:|:-:|:-:|
-| View private group, stats, audit log, team generator | ✅ | ✅ | ✅ | ✅ |
-| Record matches; edit/delete matches they recorded | ✅ | ✅ | ✅ | |
-| Edit/delete any match | ✅ | ✅ | | |
-| Add/rename/remove players; set roles recorder/viewer; unlink non-admins | ✅ | ✅ | | |
-| Edit settings, manage invite link | ✅ | ✅ | | |
-| Grant/revoke admin; unlink admins | ✅ | | | |
-| Transfer ownership, delete group | ✅ | | | |
+| Capability                                                              | owner | admin | recorder | viewer |
+| ----------------------------------------------------------------------- | :---: | :---: | :------: | :----: |
+| View private group, stats, audit log, team generator                    |  ✅   |  ✅   |    ✅    |   ✅   |
+| Record matches; edit/delete matches they recorded                       |  ✅   |  ✅   |    ✅    |        |
+| Edit/delete any match                                                   |  ✅   |  ✅   |          |        |
+| Add/rename/remove players; set roles recorder/viewer; unlink non-admins |  ✅   |  ✅   |          |        |
+| Edit settings, manage invite link                                       |  ✅   |  ✅   |          |        |
+| Grant/revoke admin; unlink admins                                       |  ✅   |       |          |        |
+| Transfer ownership, delete group                                        |  ✅   |       |          |        |
 
-  Rules:
-  - Exactly one owner per group (except the demo group: no owner, managed by site admins). The owner can't be unlinked; ownership only changes by transfer to a linked player.
-  - **Admin only on linked players.** Unclaimed players can be recorder or viewer only. When an admin is unlinked or leaves, their player's role resets to the group's default role. (Otherwise anyone with the invite link could claim a vacated admin player.)
-  - The group's default role is recorder or viewer.
-  - Site admins act as owner on any group, including private ones, but can't become owner (they aren't players).
+Rules:
+
+- Exactly one owner per group (except the demo group: no owner, managed by site admins). The owner can't be unlinked; ownership only changes by transfer to a linked player.
+- **Admin only on linked players.** Unclaimed players can be recorder or viewer only. When an admin is unlinked or leaves, their player's role resets to the group's default role. (Otherwise anyone with the invite link could claim a vacated admin player.)
+- The group's default role is recorder or viewer.
+- Site admins act as owner on any group, including private ones, but can't become owner (they aren't players).
 - **Match** — `playedAt` (date-time), 2+ teams, each team 1+ players with an optional score and a **rank** (1 = best; ties share a rank). With scores, rank derives from score (higher is better, any number of teams). Without scores, the recorder sets the winner/placement.
 - **Team format** (locked after creation): fixed `T teams × S players`, or `flexible` (any teams ≥ 2, any sizes ≥ 1).
 - **Scoring mode:** `required` / `optional` / `none`; `allowTies` boolean. Settings changes don't invalidate existing matches; they apply to new matches and to fields changed in an edit.
-- **Ratings** are *derived*: a pure function of (match history, rating config, as-of time). Never stored, never edited. (So there's no "reset ratings" — start a new group.)
+- **Ratings** are _derived_: a pure function of (match history, rating config, as-of time). Never stored, never edited. (So there's no "reset ratings" — start a new group.)
 
 ### Limits
 
-| Item | Limit |
-|---|---|
-| Group name / player name | 1–40 chars, trimmed |
-| Description / match notes | ≤ 500 chars |
-| Players per group | ≤ 200 |
-| Fixed format | 2–8 teams × 1–8 players |
-| Flexible format | ≤ 8 teams, ≤ 8 players per team |
-| Matches per batch | ≤ 50 |
-| Scores | integers 0–999 |
-| `playedAt` | entered in viewer's local time, stored UTC; ≤ 24 h in the future |
+| Item                      | Limit                                                            |
+| ------------------------- | ---------------------------------------------------------------- |
+| Group name / player name  | 1–40 chars, trimmed                                              |
+| Description / match notes | ≤ 500 chars                                                      |
+| Players per group         | ≤ 200                                                            |
+| Fixed format              | 2–8 teams × 1–8 players                                          |
+| Flexible format           | ≤ 8 teams, ≤ 8 players per team                                  |
+| Matches per batch         | ≤ 50                                                             |
+| Scores                    | integers 0–999                                                   |
+| `playedAt`                | entered in viewer's local time, stored UTC; ≤ 24 h in the future |
 
 ---
 
@@ -170,12 +174,12 @@ scripts/             check-scenarios.ts, scenarios.ts (parser), seed-demo.ts
 
 ### Free-tier constraints
 
-| Limit (free) | Design response |
-|---|---|
-| ~10 ms CPU per request | Server does only validation + I/O; all computation is client-side |
-| 50 D1 queries per invocation (a `db.batch()` counts as one); 100 bound params per statement; 2 MB per row | Mutations are a single batch; multi-row inserts chunked to ≤ 100 params |
-| 5M D1 **rows read**/day, 100k **rows written**/day | Snapshot reads ~1 row per match; conditional GETs check the group version (1 row) before reading anything else; sessions extended at most once per 15 days |
-| 100k requests/day | Far beyond hobby use |
+| Limit (free)                                                                                              | Design response                                                                                                                                            |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~10 ms CPU per request                                                                                    | Server does only validation + I/O; all computation is client-side                                                                                          |
+| 50 D1 queries per invocation (a `db.batch()` counts as one); 100 bound params per statement; 2 MB per row | Mutations are a single batch; multi-row inserts chunked to ≤ 100 params                                                                                    |
+| 5M D1 **rows read**/day, 100k **rows written**/day                                                        | Snapshot reads ~1 row per match; conditional GETs check the group version (1 row) before reading anything else; sessions extended at most once per 15 days |
+| 100k requests/day                                                                                         | Far beyond hobby use                                                                                                                                       |
 
 ---
 
@@ -213,6 +217,7 @@ audit_events     id, group_id, actor_user_id, action, entity_type, entity_id,
 Library: **[openskill](https://github.com/philihp/openskill.js)** (MIT, TS, N teams × M players, ranks, ties, `predictWin`).
 
 `replay(matches, config, asOf) → { players: {id: {mu, sigma, lastPlayedAt, matches}}, matches: {id: {playerId: {before, after}}} }`
+
 1. Sort by `(playedAt, id)`.
 2. For each match: decay each participant for time since their last match, then `rate(teams, { rank })`; record before/after.
 3. Decay every player to `asOf` for display (the UI passes now; tests pass a fixed time).
@@ -221,15 +226,15 @@ Library: **[openskill](https://github.com/philihp/openskill.js)** (MIT, TS, N te
 
 **Defaults (`rating_config`, tune per R2):**
 
-| Param | Default |
-|---|---|
-| model | Plackett-Luce |
-| μ₀, σ₀ | 25, 25/3 |
-| τ (openskill dynamics) | 25/300 |
-| decay `d` per week | 0.5 |
-| display | `round(1000 + 20 · (μ − 3σ))` |
-| provisional | σ > 5 |
-| useScores | false (scores stored, only used to derive rank) |
+| Param                  | Default                                         |
+| ---------------------- | ----------------------------------------------- |
+| model                  | Plackett-Luce                                   |
+| μ₀, σ₀                 | 25, 25/3                                        |
+| τ (openskill dynamics) | 25/300                                          |
+| decay `d` per week     | 0.5                                             |
+| display                | `round(1000 + 20 · (μ − 3σ))`                   |
+| provisional            | σ > 5                                           |
+| useScores              | false (scores stored, only used to derive rank) |
 
 **Interface:** `RatingSystem { initial(); rateMatch(teams, ranks); predictWin(teams); display(rating) }` — openskill is the only implementation.
 
@@ -273,9 +278,9 @@ POST   /invites/:code/claim            { playerId } | { newPlayerName }
 - One middleware resolves `(user, group, role)` and checks `can(role, action, resource)` from `packages/core/permissions` — the same function the UI uses to hide controls.
 - Private group + non-member (or missing group): identical `404`.
 - **Snapshot** = group settings, players, matches. Shaped per audience by explicit serializers:
-  - *public*: settings, players (id, name), matches (no `recorded_by`).
-  - *member*: + player roles, claimed flag, `recorded_by_player_id`, my player ID/role.
-  - *admin*: + invite code/expiry.
+  - _public_: settings, players (id, name), matches (no `recorded_by`).
+  - _member_: + player roles, claimed flag, `recorded_by_player_id`, my player ID/role.
+  - _admin_: + invite code/expiry.
   - Never: emails, Google names/avatars, user IDs.
 - Caching: `ETag: "<version>-<audience>"`, `Cache-Control: private, no-cache`. On `If-None-Match`, read only `groups.version` and return 304 if unchanged.
 - Errors: `{ error: { code, message, details? } }`; 400 validation, 401, 403, 404, 409 (e.g. name taken, claim lost), 412 (stale version).
@@ -288,6 +293,7 @@ POST   /invites/:code/claim            { playerId } | { newPlayerName }
 Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form + Zod, Tailwind + shadcn/ui, Recharts, vite-plugin-pwa. Mobile-first; every screen designed at 375px first.
 
 **Routes**
+
 ```
 /                         my groups / landing (link to demo group)
 /login
@@ -316,11 +322,11 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 
 ## 10. Testing
 
-| Level | Tool | Covers |
-|---|---|---|
-| Unit | Vitest | `packages/core`: replay, decay, permissions, stats, generator (incl. perf benchmark), schemas |
-| API integration | Vitest 4.1 + `@cloudflare/vitest-pool-workers` ≥ 0.13 (plugin API: `cloudflareTest()`; older config examples are wrong) | routes, auth, permissions, serializers, atomicity, concurrency, audit rows |
-| E2E | Playwright (projects: Pixel 7, iPhone 14) against `wrangler pages dev` | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
+| Level           | Tool                                                                                                                    | Covers                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Unit            | Vitest                                                                                                                  | `packages/core`: replay, decay, permissions, stats, generator (incl. perf benchmark), schemas         |
+| API integration | Vitest 4.1 + `@cloudflare/vitest-pool-workers` ≥ 0.13 (plugin API: `cloudflareTest()`; older config examples are wrong) | routes, auth, permissions, serializers, atomicity, concurrency, audit rows                            |
+| E2E             | Playwright (projects: Pixel 7, iPhone 14) against `wrangler pages dev`                                                  | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
 
 - API tests call `app.request(…, env)` using a test-only wrangler config that declares the D1 binding (Pages config has no `main`); migrations applied before each file.
 - Pick the lowest level that genuinely verifies a scenario.

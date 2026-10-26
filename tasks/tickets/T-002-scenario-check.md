@@ -1,10 +1,12 @@
 # T-002: Scenario parser, scenarios:check, Vitest tag config
+
 Status: ready
 Milestone: M0
 Scenarios: —
 Depends on: T-001
 
 ## Notes
+
 - PLAN §1 is the spec. `scripts/scenarios.ts` exports a parser returning `{ id, title, file, stretch }[]` from `scenarios/*.md`; used by both the check script and Vitest configs.
 - Malformed = a `### ` heading not matching `^### [A-Z]+-\d{3}: .+$`, or an ID whose prefix differs from the file's other IDs.
 - Coverage scan is static (regex over `**/*.test.ts` / `*.spec.ts`): Vitest `tags: [...]` and Playwright `tag: '@ID'` / `tag: ['@ID', ...]`.
@@ -13,5 +15,6 @@ Depends on: T-001
 - Unit-test the parser and scanner (plain tests, no scenario tags).
 
 ## Done when
+
 - `pnpm scenarios:check` runs against the current scenarios with 0 errors (all uncovered as warnings)
 - A Vitest test tagged with an unknown ID fails the run

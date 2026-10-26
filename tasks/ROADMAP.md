@@ -13,22 +13,26 @@ Ticket template:
 
 ```md
 # T-012: <title>
+
 Status: ready | in-progress
 Milestone: M2
 Scenarios: MATCH-001, MATCH-002
 Depends on: T-010
 
 ## Notes
+
 - <approach, files, gotchas>
 
 ## Done when
+
 - Listed scenarios have passing tagged tests; lint, typecheck, scenarios:check green
 ```
 
 Each milestone ends deployed, with its scenarios passing.
 
 ## M0 — Foundation
-- [ ] pnpm monorepo, TS config, ESLint, `packages/core` skeleton with Vitest → T-001
+
+- [x] pnpm monorepo, TS config, ESLint, `packages/core` skeleton with Vitest
 - [ ] Scenario parser + `scenarios:check` + Vitest tag config → T-002
 - [ ] Pages project + Hono via Pages Functions + D1 binding, deployed "hello" → T-003
 - [ ] Drizzle schema + first migration → T-004
@@ -38,6 +42,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [ ] Spike: guarded-batch optimistic concurrency in D1 (PLAN §5) → T-008
 
 ## M1 — Auth & groups (AUTH, GROUP, ROLE, PLAYER)
+
 - [ ] Google OAuth, sessions, `/me`, site admin config
 - [ ] Permissions module (core)
 - [ ] Groups API: create, list, settings, delete, transfer
@@ -47,6 +52,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [ ] Players & roles UI
 
 ## M2 — Matches & ratings (MATCH, RATE, BOARD, AUDIT)
+
 - [ ] Rating replay engine + default config (core)
 - [ ] Match schemas + validation rules (core)
 - [ ] Snapshot endpoint: audience serializers, ETag/304
@@ -57,15 +63,18 @@ Each milestone ends deployed, with its scenarios passing.
 - [ ] Audit log API + UI
 
 ## M3 — Editing (EDIT)
+
 - [ ] Match edit/delete API with versions
 - [ ] Match detail/edit UI, stale-edit handling
 
 ## M4 — Joining (JOIN)
+
 - [ ] Invite link API + settings UI
 - [ ] Claim/join API, leave
 - [ ] Join flow UI
 
 ## M5 — Insights (STATS, TEAMS)
+
 - [ ] Stats functions (core)
 - [ ] Player profile UI
 - [ ] Group stats UI
@@ -74,6 +83,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [ ] Stretch: win probability preview (MATCH-016)
 
 ## M6 — Public & polish (VIS)
+
 - [ ] Public group access end-to-end
 - [ ] Demo seed script + deploy wiring
 - [ ] PWA
