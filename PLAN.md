@@ -32,7 +32,7 @@ Behavior is specified as Given/When/Then scenarios in `scenarios/*.md`, one file
 
 ### Linking tests to scenarios (tags)
 
-Every test that verifies a scenario carries the scenario ID as a tag. A test may cover several scenarios; a scenario may be covered at several levels.
+Every test that verifies a scenario carries the scenario ID as a tag. A test may cover several scenarios; a scenario may be covered at several levels. Tags must be string literals (the check scans source); for table-driven tests, tag the enclosing `describe`.
 
 | Runner             | Syntax                                                       |
 | ------------------ | ------------------------------------------------------------ |

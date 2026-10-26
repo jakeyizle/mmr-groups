@@ -44,7 +44,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M1 — Auth & groups (AUTH, GROUP, ROLE, PLAYER)
 
 - [ ] Google OAuth, sessions, `/me`, site admin config → T-010, T-011
-- [ ] Permissions module (core) → T-009
+- [x] Permissions module (core)
 - [ ] Groups API: create, list, settings, delete, transfer → T-012
 - [ ] Players API: add, rename, role, remove, unlink → T-013
 - [ ] Web shell: router, layout, auth state, query client → T-014
