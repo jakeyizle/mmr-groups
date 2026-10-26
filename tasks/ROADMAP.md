@@ -35,7 +35,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] pnpm monorepo, TS config, ESLint, `packages/core` skeleton with Vitest
 - [x] Scenario parser + `scenarios:check` + Vitest tag config
 - [x] Worker (static assets) + Hono + D1 binding, deployed "hello"
-- [ ] Drizzle schema + first migration → T-004
+- [x] Drizzle schema + first migration
 - [ ] API test harness (`vitest-pool-workers`, test wrangler config) → T-005
 - [ ] Playwright harness + test-login route (AUTH-008) → T-006
 - [ ] GitHub Actions: checks, preview + production deploy, migrations → T-007

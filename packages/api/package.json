@@ -6,12 +6,16 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate --name"
   },
   "dependencies": {
+    "@mmr/core": "workspace:*",
+    "drizzle-orm": "~0.45.4",
     "hono": "~4.13.13"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261024.1"
+    "@cloudflare/workers-types": "5.20261024.1",
+    "drizzle-kit": "~0.31.11"
   }
 }

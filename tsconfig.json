@@ -5,5 +5,10 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["vitest.config.ts", "scripts", "apps/web/vite.config.ts"]
+  "include": [
+    "vitest.config.ts",
+    "scripts",
+    "apps/web/vite.config.ts",
+    "packages/api/drizzle.config.ts"
+  ]
 }

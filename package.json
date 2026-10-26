@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit && pnpm -r --if-present typecheck",
     "test": "vitest run",
     "scenarios:check": "node scripts/check-scenarios.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @mmr/api db:generate",
+    "db:migrate:local": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
