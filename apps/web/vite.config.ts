@@ -1,4 +1,8 @@
+import { fileURLToPath } from "node:url";
+
 import { cloudflare } from "@cloudflare/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -11,8 +15,14 @@ export default defineConfig(({ mode }) => {
     define: { __TEST_LOGIN__: JSON.stringify(e2e) },
     // Never leave a test-login build where `wrangler deploy` would pick it up.
     build: { outDir: e2e ? "dist-e2e" : "dist" },
+    resolve: {
+      alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    },
     plugins: [
+      // Must run before the React plugin.
+      tanstackRouter({ target: "react", autoCodeSplitting: true }),
       react(),
+      tailwindcss(),
       cloudflare(
         e2e
           ? {

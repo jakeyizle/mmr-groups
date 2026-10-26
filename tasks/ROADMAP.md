@@ -47,7 +47,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Permissions module (core)
 - [x] Groups API: create, list, settings, delete, transfer
 - [x] Players API: add, rename, role, remove, unlink
-- [ ] Web shell: router, layout, auth state, query client → T-014
+- [x] Web shell: router, layout, auth state, query client
 - [ ] Group create + settings UI → T-015
 - [ ] Players & roles UI → T-016
 

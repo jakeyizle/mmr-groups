@@ -1,2 +1,3 @@
 pnpm-lock.yaml
 packages/api/migrations/
+apps/web/src/routeTree.gen.ts

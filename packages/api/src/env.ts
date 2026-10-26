@@ -1,3 +1,6 @@
+// Imported (not global) so the web app can type-check AppType without workers globals.
+import type { D1Database } from "@cloudflare/workers-types";
+
 import type { Db } from "./db";
 
 export interface Bindings {
