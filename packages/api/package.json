@@ -1,0 +1,17 @@
+{
+  "name": "@mmr/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "~4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261024.1"
+  }
+}

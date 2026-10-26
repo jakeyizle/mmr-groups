@@ -1,5 +1,7 @@
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
@@ -14,6 +16,10 @@ export default defineConfig(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+  {
+    files: ["apps/web/src/**/*.{ts,tsx}"],
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
   },
   { files: ["**/*.js"], extends: [tseslint.configs.disableTypeChecked] },
 );

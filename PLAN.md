@@ -144,17 +144,18 @@ Rules:
 ```
  Browser (React SPA, PWA)
    │  rating replay, stats, team generator run here (packages/core)
-   │  same origin: https://<project>.pages.dev
+   │  same origin: https://mmr-groups.<subdomain>.workers.dev
    ▼
- Cloudflare Pages
+ Cloudflare Worker (static assets)
    ├─ static assets (Vite build)
-   └─ Pages Functions: /api/*  →  Hono app (auth, permissions, validation, persistence)
+   └─ /api/* (run_worker_first)  →  Hono app (auth, permissions, validation, persistence)
                                    │
                                    ▼
                               Cloudflare D1 (SQLite) via Drizzle
 ```
 
-- **Same origin** for SPA and API (Pages Functions catch-all `functions/api/[[route]].ts` → `handle(app)` from `hono/cloudflare-pages`). Session cookies are first-party; no CORS.
+- **Same origin** for SPA and API: one Worker serves the Vite build as static assets (SPA fallback) and runs the Hono app for `/api/*` (`apps/web/worker/index.ts` default-exports `app`). Session cookies are first-party; no CORS.
+- **Dev:** `@cloudflare/vite-plugin` runs the Worker in workerd inside `vite dev`, with local D1. One process.
 - **The server stores facts; the client derives ratings.** The API validates and persists matches; the browser fetches the group snapshot and replays it with `packages/core`. Replaying thousands of matches takes milliseconds, so there's no server CPU risk, no stored derived state to keep consistent, and no recalc logic — every edit is "correct by construction".
 - **Hono RPC** (`hc<AppType>`) gives the client end-to-end types with no codegen.
 - **Zod** schemas in `packages/core` validate on both client and server.
@@ -163,8 +164,8 @@ Rules:
 ### Repo layout (pnpm workspaces)
 
 ```
-apps/web/            Vite + React SPA; Pages project root
-  functions/api/[[route]].ts   mounts packages/api
+apps/web/            Vite + React SPA + Worker entry; wrangler.jsonc
+  worker/index.ts    default-exports the packages/api app
 packages/api/        Hono app, routes, auth, Drizzle schema + migrations
 packages/core/       domain types, Zod schemas, rating engine, stats, generator, permissions
 e2e/                 Playwright tests
@@ -326,9 +327,9 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 | --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Unit            | Vitest                                                                                                                  | `packages/core`: replay, decay, permissions, stats, generator (incl. perf benchmark), schemas         |
 | API integration | Vitest 4.1 + `@cloudflare/vitest-pool-workers` ≥ 0.13 (plugin API: `cloudflareTest()`; older config examples are wrong) | routes, auth, permissions, serializers, atomicity, concurrency, audit rows                            |
-| E2E             | Playwright (projects: Pixel 7, iPhone 14) against `wrangler pages dev`                                                  | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
+| E2E             | Playwright (projects: Pixel 7, iPhone 14) against `vite preview` (built Worker in workerd)                              | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
 
-- API tests call `app.request(…, env)` using a test-only wrangler config that declares the D1 binding (Pages config has no `main`); migrations applied before each file.
+- API tests call `app.request(…, env)` using `apps/web/wrangler.jsonc`; migrations applied before each file.
 - Pick the lowest level that genuinely verifies a scenario.
 - E2E uses the test-login route and a fresh local D1 per run.
 - Rating tests use fixed fixtures and a fixed `asOf`, asserting against openskill outputs with tolerances.
@@ -337,10 +338,10 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 
 ## 11. CI/CD (GitHub Actions)
 
-- **PR:** install → lint (ESLint) → typecheck → unit + API tests → `scenarios:check` → E2E → Pages preview deploy (against the preview D1).
+- **PR:** install → lint (ESLint) → typecheck → unit + API tests → `scenarios:check` → E2E → preview upload: `wrangler versions upload --env preview --preview-alias pr-<n>` to the `mmr-groups-preview` Worker (preview D1).
 - **main:** same checks → `wrangler d1 migrations apply --remote` (production, then preview) → seed demo on preview if missing → deploy production.
 - PRs never migrate the preview D1, so unmerged migrations can't leak into it. Preview deploys of PRs with new migrations may break; that's acceptable.
-- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (GitHub); `GOOGLE_CLIENT_ID/SECRET`, `SITE_ADMIN_EMAILS` (Pages env).
+- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (GitHub); `GOOGLE_CLIENT_ID/SECRET`, `SITE_ADMIN_EMAILS` (Worker secrets).
 - Migrations: Drizzle Kit → `packages/api/migrations`; must be backward-compatible with the previously deployed code.
 - Google OAuth needs exact redirect URIs, so sign-in works only on production. Previews are for viewing the demo group.
 
@@ -363,4 +364,4 @@ See `tasks/ROADMAP.md` (milestones, ticket process), `tasks/tickets/` (open tick
 
 - **R1 — Snapshot growth.** The snapshot grows linearly (~100 bytes/match). Fine for thousands of matches; if it ever matters, paginate history and cache older matches client-side.
 - **R2 — Rating constants** need tuning against real data; they live in `rating_config`, not code.
-- **R3 — Pages vs Workers static assets.** Pages meets all needs today; migrating later is mechanical.
+- **R3 — Pages vs Workers static assets.** Resolved: Workers (Hono's Pages adapter is deprecated; Cloudflare recommends Workers).
