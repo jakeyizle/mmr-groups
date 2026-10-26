@@ -37,7 +37,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Worker (static assets) + Hono + D1 binding, deployed "hello"
 - [x] Drizzle schema + first migration
 - [x] API test harness (`@cloudflare/vitest-plugin`)
-- [ ] Playwright harness + test-login route (AUTH-008) → T-006
+- [x] Playwright harness + test-login route (AUTH-008)
 - [ ] GitHub Actions: checks, preview + production deploy, migrations → T-007
 - [x] Spike: guarded-batch optimistic concurrency in D1 (PLAN §5)
 

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 export interface Bindings {
   DB: D1Database;
+  ENABLE_TEST_LOGIN?: string;
 }
 
 export const app = new Hono<{ Bindings: Bindings }>()

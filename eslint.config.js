@@ -5,7 +5,14 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  globalIgnores(["**/dist/", "**/coverage/", "**/.wrangler/"]),
+  globalIgnores([
+    "**/dist/",
+    "**/dist-e2e/",
+    "**/coverage/",
+    "**/.wrangler/",
+    "**/test-results/",
+    "**/playwright-report/",
+  ]),
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,

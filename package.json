@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @mmr/api db:generate",
     "db:migrate:local": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --local",
-    "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview"
+    "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview",
+    "e2e": "pnpm --filter @mmr/e2e test"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "~1.4.7",

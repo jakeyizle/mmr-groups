@@ -17,6 +17,8 @@ export default defineConfig({
       },
       {
         extends: true,
+        // The Worker entry is loaded as in production: no test-login route.
+        define: { __TEST_LOGIN__: "false" },
         plugins: [
           cloudflareTest(async () => ({
             wrangler: { configPath: "./apps/web/wrangler.jsonc" },

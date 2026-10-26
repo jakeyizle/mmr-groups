@@ -247,7 +247,7 @@ Library: **[openskill](https://github.com/philihp/openskill.js)** (MIT, TS, N te
 - Session: random 32-byte token in an `HttpOnly; Secure; SameSite=Lax` cookie; DB stores its SHA-256. 30-day expiry, extended only when < 15 days remain.
 - CSRF: SameSite=Lax + every mutation **requires** `Content-Type: application/json` and `X-Requested-With: fetch`.
 - `returnTo` preserved through login; must be a same-origin path, else `/`.
-- **Test login** (`POST /api/test/login`) exists only in builds with the `TEST_LOGIN` build flag (local/CI); production builds don't include the route. The handler also refuses unless `env.ENABLE_TEST_LOGIN === 'true'`.
+- **Test login** (`POST /api/test/login`) exists only in `vite build --mode e2e` builds (compile-time `__TEST_LOGIN__`, output to `dist-e2e/`); production bundles don't contain the route. The handler also refuses unless `env.ENABLE_TEST_LOGIN === 'true'`.
 
 ---
 
