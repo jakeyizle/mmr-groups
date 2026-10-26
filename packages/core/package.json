@@ -6,10 +6,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "vitest": "~4.1.12"
+    "typecheck": "tsc --noEmit"
   }
 }

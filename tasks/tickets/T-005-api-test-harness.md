@@ -11,7 +11,7 @@ Depends on: T-002, T-004
 - Test-only wrangler config (e.g. `packages/api/wrangler.test.toml`) declaring the `DB` binding, since the Pages config has no `main`.
 - Apply migrations per test file (`readD1Migrations` in config + `applyD1Migrations` in a setup file).
 - Tests call `app.request(path, init, env)`.
-- Include `scenarioTags()` from T-002 in this Vitest config.
+- Add an `api` project (`extends: true`, so it inherits scenario tags) to the root `vitest.config.ts`; if the plugin can't live in an inline project, use a file project and pass `tags: scenarioTags()` there.
 - Small helpers: `seedUser`, `seedGroup`, authenticated request helper (can stub until M1 auth exists).
 - First test: `/api/health` returns ok.
 

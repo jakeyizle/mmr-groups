@@ -33,7 +33,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M0 — Foundation
 
 - [x] pnpm monorepo, TS config, ESLint, `packages/core` skeleton with Vitest
-- [ ] Scenario parser + `scenarios:check` + Vitest tag config → T-002
+- [x] Scenario parser + `scenarios:check` + Vitest tag config
 - [ ] Pages project + Hono via Pages Functions + D1 binding, deployed "hello" → T-003
 - [ ] Drizzle schema + first migration → T-004
 - [ ] API test harness (`vitest-pool-workers`, test wrangler config) → T-005
