@@ -15,3 +15,4 @@
 - T-013 | 2026-10-25 | players API (batch add with all-or-nothing 200 cap, rename/role, delete unless in matches, unlink); guarded writes throughout
 - T-014 | 2026-10-25 | TanStack Router/Query shell, Tailwind 4 + shadcn, typed Hono RPC client (D1Database imported, not global), auth guard, `<Can>`; ROLE-008 tests land with T-015/T-016
 - T-015 | 2026-10-25 | home group list, create form, group layout + tabs, settings with owner-only delete/transfer; typed `unwrap` over RPC responses
+- T-016 | 2026-10-25 | players & roles settings: multi-add, rename, role (filtered by `can`/`validRoleFor`), remove, unlink; opaque header

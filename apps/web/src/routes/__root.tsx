@@ -21,7 +21,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function Layout() {
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b bg-background">
         <div className="mx-auto flex h-14 max-w-screen-md items-center justify-between gap-2 px-4">
           <Link
             to="/"

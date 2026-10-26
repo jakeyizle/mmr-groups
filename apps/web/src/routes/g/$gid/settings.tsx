@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DangerZone } from "@/components/group/danger-zone";
 import { GeneralSettings } from "@/components/group/general-settings";
+import { PlayersSettings } from "@/components/group/players-settings";
 import { requireUser } from "@/lib/auth";
 import { groupQuery } from "@/lib/groups";
 
@@ -20,6 +21,12 @@ function Settings() {
       <section className="space-y-4">
         <h2 className="font-heading text-lg font-semibold">General</h2>
         <GeneralSettings data={data} />
+      </section>
+      <section className="space-y-4">
+        <h2 className="font-heading text-lg font-semibold">
+          Players &amp; roles
+        </h2>
+        <PlayersSettings data={data} />
       </section>
       <DangerZone data={data} />
     </div>
