@@ -45,7 +45,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [ ] Google OAuth, sessions, `/me`, site admin config → T-011
 - [x] Permissions module (core)
-- [ ] Groups API: create, list, settings, delete, transfer → T-012
+- [x] Groups API: create, list, settings, delete, transfer
 - [ ] Players API: add, rename, role, remove, unlink → T-013
 - [ ] Web shell: router, layout, auth state, query client → T-014
 - [ ] Group create + settings UI → T-015
@@ -54,7 +54,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M2 — Matches & ratings (MATCH, RATE, BOARD, AUDIT)
 
 - [ ] Rating replay engine + default config (core)
-- [ ] Match schemas + validation rules (core)
+- [ ] Match schemas + validation rules (core); also covers the match side of GROUP-003, GROUP-011
 - [ ] Snapshot endpoint: audience serializers, ETag/304
 - [ ] Batch match create API + audit
 - [ ] Batch entry form

@@ -11,3 +11,4 @@
 - T-006 | 2026-10-25 | Playwright (Pixel 7, iPhone 14) on `vite preview --mode e2e` with fresh D1; test login compiled out of prod; session helpers
 - T-009 | 2026-10-25 | core `can()` / `validRoleFor()` over the role matrix; site admins as owner; table-driven tagged tests
 - T-010 | 2026-10-25 | session validate/extend/invalidate, `/me`, logout, CSRF + mutations-need-user middleware, error helper
+- T-012 | 2026-10-25 | groups API (list/create/settings/delete/transfer), access middleware, core Zod schemas, `auditedBatch`

@@ -8,6 +8,7 @@ import {
   SESSION_COOKIE,
 } from "./auth/session";
 import type { AppEnv } from "./env";
+import { groupsRoutes } from "./groups/routes";
 
 export type { AppEnv, Bindings, SessionUser } from "./env";
 
@@ -24,6 +25,7 @@ export const app = new Hono<AppEnv>()
     if (token) await invalidateSession(c.get("db"), token);
     clearSessionCookie(c);
     return c.json({ ok: true });
-  });
+  })
+  .route("/groups", groupsRoutes);
 
 export type AppType = typeof app;
