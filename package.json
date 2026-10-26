@@ -16,6 +16,7 @@
     "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "~1.4.7",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
     "eslint": "^10.13.0",

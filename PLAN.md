@@ -323,11 +323,11 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 
 ## 10. Testing
 
-| Level           | Tool                                                                                                                    | Covers                                                                                                |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Unit            | Vitest                                                                                                                  | `packages/core`: replay, decay, permissions, stats, generator (incl. perf benchmark), schemas         |
-| API integration | Vitest 4.1 + `@cloudflare/vitest-pool-workers` ≥ 0.13 (plugin API: `cloudflareTest()`; older config examples are wrong) | routes, auth, permissions, serializers, atomicity, concurrency, audit rows                            |
-| E2E             | Playwright (projects: Pixel 7, iPhone 14) against `vite preview` (built Worker in workerd)                              | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
+| Level           | Tool                                                                                              | Covers                                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Unit            | Vitest                                                                                            | `packages/core`: replay, decay, permissions, stats, generator (incl. perf benchmark), schemas         |
+| API integration | Vitest 4.1 + `@cloudflare/vitest-plugin` (`cloudflareTest()`; renamed from `vitest-pool-workers`) | routes, auth, permissions, serializers, atomicity, concurrency, audit rows                            |
+| E2E             | Playwright (projects: Pixel 7, iPhone 14) against `vite preview` (built Worker in workerd)        | critical journeys: sign in, create group, join/claim, batch entry, edit → ratings update, public view |
 
 - API tests call `app.request(…, env)` using `apps/web/wrangler.jsonc`; migrations applied before each file.
 - Pick the lowest level that genuinely verifies a scenario.
