@@ -60,7 +60,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Batch entry form
 - [x] Leaderboard
 - [x] Match history
-- [ ] Audit log API + UI → T-024
+- [x] Audit log API + UI
 
 ## M3 — Editing (EDIT)
 

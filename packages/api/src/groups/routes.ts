@@ -13,6 +13,7 @@ import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
 import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
+import { auditRoutes } from "./audit";
 import { matchesRoutes } from "./matches";
 import { playersRoutes } from "./players";
 import {
@@ -161,7 +162,8 @@ const groupRoutes = new Hono<GroupEnv>()
     },
   )
   .route("/players", playersRoutes)
-  .route("/matches", matchesRoutes);
+  .route("/matches", matchesRoutes)
+  .route("/audit", auditRoutes);
 
 export const groupsRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {

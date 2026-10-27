@@ -25,3 +25,4 @@
 - T-021 | 2026-10-26 | batch entry: RHF field array, native selects excluding chosen players, scores/winner/placements per mode, duplicate row, +1 min times, per-row issues (core rules, server paths), localStorage draft, inline add player
 - T-022 | 2026-10-26 | core `leaderboard()` (competition ranks, W/L/T, rank change around latest match via `replay` observer); leaderboard page with provisional badge, unrated section, record CTA
 - T-023 | 2026-10-26 | match history: newest-first cards, winners first with score/placement, per-player display-rating deltas from `replay`, `?player=` filter
+- T-024 | 2026-10-26 | `GET /groups/:gid/audit` (members via `group.view`, keyset pages of 50, actor as player name); plain-language audit page with "Show older"; queries skip retries on 4xx

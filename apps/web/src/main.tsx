@@ -5,9 +5,18 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import { ApiError } from "./lib/api";
 import { routeTree } from "./routeTree.gen";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // 4xx answers (not found, forbidden) won't change on retry.
+      retry: (count, err) =>
+        !(err instanceof ApiError && err.status < 500) && count < 3,
+    },
+  },
+});
 const router = createRouter({
   routeTree,
   context: { queryClient },
