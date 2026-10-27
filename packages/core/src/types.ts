@@ -14,6 +14,7 @@ export interface MatchTeam {
 }
 
 export interface RatingConfig {
+  model: "plackett-luce";
   mu: number;
   sigma: number;
   tau: number;

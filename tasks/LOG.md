@@ -18,3 +18,4 @@
 - T-016 | 2026-10-25 | players & roles settings: multi-add, rename, role (filtered by `can`/`validRoleFor`), remove, unlink; opaque header
 - T-007 | 2026-10-26 | CI on PRs (checks, E2E, `pr-<n>` preview alias on preview Worker); main migrates, deploys preview + prod, smoke-tests AUTH-008 live
 - T-011 | 2026-10-26 | Google sign-in (arctic, PKCE, flow cookies scoped to /api/auth/google); upsert by sub, site admin from verified email each login; safe returnTo; login error message
+- T-017 | 2026-10-26 | core `replay()` over openskill (PL) with pre-match + as-of decay, `(playedAt, id)` order, display/provisional, `DEFAULT_RATING_CONFIG`
