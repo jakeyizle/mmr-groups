@@ -148,7 +148,7 @@ function Browse() {
         </select>
         <Button
           variant="outline"
-          className="shrink-0"
+          className="h-9 shrink-0"
           aria-label={`Order: ${DIR_LABELS[sort][dir]}. Reverse`}
           onClick={() => {
             const next: Dir = dir === "asc" ? "desc" : "asc";
