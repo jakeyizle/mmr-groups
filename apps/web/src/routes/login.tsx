@@ -8,9 +8,10 @@ interface LoginSearch {
 }
 
 export const Route = createFileRoute("/login")({
+  // `undefined` overrides a bad raw value (see validateBrowseSearch).
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
-    ...(typeof search.returnTo === "string" && { returnTo: search.returnTo }),
-    ...(typeof search.error === "string" && { error: search.error }),
+    returnTo: typeof search.returnTo === "string" ? search.returnTo : undefined,
+    error: typeof search.error === "string" ? search.error : undefined,
   }),
   component: Login,
 });

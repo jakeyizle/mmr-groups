@@ -122,10 +122,6 @@ function Generator({ data }: { data: GroupData }) {
     saveDraft(`mmr:draft:${gid}`, draft);
     void navigate({ to: "/g/$gid/matches/new", params: { gid } });
   };
-  // Suggestions in a different shape than the group's can't be recorded as-is.
-  const recordable =
-    groupFormat.kind === "flexible" ||
-    (format.teams === groupFormat.teams && format.size === groupFormat.size);
 
   return (
     <div className="space-y-6">
@@ -248,7 +244,7 @@ function Generator({ data }: { data: GroupData }) {
                 .join(", ")}
             </p>
           )}
-          {can(actor, "match.record") && recordable && (
+          {can(actor, "match.record") && (
             <Button variant="outline" className="w-full" onClick={record}>
               Record these
             </Button>

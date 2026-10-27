@@ -13,9 +13,11 @@ interface HistorySearch {
 }
 
 export const Route = createFileRoute("/g/$gid/matches/")({
-  // BOARD-006: the filter is in the URL so it can be linked to.
-  validateSearch: (search: Record<string, unknown>): HistorySearch =>
-    typeof search.player === "string" ? { player: search.player } : {},
+  // BOARD-006: the filter is in the URL so it can be linked to. `undefined` overrides a bad
+  // raw value (see validateBrowseSearch).
+  validateSearch: (search: Record<string, unknown>): HistorySearch => ({
+    player: typeof search.player === "string" ? search.player : undefined,
+  }),
   component: Matches,
 });
 

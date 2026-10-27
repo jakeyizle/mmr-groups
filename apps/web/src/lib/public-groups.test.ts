@@ -14,6 +14,14 @@ describe("validateBrowseSearch", { tags: ["VIS-010", "VIS-011"] }, () => {
     expect(validateBrowseSearch({ dir: "asc" })).toEqual({ dir: "asc" });
   });
 
+  it("returns invalid params as undefined, to override the raw URL value", () => {
+    expect(validateBrowseSearch({ sort: "rating" })).toHaveProperty(
+      "sort",
+      undefined,
+    );
+    expect(Object.keys(validateBrowseSearch({}))).toEqual(["q", "sort", "dir"]);
+  });
+
   it("drops blank, unknown or mistyped params", () => {
     expect(
       validateBrowseSearch({ q: "  ", sort: "rating", dir: "up", x: 1 }),

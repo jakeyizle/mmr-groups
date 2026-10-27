@@ -214,6 +214,15 @@ describe("sorting", { tags: ["VIS-010"] }, () => {
   });
 });
 
+describe("bad URLs", { tags: ["VIS-010"] }, () => {
+  it("falls back to the defaults for unknown sorts and directions", async () => {
+    const { lastIndexCall } = setup("/groups?sort=bogus&dir=up&q=%20", one);
+    await listed();
+    expect(lastIndexCall().query).toEqual({ sort: "name", dir: "asc" });
+    expect(order().textContent).toBe("A to Z");
+  });
+});
+
 describe("search", { tags: ["VIS-011"] }, () => {
   it("searches once typing stops, trimmed, and clears when blank", async () => {
     const { lastIndexCall, router, navigations } = setup("/groups", () => ({

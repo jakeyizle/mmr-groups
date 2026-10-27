@@ -10,13 +10,17 @@ export interface BrowseSearch {
 const isSort = (v: unknown): v is PublicGroupSort =>
   PUBLIC_GROUP_SORTS.includes(v as PublicGroupSort);
 
-/** `/groups` search params; anything invalid is dropped. Defaults stay out of the URL (VIS-010). */
+/**
+ * `/groups` search params. Every key is returned, `undefined` when invalid: the router merges
+ * this over the raw URL search, so an omitted key would keep a bad value. Defaults stay out of
+ * the URL (VIS-010).
+ */
 export const validateBrowseSearch = (
   search: Record<string, unknown>,
 ): BrowseSearch => ({
-  ...(typeof search.q === "string" && search.q.trim() && { q: search.q }),
-  ...(isSort(search.sort) && { sort: search.sort }),
-  ...((search.dir === "asc" || search.dir === "desc") && { dir: search.dir }),
+  q: typeof search.q === "string" && search.q.trim() ? search.q : undefined,
+  sort: isSort(search.sort) ? search.sort : undefined,
+  dir: search.dir === "asc" || search.dir === "desc" ? search.dir : undefined,
 });
 
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
