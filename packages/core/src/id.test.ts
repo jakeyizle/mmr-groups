@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { newId } from "./id";
+import { clampPage, newId } from "./id";
 
 describe("newId", () => {
   it("is strictly increasing within the same millisecond", () => {
@@ -8,4 +8,8 @@ describe("newId", () => {
     expect([...ids].sort()).toEqual(ids);
     expect(new Set(ids).size).toBe(ids.length);
   });
+});
+
+it("clampPage", () => {
+  expect(clampPage(5)).toBe(5);
 });
