@@ -10,6 +10,7 @@ export const MUTATE = [
   "!packages/api/src/db/schema.ts",
   "!apps/web/src/routeTree.gen.ts",
   "!apps/web/src/components/ui/**",
+  "!apps/web/src/components/charts/**",
   "!apps/web/src/main.tsx",
 ];
 
@@ -24,6 +25,7 @@ const EXCLUDE = [
   /^packages\/api\/src\/db\/schema\.ts$/,
   /^apps\/web\/src\/routeTree\.gen\.ts$/,
   /^apps\/web\/src\/components\/ui\//,
+  /^apps\/web\/src\/components\/charts\//,
   /^apps\/web\/src\/main\.tsx$/,
 ];
 

@@ -53,6 +53,9 @@ describe("isMutable", () => {
     expect(isMutable("apps/web/src/routeTree.gen.ts")).toBe(false);
     expect(isMutable("apps/web/src/components/ui/button.tsx")).toBe(false);
     expect(isMutable("apps/web/src/main.tsx")).toBe(false);
+    expect(isMutable("apps/web/src/components/charts/bar-chart.tsx")).toBe(
+      false,
+    );
     expect(isMutable("apps/web/worker/index.ts")).toBe(false);
   });
 });

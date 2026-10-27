@@ -348,7 +348,7 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 - `pnpm mutate:changed` mutates only lines changed vs the base branch (`git diff -U0 -M --diff-filter=AMR`, new-side ranges → `--mutate file:a-b`). Empty diff → skip (never run Stryker without `--mutate`). CI runs it on PRs (`fetch-depth: 0`, `github.base_ref`).
 - Pass = no Survived/NoCoverage mutants; Timeout counts as killed; survivors get one rerun before failing.
 - An unkillable (equivalent) mutant is disabled inline with `// Stryker disable next-line <mutator>: <reason>`; a reason is required, and the script lists disables added by the PR. Static (module-level) survivors need a test, not a disable.
-- Not mutated: tests, `*.d.ts`, migrations, `meta/`, `routeTree.gen.ts`, `components/ui/*`, `db/schema.ts`, `main.tsx`. Noise skipped by the `noise` ignorer (`scripts/stryker-noise.ts`), not disables: `className`/`cn()`, `console.*`, `apiError` messages, `new Error(…)` messages.
+- Not mutated: tests, `*.d.ts`, migrations, `meta/`, `routeTree.gen.ts`, `components/ui/*`, `components/charts/*` (Recharts config; chart data comes from tested lib/core code), `db/schema.ts`, `main.tsx`. Noise skipped by the `noise` ignorer (`scripts/stryker-noise.ts`), not disables: `className`/`cn()`, `console.*`, `apiError` messages, `new Error(…)` messages.
 - Known gaps: deleted lines (incl. deleted tests) aren't checked; a mutant only partly overlapping a changed range is skipped.
 - One-time audit brings every file to zero unresolved survivors (M8); until then, a PR inherits old survivors on lines it touches.
 

@@ -7,6 +7,15 @@ import { defineConfig } from "vitest/config";
 import { scenarioTags } from "./scripts/scenarios.ts";
 
 export default defineConfig({
+  // By path, not through node_modules: Stryker's sandbox links node_modules back to the
+  // original tree, so cross-package imports would otherwise run unmutated code.
+  resolve: {
+    alias: {
+      "@mmr/core": fileURLToPath(
+        new URL("./packages/core/src/index.ts", import.meta.url),
+      ),
+    },
+  },
   test: {
     tags: scenarioTags(),
     projects: [

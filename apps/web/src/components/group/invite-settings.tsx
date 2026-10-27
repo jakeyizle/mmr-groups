@@ -8,7 +8,14 @@ import { Input } from "@/components/ui/input";
 import { client, unwrap } from "@/lib/api";
 import type { GroupData } from "@/lib/groups";
 
-const EXPIRY = { never: "Never", "1": "1 day", "7": "7 days", "30": "30 days" };
+// A list: object keys like "1" would sort before "never".
+const EXPIRY = [
+  ["never", "Never"],
+  ["1", "1 day"],
+  ["7", "7 days"],
+  ["30", "30 days"],
+] as const;
+type Expiry = (typeof EXPIRY)[number][0];
 
 const dateFormat = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -20,7 +27,7 @@ export function InviteSettings({ data }: { data: GroupData }) {
   const gid = data.group.id;
   const invite = data.invite;
   const queryClient = useQueryClient();
-  const [expiry, setExpiry] = useState<keyof typeof EXPIRY>("never");
+  const [expiry, setExpiry] = useState<Expiry>("never");
   const [copied, setCopied] = useState(false);
   const url = invite ? `${location.origin}/join/${invite.code}` : null;
 
@@ -92,10 +99,10 @@ export function InviteSettings({ data }: { data: GroupData }) {
             className={nativeSelect}
             value={expiry}
             onChange={(e) => {
-              setExpiry(e.target.value as keyof typeof EXPIRY);
+              setExpiry(e.target.value as Expiry);
             }}
           >
-            {Object.entries(EXPIRY).map(([value, text]) => (
+            {EXPIRY.map(([value, text]) => (
               <option key={value} value={value}>
                 {text}
               </option>

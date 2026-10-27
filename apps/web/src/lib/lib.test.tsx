@@ -1,0 +1,182 @@
+import { QueryClient } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
+import { renderWithQuery, stubApi } from "../../test/render";
+import { ApiError, client, meQuery, unwrap } from "./api";
+import { requireUser } from "./auth";
+import { Can } from "./can";
+import {
+  formatLabel,
+  type GroupData,
+  groupsQuery,
+  useGroupActor,
+} from "./groups";
+
+describe("unwrap", () => {
+  it("returns the JSON body on success", async () => {
+    stubApi({ "GET /api/me": () => ({ user: null }) });
+    expect(await unwrap(await client.me.$get())).toEqual({ user: null });
+  });
+
+  it("throws the API's error, with status and details", async () => {
+    stubApi({
+      "GET /api/me": () =>
+        Response.json(
+          { error: { code: "nope", message: "No way", details: [1] } },
+          { status: 403 },
+        ),
+    });
+    const err = await unwrap(await client.me.$get()).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).toMatchObject({
+      status: 403,
+      code: "nope",
+      message: "No way",
+      details: [1],
+    });
+  });
+
+  it("falls back for errors without a JSON body", async () => {
+    stubApi({ "GET /api/me": () => new Response("oops", { status: 502 }) });
+    const err = await unwrap(await client.me.$get()).catch((e: unknown) => e);
+    expect(err).toMatchObject({
+      status: 502,
+      code: "unknown",
+      message: "HTTP 502",
+      details: undefined,
+    });
+  });
+
+  it("sends the CSRF headers (PLAN §7)", async () => {
+    stubApi({ "GET /api/me": () => ({ user: null }) });
+    await client.me.$get();
+    const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    expect(new Headers(init?.headers).get("X-Requested-With")).toBe("fetch");
+    expect(new Headers(init?.headers).get("Content-Type")).toBe(
+      "application/json",
+    );
+  });
+});
+
+describe("queries", () => {
+  it("reads the signed-in user and their groups", async () => {
+    stubApi({
+      "GET /api/me": () => ({ user: { id: "u1" } }),
+      "GET /api/groups": () => ({ groups: [{ id: "g1" }] }),
+    });
+    const qc = new QueryClient();
+    expect(await qc.query(meQuery)).toEqual({ id: "u1" });
+    expect(await qc.query(groupsQuery)).toEqual([{ id: "g1" }]);
+    expect(meQuery.staleTime).toBe(300_000);
+  });
+});
+
+describe("requireUser", { tags: ["AUTH-005"] }, () => {
+  it("returns the signed-in user", async () => {
+    stubApi({ "GET /api/me": () => ({ user: { id: "u1" } }) });
+    const context = { queryClient: new QueryClient() };
+    expect(await requireUser({ context, location: { href: "/x" } })).toEqual({
+      me: { id: "u1" },
+    });
+  });
+
+  it("redirects to sign-in, coming back afterwards", async () => {
+    stubApi({ "GET /api/me": () => ({ user: null }) });
+    const context = { queryClient: new QueryClient() };
+    const thrown = await requireUser({
+      context,
+      location: { href: "/g/1?x=1" },
+    }).catch((e: unknown) => e);
+    expect(thrown).toMatchObject({
+      options: { to: "/login", search: { returnTo: "/g/1?x=1" } },
+    });
+  });
+
+  it("asks the API only once per session", async () => {
+    const calls = stubApi({ "GET /api/me": () => ({ user: { id: "u1" } }) });
+    const context = { queryClient: new QueryClient() };
+    await requireUser({ context, location: { href: "/" } });
+    await requireUser({ context, location: { href: "/" } });
+    expect(calls).toHaveLength(1);
+  });
+});
+
+describe("Can", { tags: ["ROLE-008"] }, () => {
+  it("renders children only when allowed", () => {
+    render(
+      <>
+        <Can
+          actor={{ role: "admin", playerId: "p", isSiteAdmin: false }}
+          action="group.editSettings"
+        >
+          yes
+        </Can>
+        <Can
+          actor={{ role: "viewer", playerId: "p", isSiteAdmin: false }}
+          action="group.editSettings"
+        >
+          no
+        </Can>
+      </>,
+    );
+    expect(screen.getByText("yes")).toBeTruthy();
+    expect(screen.queryByText("no")).toBeNull();
+  });
+});
+
+describe("formatLabel", () => {
+  it("describes the team format", () => {
+    expect(formatLabel({ kind: "flexible" })).toBe(
+      "Flexible (any teams and sizes)",
+    );
+    expect(formatLabel({ kind: "fixed", teams: 2, size: 3 })).toBe(
+      "2 teams of 3",
+    );
+  });
+});
+
+describe("useGroupActor", () => {
+  it("combines the group role with site-admin status", async () => {
+    stubApi({ "GET /api/me": () => ({ user: { isSiteAdmin: true } }) });
+    const data = { me: { role: "recorder", playerId: "p1" } } as GroupData;
+    const seen: unknown[] = [];
+    function Probe() {
+      seen.push(useGroupActor(data));
+      return null;
+    }
+    renderWithQuery(<Probe />);
+    await waitFor(() => {
+      expect(seen.at(-1)).toEqual({
+        role: "recorder",
+        playerId: "p1",
+        isSiteAdmin: true,
+      });
+    });
+    expect(seen[0]).toEqual({
+      role: "recorder",
+      playerId: "p1",
+      isSiteAdmin: false,
+    });
+  });
+
+  it("is an outsider without data or membership", async () => {
+    const calls = stubApi({ "GET /api/me": () => ({ user: null }) });
+    const seen: unknown[] = [];
+    function Probe({ data }: { data: GroupData | undefined }) {
+      seen.push(useGroupActor(data));
+      return null;
+    }
+    renderWithQuery(
+      <>
+        <Probe data={undefined} />
+        <Probe data={{ me: null } as GroupData} />
+      </>,
+    );
+    await waitFor(() => {
+      expect(calls).toHaveLength(1);
+    });
+    const outsider = { role: null, playerId: null, isSiteAdmin: false };
+    expect(seen.slice(-2)).toEqual([outsider, outsider]);
+  });
+});

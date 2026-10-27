@@ -1,11 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
+  createRootRoute,
+  createRoute,
   createRouter,
+  Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
 import { render } from "@testing-library/react";
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
@@ -54,12 +57,11 @@ const newQueryClient = () =>
 
 export function renderWithQuery(ui: ReactElement) {
   const queryClient = newQueryClient();
-  return {
-    queryClient,
-    ...render(
-      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-    ),
-  };
+  // As a wrapper, so `rerender` keeps the provider.
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return { queryClient, ...render(ui, { wrapper }) };
 }
 
 /** Renders the app's real route tree at `path`. */
@@ -69,6 +71,27 @@ export function renderRoute(path: string) {
     routeTree,
     context: { queryClient },
     history: createMemoryHistory({ initialEntries: [path] }),
+  });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+  return { router, queryClient };
+}
+
+/** Renders `ui` at `/here` in a bare router, for components that link or navigate. */
+export function renderInRouter(ui: ReactElement) {
+  const queryClient = newQueryClient();
+  const rootRoute = createRootRoute({ component: Outlet });
+  const page = (path: string, component: () => ReactNode) =>
+    createRoute({ getParentRoute: () => rootRoute, path, component });
+  const router = createRouter({
+    routeTree: rootRoute.addChildren([
+      page("/here", () => ui),
+      page("$", () => null),
+    ]),
+    history: createMemoryHistory({ initialEntries: ["/here"] }),
   });
   render(
     <QueryClientProvider client={queryClient}>

@@ -12,3 +12,8 @@ globalThis.ResizeObserver = class {
   unobserve = vi.fn();
   disconnect = vi.fn();
 };
+
+// Radix Select uses pointer capture and scrolling, which jsdom lacks.
+Element.prototype.hasPointerCapture = () => false;
+Element.prototype.releasePointerCapture = vi.fn();
+Element.prototype.scrollIntoView = vi.fn();
