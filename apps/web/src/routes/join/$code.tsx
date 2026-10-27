@@ -80,8 +80,9 @@ function Claim({
         await client.invites[":code"].claim.$post({ param: { code }, json }),
       ),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["groups"] });
+      // Navigate first: a refetched offer would otherwise redirect a second time.
       await navigate({ to: "/g/$gid", params: { gid: groupId } });
+      await queryClient.invalidateQueries({ queryKey: ["groups"] });
     },
     onError: async (err) => {
       // JOIN-013: someone else claimed it first; offer what's left.

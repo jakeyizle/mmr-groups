@@ -70,6 +70,7 @@ async function joinAs(page: Page, path: string, name: string, player: string) {
   await signIn(page, name);
   await page.goto(path);
   await page.getByRole("button", { name: new RegExp(`^${player}`) }).click();
+  await expect(page.getByRole("link", { name: "Leaderboard" })).toBeVisible();
 }
 
 test(
@@ -186,12 +187,15 @@ test(
   "with a second member: grant admin, unlink, and transfer ownership",
   { tag: ["@ROLE-005", "@PLAYER-008", "@GROUP-008"] },
   async ({ page, browser }) => {
+    // Three people and many steps: more than the default 30 s under full parallel load.
+    test.slow();
     const { gid, path } = await groupWithInvite(page);
     const dan = await person(browser, test.info());
     await joinAs(dan.page, path, "Dan", "Dave");
     const sam = await person(browser, test.info());
     await joinAs(sam.page, path, "Sam", "Sue");
     await expect(sam.page).toHaveURL(new RegExp(`/g/${gid}$`));
+    await sam.context.close();
 
     await page.goto(`/g/${gid}/settings`);
     // ROLE-005: the owner can make a claimed player an admin, and back.
@@ -223,6 +227,5 @@ test(
       dan.page.getByRole("heading", { name: "Danger zone" }),
     ).toBeVisible();
     await dan.context.close();
-    await sam.context.close();
   },
 );
