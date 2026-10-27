@@ -32,3 +32,4 @@
 - T-028 | 2026-10-26 | `POST /invites/:code/claim` (first claim wins via guarded `user_id IS NULL`, or new player with default role + cap/name checks), members short-circuit; `POST /groups/:gid/leave` (owner blocked, admin reset); audited
 - T-029 | 2026-10-26 | join page (sign-in return, claim buttons, "not listed" name, member redirect, invalid-link message, claim_lost retry), leave group in settings; two-context E2E incl. deferred GROUP-008/PLAYER-008/ROLE-005
 - T-030 | 2026-10-27 | core stats: `playerStats` (record, streaks, partners, head-to-head), `ratingSeries`, `activity` (caller-supplied week start), `bestDuos`, `biggestUpsets`, `longestStreaks`, `ratingHistogram`; shared `teamOutcome`
+- T-031 | 2026-10-27 | player profile: Recharts rating line (validated series tokens, tooltip), record/streak tiles, best/worst partners, head-to-head, 10 recent matches (shared `MatchCard`); leaderboard names link to profiles

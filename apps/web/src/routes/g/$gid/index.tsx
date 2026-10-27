@@ -47,9 +47,13 @@ function Board({ data }: { data: GroupData }) {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2">
-                  <span className="truncate font-medium">
+                  <Link
+                    to="/g/$gid/players/$pid"
+                    params={{ gid, pid: e.playerId }}
+                    className="truncate font-medium hover:underline"
+                  >
                     {names.get(e.playerId) ?? "Removed player"}
-                  </span>
+                  </Link>
                   {e.provisional && (
                     <Badge variant="outline" className="shrink-0">
                       Provisional

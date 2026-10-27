@@ -1,7 +1,199 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { type PairRecord, playerStats } from "@mmr/core";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+
+import { RatingChart } from "@/components/charts/rating-chart";
+import { MatchCard } from "@/components/match/match-card";
+import { Badge } from "@/components/ui/badge";
+import { SERIES } from "@/lib/charts";
+import { type GroupData, groupQuery } from "@/lib/groups";
+import { useLeaderboard, useRatingSeries, useReplay } from "@/lib/ratings";
 
 export const Route = createFileRoute("/g/$gid/players/$pid")({
-  component: () => (
-    <h1 className="font-heading text-2xl font-semibold">Player</h1>
-  ),
+  component: PlayerPage,
 });
+
+function PlayerPage() {
+  const { gid, pid } = Route.useParams();
+  const { data } = useQuery(groupQuery(gid));
+  if (!data) return null;
+  const player = data.players.find((p) => p.id === pid);
+  if (!player) {
+    return <p className="text-muted-foreground">No such player.</p>;
+  }
+  return <Profile data={data} pid={pid} name={player.displayName} />;
+}
+
+const pct = (x: number) => `${String(Math.round(x * 100))}%`;
+const wlt = (r: { wins: number; losses: number; ties: number }) =>
+  `${String(r.wins)}–${String(r.losses)}${r.ties > 0 ? `–${String(r.ties)}` : ""}`;
+const STREAK = { win: "W", loss: "L", tie: "T" } as const;
+
+function Profile({
+  data,
+  pid,
+  name,
+}: {
+  data: GroupData;
+  pid: string;
+  name: string;
+}) {
+  const gid = data.group.id;
+  const names = useMemo(
+    () => new Map(data.players.map((p) => [p.id, p.displayName])),
+    [data.players],
+  );
+  const nameOf = (id: string) => names.get(id) ?? "Removed player";
+  const board = useLeaderboard(data);
+  const ratings = useReplay(data);
+  const series = useRatingSeries(data);
+  const stats = useMemo(
+    () => playerStats(data.matches, pid, (id) => names.get(id) ?? id),
+    [data.matches, pid, names],
+  );
+  const entry = board.find((e) => e.playerId === pid);
+  const recent = data.matches
+    .filter((m) => m.teams.some((t) => t.playerIds.includes(pid)))
+    .slice(-10)
+    .reverse();
+  const { record } = stats;
+
+  return (
+    <div className="space-y-6">
+      <section className="flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="truncate font-heading text-xl font-semibold">
+            {name}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {entry ? `#${String(entry.rank)} on the leaderboard` : "Unrated"}
+          </p>
+        </div>
+        {entry && (
+          <div className="shrink-0 text-right">
+            <p className="text-2xl font-semibold tabular-nums">
+              {entry.rating}
+            </p>
+            {entry.provisional && <Badge variant="outline">Provisional</Badge>}
+          </div>
+        )}
+      </section>
+
+      {record.matches === 0 ? (
+        <p className="text-muted-foreground">No matches yet.</p>
+      ) : (
+        <>
+          <section className="space-y-2">
+            <h3 className="text-sm font-medium">Rating over time</h3>
+            <RatingChart
+              label={`${name}'s rating over time`}
+              series={[
+                {
+                  id: pid,
+                  name,
+                  color: SERIES[0] ?? "",
+                  points: series.get(pid) ?? [],
+                },
+              ]}
+            />
+          </section>
+
+          <section aria-label="Record">
+            <dl className="grid grid-cols-3 gap-2 text-center">
+              {[
+                ["Record", wlt(record)],
+                ["Win rate", pct(record.winRate)],
+                ["Matches", String(record.matches)],
+                [
+                  "Streak",
+                  stats.currentStreak
+                    ? `${STREAK[stats.currentStreak.outcome]}${String(stats.currentStreak.length)}`
+                    : "–",
+                ],
+                ["Best streak", `W${String(stats.longestWinStreak)}`],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-lg border p-2">
+                  <dt className="text-xs text-muted-foreground">{label}</dt>
+                  <dd className="font-semibold tabular-nums">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          <PairList
+            title="Best partners"
+            pairs={stats.partners.best}
+            nameOf={nameOf}
+          />
+          <PairList
+            title="Toughest partnerships"
+            pairs={stats.partners.worst}
+            nameOf={nameOf}
+          />
+          <PairList
+            title="Head to head"
+            pairs={stats.headToHead}
+            nameOf={nameOf}
+          />
+
+          <section className="space-y-2">
+            <div className="flex items-baseline justify-between">
+              <h3 className="text-sm font-medium">Recent matches</h3>
+              <Link
+                to="/g/$gid/matches"
+                params={{ gid }}
+                search={{ player: pid }}
+                className="text-sm text-muted-foreground underline"
+              >
+                All matches
+              </Link>
+            </div>
+            <ol aria-label="Recent matches" className="space-y-3">
+              {recent.map((m) => (
+                <li key={m.id}>
+                  <MatchCard
+                    gid={gid}
+                    match={m}
+                    names={names}
+                    changes={ratings.matches.get(m.id)}
+                  />
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
+      )}
+    </div>
+  );
+}
+
+function PairList({
+  title,
+  pairs,
+  nameOf,
+}: {
+  title: string;
+  pairs: PairRecord[];
+  nameOf: (id: string) => string;
+}) {
+  if (pairs.length === 0) return null;
+  return (
+    <section className="space-y-2">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <ul aria-label={title} className="divide-y rounded-lg border">
+        {pairs.map((p) => (
+          <li
+            key={p.playerId}
+            className="flex justify-between px-3 py-2 text-sm"
+          >
+            <span className="truncate">{nameOf(p.playerId)}</span>
+            <span className="shrink-0 tabular-nums text-muted-foreground">
+              {wlt(p)} · {pct(p.winRate)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

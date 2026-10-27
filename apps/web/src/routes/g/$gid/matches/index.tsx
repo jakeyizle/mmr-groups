@@ -1,12 +1,12 @@
-import { displayRating } from "@mmr/core";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+
+import { MatchCard } from "@/components/match/match-card";
 
 import { Button } from "@/components/ui/button";
 import { Can } from "@/lib/can";
 import { type GroupData, groupQuery, useGroupActor } from "@/lib/groups";
 import { useReplay } from "@/lib/ratings";
-import { cn } from "@/lib/utils";
 
 interface HistorySearch {
   player?: string;
@@ -25,11 +25,6 @@ function Matches() {
   if (!data) return null;
   return <History data={data} />;
 }
-
-const dateFormat = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
 
 function History({ data }: { data: GroupData }) {
   const { player } = Route.useSearch();
@@ -78,83 +73,18 @@ function History({ data }: { data: GroupData }) {
         <p className="text-muted-foreground">No matches yet.</p>
       ) : (
         <ol aria-label="Matches" className="space-y-3">
-          {list.map((m) => {
-            const changes = ratings.matches.get(m.id);
-            return (
-              <li key={m.id}>
-                <Link
-                  to="/g/$gid/matches/$mid"
-                  params={{ gid, mid: m.id }}
-                  className="block space-y-2 rounded-lg border p-3 hover:bg-muted/30"
-                >
-                  <p className="text-sm text-muted-foreground">
-                    {dateFormat.format(new Date(m.playedAt))}
-                  </p>
-                  {[...m.teams]
-                    .sort((a, b) => a.rank - b.rank)
-                    .map((t, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          "flex items-start justify-between gap-2 rounded-md px-2 py-1",
-                          t.rank === 1 && "bg-muted",
-                        )}
-                      >
-                        <ul className="min-w-0 space-y-0.5">
-                          {t.playerIds.map((pid) => {
-                            const c = changes?.get(pid);
-                            const delta = c
-                              ? displayRating(c.after) - displayRating(c.before)
-                              : 0;
-                            return (
-                              <li key={pid} className="flex gap-2">
-                                <span className="truncate">
-                                  {names.get(pid) ?? "Removed player"}
-                                </span>
-                                <Delta value={delta} />
-                              </li>
-                            );
-                          })}
-                        </ul>
-                        <span className="shrink-0 text-sm font-medium tabular-nums">
-                          {t.score ?? placeLabel(t.rank, m.teams)}
-                        </span>
-                      </div>
-                    ))}
-                </Link>
-              </li>
-            );
-          })}
+          {list.map((m) => (
+            <li key={m.id}>
+              <MatchCard
+                gid={gid}
+                match={m}
+                names={names}
+                changes={ratings.matches.get(m.id)}
+              />
+            </li>
+          ))}
         </ol>
       )}
     </div>
-  );
-}
-
-function placeLabel(rank: number, teams: { rank: number }[]) {
-  const tied = teams.filter((t) => t.rank === rank).length > 1;
-  if (teams.length === 2) return tied ? "Tie" : rank === 1 ? "Won" : "Lost";
-  const suffix =
-    rank === 1 ? "st" : rank === 2 ? "nd" : rank === 3 ? "rd" : "th";
-  return `${tied ? "Tied " : ""}${String(rank)}${suffix}`;
-}
-
-/** BOARD-005: displayed-rating change from this match. */
-function Delta({ value }: { value: number }) {
-  return (
-    <span
-      className={cn(
-        "text-sm tabular-nums",
-        value > 0 && "text-green-600",
-        value < 0 && "text-destructive",
-        value === 0 && "text-muted-foreground",
-      )}
-    >
-      {value > 0
-        ? `+${String(value)}`
-        : value < 0
-          ? `−${String(-value)}`
-          : "±0"}
-    </span>
   );
 }

@@ -1,4 +1,9 @@
-import { leaderboard, replay, resolveRatingConfig } from "@mmr/core";
+import {
+  leaderboard,
+  ratingSeries,
+  replay,
+  resolveRatingConfig,
+} from "@mmr/core";
 import { useMemo } from "react";
 
 import type { GroupData } from "./groups";
@@ -24,6 +29,16 @@ export function useReplay(data: GroupData) {
   const { version, ratingConfig } = data.group;
   return useMemo(
     () => replay(data.matches, resolveRatingConfig(ratingConfig), asOf),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the version identifies the snapshot
+    [version, day],
+  );
+}
+
+export function useRatingSeries(data: GroupData) {
+  const { day, asOf } = useAsOfDay();
+  const { version, ratingConfig } = data.group;
+  return useMemo(
+    () => ratingSeries(data.matches, resolveRatingConfig(ratingConfig), asOf),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the version identifies the snapshot
     [version, day],
   );
