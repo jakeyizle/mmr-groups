@@ -85,6 +85,7 @@ Vitest requires tags to be declared in `test.tags` and rejects unknown tags by d
 - Balanced team generator
 - Audit log
 - Public/private groups
+- Public group index (sort, search; site admins can hide a group)
 - Seeded public demo group
 - PWA install (no offline sync)
 
@@ -196,6 +197,7 @@ groups           id, name, description, visibility ('private'|'public'), is_demo
                  scoring_mode, allow_ties, default_role ('recorder'|'viewer'),
                  rating_config (json; defaults in core),
                  invite_code (nullable, unique), invite_expires_at (nullable),
+                 hidden_from_index, player_count, match_count, last_played_at (nullable),
                  version (int, bumped on any change), created_at
 players          id, group_id, display_name, role, user_id (nullable), created_at
                  unique(group_id, user_id); unique(group_id, lower(display_name))
@@ -210,6 +212,7 @@ audit_events     id, group_id, actor_user_id, action, entity_type, entity_id,
 - Every mutation, its audit row(s), and the `groups.version` bump are one `db.batch()` (atomic).
 - **Optimistic concurrency:** match edit/delete requires the match's `version` (`If-Match`). `guardedBatch()` (`packages/api/src/db/guarded-batch.ts`): a guarded `UPDATE/DELETE … WHERE id = ? AND version = ?`, then the audit row inserted `WHERE changes() = 1` (the commit marker), then follow-ups and the group bump conditioned on the marker existing, so a stale write changes nothing; the API returns 412 and the client refetches. Claims use `UPDATE players SET user_id = ? WHERE id = ? AND user_id IS NULL` (first claim wins). New matches can't conflict.
 - Players with matches can't be deleted (rename instead).
+- **Index counters:** `player_count`, `match_count`, `last_played_at` exist only so the public index can sort and page without aggregating. The version bump that ends every batch recomputes them from `players`/`matches` (subqueries scoped to the group). Writes outside the API (demo seed SQL, test helpers) run the same recompute. No indexes for the index: public groups are few and the name search scans anyway.
 
 ---
 
@@ -256,6 +259,7 @@ Library: **[openskill](https://github.com/philihp/openskill.js)** (MIT, TS, N te
 ```
 GET    /me
 GET    /groups                         groups I'm a member of
+GET    /public-groups?q=&sort=&dir=&cursor=   index (anyone; pages of 25)
 POST   /groups                         create (creator becomes owner player)
 GET    /groups/:gid                    snapshot (see below)
 PATCH  /groups/:gid                    settings (team_format immutable)
@@ -284,6 +288,8 @@ POST   /invites/:code/claim            { playerId } | { newPlayerName }
   - _admin_: + invite code/expiry.
   - Never: emails, Google names/avatars, user IDs.
 - Caching: `ETag: "<version>-<audience>"`, `Cache-Control: private, no-cache`. On `If-None-Match`, read only `groups.version` and return 304 if unchanged.
+- **Public index:** listed = public, not hidden, ≥ 1 match. Response `{ groups: [{ id, name, description, playerCount, matchCount, lastPlayedAt, createdAt }], nextCursor: string | null }` (public data only). `sort` ∈ name (default, asc) | played | matches | players | created (the four non-name sorts default desc); `dir` reverses. Name sort and its keyset comparison both use `COLLATE NOCASE` (ASCII-only case folding, like `LIKE`). Keyset cursor = opaque `{ sort, dir, value, id }`; 400 if malformed or its sort/dir differ from the request. `q` is trimmed (empty = no filter, max 100 chars), a case-insensitive substring match on name (escaped `LIKE`).
+- **Settings PATCH sends only changed fields** (the form submits dirty fields). `hiddenFromIndex`: changing it is 403 unless the user is a site admin (owners included); checked after the no-op filter. Only the admin snapshot carries it, beside `invite`.
 - Errors: `{ error: { code, message, details? } }`; 400 validation, 401, 403, 404, 409 (e.g. name taken, claim lost), 412 (stale version).
 - Audit: one event per affected entity (a 6-match batch → 6 `match.created` events); `before`/`after` hold the entity's serialized fields.
 
@@ -296,8 +302,9 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 **Routes**
 
 ```
-/                         my groups / landing (link to demo group)
+/                         my groups / landing (links to demo group and index)
 /login
+/groups                   public group index (?q=&sort=&dir=)
 /groups/new
 /g/:gid                   leaderboard
 /g/:gid/matches           history (deltas per match)

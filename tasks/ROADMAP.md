@@ -89,3 +89,8 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] PWA
 - [x] README
 - [x] `scenarios:check --strict` in CI
+
+## M7 — Public group index (VIS)
+
+- [ ] Index data + API: counters, hide flag, sorted/searchable/paged endpoint → T-041
+- [ ] Index UI, home links, site-admin hide control → T-042
