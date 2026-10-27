@@ -47,7 +47,7 @@ Vitest requires tags to be declared in `test.tags` and rejects unknown tags by d
 
 1. Parses scenario IDs from `scenarios/*.md`; **fails** on duplicate IDs or malformed headings.
 2. Scans Playwright test files for `@ID` tags; **fails** on unknown IDs (Vitest already enforces this).
-3. Reports scenarios with no tagged test (Vitest + Playwright) — warning during development; `--strict` makes uncovered non-stretch scenarios an error (enabled at MVP).
+3. Reports scenarios with no tagged test (Vitest + Playwright) — `--strict` (used in CI) makes uncovered non-stretch scenarios an error.
 
 ### Scenario files
 

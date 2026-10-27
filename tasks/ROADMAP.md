@@ -88,4 +88,4 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Demo seed script + deploy wiring
 - [x] PWA
 - [x] README
-- [ ] `scenarios:check --strict` in CI → T-040
+- [x] `scenarios:check --strict` in CI
