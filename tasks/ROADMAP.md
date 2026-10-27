@@ -64,14 +64,14 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M3 — Editing (EDIT)
 
-- [ ] Match edit/delete API with versions
-- [ ] Match detail/edit UI, stale-edit handling
+- [ ] Match edit/delete API with versions → T-025
+- [ ] Match detail/edit UI, stale-edit handling → T-026
 
 ## M4 — Joining (JOIN)
 
-- [ ] Invite link API + settings UI
-- [ ] Claim/join API, leave
-- [ ] Join flow UI (+ E2E for UI that needs a second linked member: GROUP-008 transfer, PLAYER-008 unlink, ROLE-005 grant admin)
+- [ ] Invite link API + settings UI → T-027
+- [ ] Claim/join API, leave → T-028
+- [ ] Join flow UI (+ E2E for UI that needs a second linked member: GROUP-008 transfer, PLAYER-008 unlink, ROLE-005 grant admin) → T-029
 
 ## M5 — Insights (STATS, TEAMS)
 
