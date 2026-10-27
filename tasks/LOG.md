@@ -31,3 +31,4 @@
 - T-027 | 2026-10-26 | invite PUT/DELETE (12-char code, optional expiry, audited without the code), admin snapshot `invite`, `GET /invites/:code` (moved here from T-028), settings invite section
 - T-028 | 2026-10-26 | `POST /invites/:code/claim` (first claim wins via guarded `user_id IS NULL`, or new player with default role + cap/name checks), members short-circuit; `POST /groups/:gid/leave` (owner blocked, admin reset); audited
 - T-029 | 2026-10-26 | join page (sign-in return, claim buttons, "not listed" name, member redirect, invalid-link message, claim_lost retry), leave group in settings; two-context E2E incl. deferred GROUP-008/PLAYER-008/ROLE-005
+- T-030 | 2026-10-27 | core stats: `playerStats` (record, streaks, partners, head-to-head), `ratingSeries`, `activity` (caller-supplied week start), `bestDuos`, `biggestUpsets`, `longestStreaks`, `ratingHistogram`; shared `teamOutcome`

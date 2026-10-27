@@ -5,7 +5,14 @@ import {
   replay,
   type ReplayMatch,
 } from "./rating";
+import { type Outcome, teamOutcome } from "./stats";
 import type { RatingConfig } from "./types";
+
+const PLURAL = {
+  win: "wins",
+  loss: "losses",
+  tie: "ties",
+} as const satisfies Record<Outcome, string>;
 
 export interface LeaderboardEntry {
   playerId: string;
@@ -47,13 +54,6 @@ function ranks(players: ReadonlyMap<string, PlayerRating>) {
   return out;
 }
 
-/** A sole first place is a win, a shared first place a tie, anything else a loss. */
-function outcome(match: ReplayMatch, playerId: string) {
-  const team = match.teams.find((t) => t.playerIds.includes(playerId));
-  if (!team || team.rank > 1) return "losses";
-  return match.teams.filter((t) => t.rank === 1).length > 1 ? "ties" : "wins";
-}
-
 /**
  * BOARD-001/003: players who have played, best first. Unrated players are the
  * group's players missing from this list (BOARD-002).
@@ -75,7 +75,8 @@ export function leaderboard(
     const rankAfter = ranks(after);
     for (const id of match.teams.flatMap((t) => t.playerIds)) {
       const r = record.get(id) ?? { wins: 0, losses: 0, ties: 0 };
-      r[outcome(match, id)] += 1;
+      const team = match.teams.find((t) => t.playerIds.includes(id));
+      if (team) r[PLURAL[teamOutcome(match, team)]] += 1;
       record.set(id, r);
       const was = rankBefore.get(id);
       const now = rankAfter.get(id);

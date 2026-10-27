@@ -75,7 +75,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M5 — Insights (STATS, TEAMS)
 
-- [ ] Stats functions (core) → T-030
+- [x] Stats functions (core)
 - [ ] Player profile UI → T-031
 - [ ] Group stats UI → T-032
 - [ ] Team generator (core) + perf benchmark → T-033
