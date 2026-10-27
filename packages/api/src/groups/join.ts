@@ -43,6 +43,10 @@ export const claimRoutes = new Hono<AppEnv>().post(
         "This invite link is no longer valid",
       );
     }
+    // VIS-008: the demo group is managed by site admins only.
+    if (group.isDemo) {
+      return apiError(c, 403, "demo", "The demo group can't be joined");
+    }
     const existing = await db.query.players.findFirst({
       where: and(eq(players.groupId, group.id), eq(players.userId, user.id)),
     });

@@ -1,8 +1,9 @@
+import { can } from "@mmr/core";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 
 import { ApiError } from "@/lib/api";
-import { groupQuery } from "@/lib/groups";
+import { groupQuery, useGroupActor } from "@/lib/groups";
 
 export const Route = createFileRoute("/g/$gid")({ component: GroupLayout });
 
@@ -11,13 +12,18 @@ const TABS = [
   { to: "/g/$gid/matches", label: "Matches" },
   { to: "/g/$gid/stats", label: "Stats" },
   { to: "/g/$gid/teams", label: "Teams" },
-  { to: "/g/$gid/audit", label: "Audit" },
-  { to: "/g/$gid/settings", label: "Settings" },
+  { to: "/g/$gid/audit", label: "Audit", members: true },
+  { to: "/g/$gid/settings", label: "Settings", members: true },
 ] as const;
 
 function GroupLayout() {
   const { gid } = Route.useParams();
   const { data, error } = useQuery(groupQuery(gid));
+  const actor = useGroupActor(data);
+  // Public visitors don't get member-only tabs (VIS-003, AUDIT-005).
+  const tabs = TABS.filter(
+    (t) => !("members" in t) || can(actor, "group.view"),
+  );
 
   if (error instanceof ApiError && error.status === 404) {
     return (
@@ -33,7 +39,7 @@ function GroupLayout() {
       </h1>
       <nav className="-mx-4 overflow-x-auto border-b px-4">
         <ul className="flex gap-4 text-sm whitespace-nowrap">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <li key={tab.to}>
               <Link
                 to={tab.to}

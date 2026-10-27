@@ -84,7 +84,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M6 — Public & polish (VIS)
 
-- [ ] Public group access end-to-end → T-036
+- [x] Public group access end-to-end
 - [ ] Demo seed script + deploy wiring → T-037
 - [ ] PWA → T-038
 - [ ] README → T-039
