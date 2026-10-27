@@ -1,0 +1,9 @@
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/g/$gid/matches/')({
+  component: RouteComponent,
+})
+
+function RouteComponent() {
+  return <div>Hello "/g/$gid/matches/"!</div>
+}
