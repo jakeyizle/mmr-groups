@@ -53,14 +53,14 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M2 — Matches & ratings (MATCH, RATE, BOARD, AUDIT)
 
-- [ ] Rating replay engine + default config (core)
-- [ ] Match schemas + validation rules (core); also covers the match side of GROUP-003, GROUP-011
-- [ ] Snapshot endpoint: audience serializers, ETag/304
-- [ ] Batch match create API + audit
-- [ ] Batch entry form
-- [ ] Leaderboard
-- [ ] Match history
-- [ ] Audit log API + UI
+- [ ] Rating replay engine + default config (core) → T-017
+- [ ] Match schemas + validation rules (core); also covers the match side of GROUP-003, GROUP-011 → T-018
+- [ ] Snapshot endpoint: audience serializers, ETag/304 → T-019
+- [ ] Batch match create API + audit → T-020
+- [ ] Batch entry form → T-021
+- [ ] Leaderboard → T-022
+- [ ] Match history → T-023
+- [ ] Audit log API + UI → T-024
 
 ## M3 — Editing (EDIT)
 
