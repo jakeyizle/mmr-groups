@@ -77,7 +77,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Stats functions (core)
 - [x] Player profile UI
-- [ ] Group stats UI → T-032
+- [x] Group stats UI
 - [ ] Team generator (core) + perf benchmark → T-033
 - [ ] Team generator UI → T-034
 - [ ] Stretch: win probability preview (MATCH-016) → T-035

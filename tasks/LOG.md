@@ -33,3 +33,4 @@
 - T-029 | 2026-10-26 | join page (sign-in return, claim buttons, "not listed" name, member redirect, invalid-link message, claim_lost retry), leave group in settings; two-context E2E incl. deferred GROUP-008/PLAYER-008/ROLE-005
 - T-030 | 2026-10-27 | core stats: `playerStats` (record, streaks, partners, head-to-head), `ratingSeries`, `activity` (caller-supplied week start), `bestDuos`, `biggestUpsets`, `longestStreaks`, `ratingHistogram`; shared `teamOutcome`
 - T-031 | 2026-10-27 | player profile: Recharts rating line (validated series tokens, tooltip), record/streak tiles, best/worst partners, head-to-head, 10 recent matches (shared `MatchCard`); leaderboard names link to profiles
+- T-032 | 2026-10-27 | group stats page: multi-line ratings (≤8, slots stick to players, legend toggles), weekly activity bars + most active, duos, upsets (linked), streaks, rating histogram
