@@ -30,6 +30,13 @@ export default defineConfig(
   {
     files: ["apps/web/src/**/*.{ts,tsx}"],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite()],
+    rules: {
+      // react-hook-form paths like `rows.${i}.score` must stay template literals to type-check.
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        { allowNumber: true },
+      ],
+    },
   },
   {
     // Route files export only `Route`; the router's code splitting handles HMR.

@@ -57,7 +57,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Match schemas + validation rules (core); also covers the match side of GROUP-003, GROUP-011
 - [x] Snapshot endpoint: audience serializers, ETag/304
 - [x] Batch match create API + audit
-- [ ] Batch entry form → T-021
+- [x] Batch entry form
 - [ ] Leaderboard → T-022
 - [ ] Match history → T-023
 - [ ] Audit log API + UI → T-024
