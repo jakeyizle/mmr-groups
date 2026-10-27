@@ -24,6 +24,9 @@ export default defineConfig({
             wrangler: { configPath: "./apps/web/wrangler.jsonc" },
             miniflare: {
               bindings: {
+                GOOGLE_CLIENT_ID: "test-client",
+                GOOGLE_CLIENT_SECRET: "test-secret",
+                SITE_ADMIN_EMAILS: "Admin@Example.com, other@example.com",
                 TEST_MIGRATIONS: await readD1Migrations(
                   "./packages/api/migrations",
                 ),

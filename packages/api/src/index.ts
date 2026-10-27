@@ -1,6 +1,7 @@
 import { getCookie } from "hono/cookie";
 import { Hono } from "hono";
 
+import { googleAuth } from "./auth/google";
 import { csrf, mutationsRequireUser, session } from "./auth/middleware";
 import {
   clearSessionCookie,
@@ -26,6 +27,7 @@ export const app = new Hono<AppEnv>()
     clearSessionCookie(c);
     return c.json({ ok: true });
   })
+  .route("/auth/google", googleAuth)
   .route("/groups", groupsRoutes);
 
 export type AppType = typeof app;

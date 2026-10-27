@@ -5,6 +5,10 @@ import type { Db } from "./db";
 
 export interface Bindings {
   DB: D1Database;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  /** Comma-separated emails (ROLE-015). */
+  SITE_ADMIN_EMAILS?: string;
   ENABLE_TEST_LOGIN?: string;
 }
 
