@@ -1,4 +1,5 @@
 export * from "./id";
+export * from "./match";
 export * from "./permissions";
 export * from "./rating";
 export * from "./schemas";
