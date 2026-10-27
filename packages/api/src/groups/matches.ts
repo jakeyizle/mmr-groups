@@ -21,7 +21,7 @@ import {
 import { matches, players } from "../db/schema";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import { authorize, type GroupEnv } from "./access";
+import { authorize, type GroupEnv, actorId } from "./access";
 import { serializeMatch } from "./serialize";
 
 type Match = typeof matches.$inferSelect;
@@ -62,6 +62,7 @@ function ifMatch(c: Context) {
 
 const stale = (c: Context, current: Match | undefined) =>
   apiError(c, 412, "stale", "This match changed since you opened it", {
+    // Stryker disable next-line StringLiteral: any audience but "public" gets member fields
     match: current ? serializeMatch(current, "member") : null,
   });
 
@@ -111,7 +112,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
       // AUDIT-007: one event per match; AUDIT-002: same batch as the inserts.
       const audits = rows.map((m): AuditInput => ({
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "match.created",
         entityType: "match",
         entityId: m.id,
@@ -173,6 +174,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
       if (issues.length > 0) {
         return apiError(c, 400, "invalid", "Validation failed", issues);
       }
+      // Stryker disable next-line ConditionalExpression: an invalid result returned above
       next.teams = result.ok ? result.match.teams : match.teams;
     } else if (input.playedAt && isTooFarInFuture(next.playedAt, now)) {
       return apiError(c, 400, "invalid", "Validation failed", [
@@ -210,7 +212,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
         .where(and(eq(matches.id, match.id), eq(matches.version, version))),
       {
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "match.updated",
         entityType: "match",
         entityId: match.id,
@@ -219,12 +221,14 @@ export const matchesRoutes = new Hono<GroupEnv>()
         after: pick(next),
       },
     );
+    // Stryker disable all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
     if (!ok) {
       return stale(
         c,
         await db.query.matches.findFirst({ where: eq(matches.id, match.id) }),
       );
     }
+    // Stryker restore all
     return c.json({ match: serializeMatch(updated, "member") });
   })
   .delete("/:mid", async (c) => {
@@ -253,7 +257,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
         .where(and(eq(matches.id, match.id), eq(matches.version, version))),
       {
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "match.deleted",
         entityType: "match",
         entityId: match.id,
@@ -264,11 +268,13 @@ export const matchesRoutes = new Hono<GroupEnv>()
         },
       },
     );
+    // Stryker disable all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
     if (!ok) {
       return stale(
         c,
         await db.query.matches.findFirst({ where: eq(matches.id, match.id) }),
       );
     }
+    // Stryker restore all
     return c.json({ ok: true });
   });

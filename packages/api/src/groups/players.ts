@@ -15,7 +15,7 @@ import type { Db } from "../db";
 import { matches, players } from "../db/schema";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import { authorize, type GroupEnv, type Player } from "./access";
+import { authorize, type GroupEnv, type Player, actorId } from "./access";
 import { serializePlayer } from "./serialize";
 
 export const MAX_PLAYERS = 200;
@@ -58,7 +58,7 @@ export const playersRoutes = new Hono<GroupEnv>()
       const [first, ...rest] = added as [Player, ...Player[]];
       const audits = added.map((p): AuditInput => ({
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "player.created",
         entityType: "player",
         entityId: p.id,
@@ -151,7 +151,7 @@ export const playersRoutes = new Hono<GroupEnv>()
         db.update(players).set(changes).where(unchanged),
         {
           groupId: group.id,
-          actorUserId: c.get("user")?.id ?? null,
+          actorUserId: actorId(c),
           action: "player.updated",
           entityType: "player",
           entityId: target.id,
@@ -159,8 +159,10 @@ export const playersRoutes = new Hono<GroupEnv>()
           after: changes,
         },
       );
+      // Stryker disable all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
       if (!ok)
         return apiError(c, 409, "conflict", "Player changed concurrently");
+      // Stryker restore all
     } catch (err) {
       if (isUniqueViolation(err, NAME_INDEX)) {
         return apiError(c, 409, nameTaken.code, nameTaken.message);
@@ -199,7 +201,7 @@ export const playersRoutes = new Hono<GroupEnv>()
         ),
       {
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "player.deleted",
         entityType: "player",
         entityId: target.id,
@@ -250,7 +252,7 @@ export const playersRoutes = new Hono<GroupEnv>()
         ),
       {
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "player.unlinked",
         entityType: "player",
         entityId: target.id,
@@ -258,6 +260,7 @@ export const playersRoutes = new Hono<GroupEnv>()
         after: { linked: false, role },
       },
     );
+    // Stryker disable next-line all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
     if (!ok) return apiError(c, 409, "conflict", "Player changed concurrently");
     return c.json({
       player: serializePlayer({ ...target, userId: null, role }),

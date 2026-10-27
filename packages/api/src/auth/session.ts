@@ -13,10 +13,13 @@ export const SESSION_TTL_MS = 30 * DAY_MS;
 export const SESSION_EXTEND_BELOW_MS = 15 * DAY_MS;
 
 function base64url(bytes: Uint8Array) {
-  return btoa(String.fromCharCode(...bytes))
-    .replaceAll("+", "-")
-    .replaceAll("/", "_")
-    .replace(/=+$/, "");
+  return (
+    btoa(String.fromCharCode(...bytes))
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      // Stryker disable next-line Regex: 32 bytes always end in exactly one "="
+      .replace(/=+$/, "")
+  );
 }
 
 export function generateSessionToken() {

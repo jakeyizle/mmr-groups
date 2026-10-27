@@ -50,6 +50,7 @@ export function isSiteAdminEmail(
 }
 
 export const googleAuth = new Hono<AppEnv>()
+  // Stryker disable next-line StringLiteral: "" and "/" both match the mount point
   .get("/", (c) => {
     const state = generateState();
     const verifier = generateCodeVerifier();
@@ -61,6 +62,7 @@ export const googleAuth = new Hono<AppEnv>()
     const secure = new URL(c.req.url).protocol === "https:";
     const values = [state, verifier, safeReturnTo(c.req.query("returnTo"))];
     FLOW_COOKIES.forEach((name, i) => {
+      // Stryker disable next-line StringLiteral: one value per cookie name
       setCookie(c, name, values[i] ?? "", {
         httpOnly: true,
         secure,
@@ -114,6 +116,7 @@ export const googleAuth = new Hono<AppEnv>()
         set: { email: claims.email, name, isSiteAdmin },
       })
       .returning({ id: users.id });
+    // Stryker disable next-line ConditionalExpression,BlockStatement: an upsert always returns its row
     if (!user) throw new Error("user upsert returned no row");
 
     const { token, expiresAt } = await createSession(db, user.id);

@@ -38,6 +38,8 @@ export default defineConfig({
         test: {
           name: "web",
           environment: "jsdom",
+          // jsdom renders of the real router are slow when every project runs at once.
+          testTimeout: 20_000,
           include: ["apps/web/src/**/*.test.{ts,tsx}"],
           setupFiles: ["./apps/web/test/setup.ts"],
         },

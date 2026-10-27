@@ -81,3 +81,36 @@ describe("test login", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("test login details", () => {
+  const enabled = { ENABLE_TEST_LOGIN: "true" };
+
+  it.each([
+    [{ email: "x@example.com" }],
+    [{ name: "x", email: 5 }],
+    [{ name: 5, email: "y@example.com" }],
+  ])("rejects %j with a reason", async (body) => {
+    const res = await login(body, enabled);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: { code: "bad_request", message: "name and email required" },
+    });
+  });
+
+  it("keys test users by email, and makes site admins only on true", async () => {
+    const user = async (body: object) => {
+      const res = await login(body, enabled);
+      const { userId } = await res.json<{ userId: string }>();
+      return db.query.users.findFirst({ where: eq(users.id, userId) });
+    };
+    expect(
+      await user({ name: "Sa", email: "sa@example.com", isSiteAdmin: true }),
+    ).toMatchObject({
+      googleSub: "test:sa@example.com",
+      isSiteAdmin: true,
+    });
+    expect(
+      await user({ name: "Sa", email: "sa@example.com", isSiteAdmin: "true" }),
+    ).toMatchObject({ isSiteAdmin: false });
+  });
+});

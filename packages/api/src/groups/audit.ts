@@ -54,6 +54,7 @@ export const auditRoutes = new Hono<GroupEnv>().get(
     return c.json({
       events: page,
       nextCursor:
+        // Stryker disable next-line OptionalChaining: a full page has a last row
         rows.length > AUDIT_PAGE_SIZE ? (page.at(-1)?.id ?? null) : null,
     });
   },

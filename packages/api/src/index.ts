@@ -26,6 +26,7 @@ export const app = new Hono<AppEnv>()
   .get("/me", (c) => c.json({ user: c.get("user") }))
   .post("/auth/logout", async (c) => {
     const token = getCookie(c, SESSION_COOKIE);
+    // Stryker disable next-line ConditionalExpression: skips a delete that would match nothing
     if (token) await invalidateSession(c.get("db"), token);
     clearSessionCookie(c);
     return c.json({ ok: true });

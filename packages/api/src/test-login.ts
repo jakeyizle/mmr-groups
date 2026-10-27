@@ -44,6 +44,7 @@ export const testLogin = new Hono<{ Bindings: Bindings }>().post(
         set: { name: body.name, email: body.email, isSiteAdmin },
       })
       .returning({ id: users.id });
+    // Stryker disable next-line ConditionalExpression,BlockStatement: an upsert always returns its row
     if (!user) throw new Error("user upsert returned no row");
 
     const { token, expiresAt } = await createSession(db, user.id);

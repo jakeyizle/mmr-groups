@@ -263,3 +263,94 @@ describe(
     });
   },
 );
+
+describe(
+  "Google flow details",
+  { tags: ["AUTH-001", "AUTH-006", "ROLE-015"] },
+  () => {
+    const attrs = (res: Response) =>
+      Object.fromEntries(
+        res.headers.getSetCookie().map((c) => {
+          const [pair = "", ...rest] = c.split("; ");
+          return [pair.slice(0, pair.indexOf("=")), rest.sort()];
+        }),
+      );
+
+    it("keeps the flow in short-lived, HttpOnly, Lax cookies scoped to the callback", async () => {
+      const start = await request("/api/auth/google");
+      const flow = attrs(start);
+      expect(Object.keys(flow).sort()).toEqual([
+        "oauth_return",
+        "oauth_state",
+        "oauth_verifier",
+      ]);
+      for (const a of Object.values(flow))
+        expect(a).toEqual([
+          "HttpOnly",
+          "Max-Age=600",
+          "Path=/api/auth/google",
+          "SameSite=Lax",
+        ]);
+      const secure = attrs(await request("https://localhost/api/auth/google"));
+      for (const a of Object.values(secure)) expect(a).toContain("Secure");
+    });
+
+    it("clears the flow cookies on the callback", async () => {
+      const res = await request("/api/auth/google/callback");
+      const flow = attrs(res);
+      for (const name of ["oauth_return", "oauth_state", "oauth_verifier"])
+        expect(flow[name]).toEqual(
+          expect.arrayContaining(["Path=/api/auth/google"]),
+        );
+    });
+
+    it.each([
+      ["no code", "", true, true],
+      ["no state cookie", "code=abc&", false, true],
+      ["no verifier cookie", "code=abc&", true, false],
+    ])(
+      "rejects a callback with %s",
+      async (_, query, withState, withVerifier) => {
+        const fetchSpy = stubGoogle({
+          sub: "g-missing",
+          email: "m@example.com",
+        });
+        const start = await request("/api/auth/google");
+        const flow = cookies(start);
+        const state = flow.oauth_state ?? "";
+        const cookie = [
+          withState && `oauth_state=${state}`,
+          withVerifier && `oauth_verifier=${flow.oauth_verifier ?? ""}`,
+        ]
+          .filter(Boolean)
+          .join("; ");
+        const res = await request(
+          `/api/auth/google/callback?${query}state=${state}`,
+          {
+            headers: { Cookie: cookie },
+          },
+        );
+        expect(res.headers.get("Location")).toBe("/login?error=state");
+        expect(fetchSpy).not.toHaveBeenCalled();
+      },
+    );
+
+    it("keeps in-app paths that contain a double slash later on", async () => {
+      const { location } = await signInWithGoogle(
+        { sub: "g-double", email: "dbl@example.com" },
+        "/g/abc//x",
+      );
+      expect(location).toBe("/g/abc//x");
+    });
+
+    it("matches admin emails ignoring spaces and case in the config", async () => {
+      // SITE_ADMIN_EMAILS is "Admin@Example.com, other@example.com".
+      const { session } = await signInWithGoogle({
+        sub: "g-other-admin",
+        email: "OTHER@example.com",
+        email_verified: true,
+      });
+      expect((await me(session))?.isSiteAdmin).toBe(true);
+    });
+  },
+);

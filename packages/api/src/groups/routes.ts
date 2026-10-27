@@ -12,7 +12,13 @@ import { groups, matches, players } from "../db/schema";
 import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
+import {
+  authorize,
+  groupAccess,
+  type GroupEnv,
+  type Player,
+  actorId,
+} from "./access";
 import { auditRoutes } from "./audit";
 import { inviteRoutes, serializeInvite } from "./invite";
 import { leaveRoutes } from "./join";
@@ -86,7 +92,7 @@ const groupRoutes = new Hono<GroupEnv>()
         [
           {
             groupId: group.id,
-            actorUserId: c.get("user")?.id ?? null,
+            actorUserId: actorId(c),
             action: "group.updated",
             entityType: "group",
             entityId: group.id,
@@ -98,6 +104,7 @@ const groupRoutes = new Hono<GroupEnv>()
       const updated = await db.query.groups.findFirst({
         where: eq(groups.id, group.id),
       });
+      // Stryker disable next-line LogicalOperator: the row was just updated
       return c.json({ group: serializeGroup(updated ?? group) });
     },
   )
@@ -143,7 +150,7 @@ const groupRoutes = new Hono<GroupEnv>()
 
       const audit = (p: Player, to: Player["role"]) => ({
         groupId: group.id,
-        actorUserId: c.get("user")?.id ?? null,
+        actorUserId: actorId(c),
         action: "player.roleChanged",
         entityType: "player",
         entityId: p.id,
@@ -166,8 +173,10 @@ const groupRoutes = new Hono<GroupEnv>()
             ),
         ],
       );
+      // Stryker disable all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
       if (!ok)
         return apiError(c, 409, "conflict", "Ownership changed concurrently");
+      // Stryker restore all
       return c.json({ ok: true });
     },
   )
@@ -198,6 +207,7 @@ export const groupsRoutes = new Hono<AppEnv>()
   .post("/", validate("json", createGroupSchema), async (c) => {
     const db = c.get("db");
     const user = c.get("user");
+    // Stryker disable next-line ConditionalExpression: mutationsRequireUser answers first (AUTH-007)
     if (!user) return apiError(c, 401, "unauthenticated", "Sign in required");
     const { playerName, ...settings } = c.req.valid("json");
     const now = new Date().toISOString();

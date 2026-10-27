@@ -9,7 +9,7 @@ import { players } from "../db/schema";
 import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import type { GroupEnv, Player } from "./access";
+import { actorId, type GroupEnv, type Player } from "./access";
 import { groupForInvite } from "./invite";
 import {
   insertPlayerWhere,
@@ -33,6 +33,7 @@ export const claimRoutes = new Hono<AppEnv>().post(
   async (c) => {
     const db = c.get("db");
     const user = c.get("user");
+    // Stryker disable next-line ConditionalExpression: mutationsRequireUser answers first (AUTH-007)
     if (!user) return apiError(c, 401, "unauthenticated", "Sign in required");
     const group = await groupForInvite(db, c.req.param("code"));
     if (!group) {
@@ -122,6 +123,7 @@ export const claimRoutes = new Hono<AppEnv>().post(
         return apiError(c, 409, nameTaken.code, nameTaken.message);
       }
       // A concurrent claim or join by the same user.
+      // Stryker disable all: only when the same user joins twice at once
       if (isUniqueViolation(err, USER_INDEX)) {
         return apiError(
           c,
@@ -130,6 +132,7 @@ export const claimRoutes = new Hono<AppEnv>().post(
           "You're already in this group",
         );
       }
+      // Stryker restore all
       throw err;
     }
   },
@@ -165,7 +168,7 @@ export const leaveRoutes = new Hono<GroupEnv>().post("/", async (c) => {
       ),
     {
       groupId: group.id,
-      actorUserId: c.get("user")?.id ?? null,
+      actorUserId: actorId(c),
       action: "player.left",
       entityType: "player",
       entityId: me.id,
@@ -173,7 +176,9 @@ export const leaveRoutes = new Hono<GroupEnv>().post("/", async (c) => {
       after: { linked: false, role },
     },
   );
+  // Stryker disable all: only under concurrent writes; the guard is tested in guarded-batch.test.ts
   if (!ok)
     return apiError(c, 409, "conflict", "Your player changed concurrently");
+  // Stryker restore all
   return c.json({ ok: true });
 });

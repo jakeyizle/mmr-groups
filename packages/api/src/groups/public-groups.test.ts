@@ -470,3 +470,52 @@ describe(
     });
   },
 );
+
+describe("index paging details", { tags: ["VIS-010", "VIS-012"] }, () => {
+  it("pages by latest match without repeats or skips", async () => {
+    for (let i = 0; i < 30; i++)
+      await fixture(newId(), `latest ${String(i).padStart(2, "0")}`, {
+        played: [1 + (i % 7)],
+      });
+    const seen = await walk({ q: "latest", sort: "played" });
+    expect(seen).toHaveLength(30);
+    expect(new Set(seen.map((g) => g.id)).size).toBe(30);
+    const times = seen.map((g) => g.lastPlayedAt);
+    expect(times).toEqual([...times].sort().reverse());
+  });
+
+  it("uses URL-safe cursors that survive the round trip", async () => {
+    // Names whose cursors encode to "+" and "/" in plain base64.
+    for (let i = 0; i < 27; i++)
+      await fixture(newId(), `cursor ?>?~ ${String(i).padStart(2, "0")}`);
+    const first = await list({ q: "cursor ?>?~" });
+    expect(first.body.nextCursor).toMatch(/^[A-Za-z0-9_-]+$/);
+    expect(await walk({ q: "cursor ?>?~" })).toHaveLength(27);
+  });
+
+  it("lists without a search", async () => {
+    await fixture(newId(), "unsearched");
+    const { status, body } = await list();
+    expect(status).toBe(200);
+    expect(body.groups.length).toBeGreaterThan(0);
+  });
+
+  it("has no next page with exactly one page of groups", async () => {
+    for (let i = 0; i < 25; i++)
+      await fixture(newId(), `exact ${String(i).padStart(2, "0")}`);
+    const { body } = await list({ q: "exact" });
+    expect(body.groups).toHaveLength(25);
+    expect(body.nextCursor).toBeNull();
+  });
+
+  it("rejects a cursor from the other direction, with a code", async () => {
+    for (let i = 0; i < 26; i++)
+      await fixture(newId(), `direction ${String(i).padStart(2, "0")}`);
+    const { body } = await list({ q: "direction" });
+    const res = await request(
+      `/api/public-groups?q=direction&dir=desc&cursor=${body.nextCursor ?? ""}`,
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: { code: "bad_cursor" } });
+  });
+});

@@ -25,6 +25,7 @@ export interface GroupEnv extends AppEnv {
 export const groupAccess = createMiddleware<GroupEnv>(async (c, next) => {
   const db = c.get("db");
   const user = c.get("user");
+  // Stryker disable next-line StringLiteral: mounted under /:gid
   const gid = c.req.param("gid") ?? "";
 
   const group = await db.query.groups.findFirst({ where: eq(groups.id, gid) });
@@ -48,6 +49,11 @@ export const groupAccess = createMiddleware<GroupEnv>(async (c, next) => {
   c.set("actor", actor);
   await next();
 });
+
+/** The signed-in user's id for audit rows. */
+export const actorId = (c: { var: { user: { id: string } | null } }) =>
+  // Stryker disable next-line OptionalChaining: mutations always have a user (AUTH-007)
+  c.var.user?.id ?? null;
 
 /** 403 unless the actor may perform `action` (ROLE-009). */
 export function authorize(action: Action, target?: Target) {

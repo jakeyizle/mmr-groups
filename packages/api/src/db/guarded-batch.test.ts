@@ -3,7 +3,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { db, seedGroup, seedUser } from "../../test/helpers";
-import { guardedBatch } from "./guarded-batch";
+import { auditedBatch, guardedBatch } from "./guarded-batch";
 import { auditEvents, groups, matches, players } from "./schema";
 
 // Storage is isolated per file, not per test: scope assertions to this test's group.
@@ -206,5 +206,13 @@ describe("db.batch", () => {
       db.batch([player("Ok"), player("Dup"), player("dup")]),
     ).rejects.toThrow();
     expect(await db.$count(players, eq(players.groupId, groupId))).toBe(1);
+  });
+});
+
+describe("auditedBatch", () => {
+  it("needs at least one audit row", async () => {
+    await expect(auditedBatch(db, [], [])).rejects.toThrow(
+      "auditedBatch needs at least one audit row",
+    );
   });
 });

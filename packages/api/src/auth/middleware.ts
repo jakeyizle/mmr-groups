@@ -17,6 +17,7 @@ export const session = createMiddleware<AppEnv>(async (c, next) => {
   c.set("user", null);
 
   const token = getCookie(c, SESSION_COOKIE);
+  // Stryker disable next-line ConditionalExpression: skips a lookup that would find nothing
   if (token) {
     const result = await validateSession(db, token);
     if (result) {

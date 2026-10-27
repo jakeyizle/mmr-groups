@@ -8,7 +8,7 @@ import { groups } from "../db/schema";
 import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
-import { authorize, type Group, type GroupEnv } from "./access";
+import { authorize, type Group, type GroupEnv, actorId } from "./access";
 
 const CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // no 0/o, 1/l/i
 const CODE_LENGTH = 12;
@@ -70,7 +70,7 @@ export const inviteRoutes = new Hono<GroupEnv>()
         [
           {
             groupId: group.id,
-            actorUserId: c.get("user")?.id ?? null,
+            actorUserId: actorId(c),
             action: group.inviteCode ? "invite.regenerated" : "invite.created",
             entityType: "group",
             entityId: group.id,
@@ -97,7 +97,7 @@ export const inviteRoutes = new Hono<GroupEnv>()
         [
           {
             groupId: group.id,
-            actorUserId: c.get("user")?.id ?? null,
+            actorUserId: actorId(c),
             action: "invite.revoked",
             entityType: "group",
             entityId: group.id,

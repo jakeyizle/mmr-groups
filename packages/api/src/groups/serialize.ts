@@ -57,6 +57,7 @@ export interface SnapshotMatch {
 /** Never exposes user IDs: only whether the player is claimed. */
 export function serializePlayer(
   p: Player,
+  // Stryker disable next-line StringLiteral: any audience but "public" gets member fields
   audience: Audience = "member",
 ): SnapshotPlayer {
   const base = { id: p.id, displayName: p.displayName };

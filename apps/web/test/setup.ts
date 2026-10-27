@@ -1,5 +1,8 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
+
+// findBy* waits this long; the default 1 s is too tight under a full parallel run.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

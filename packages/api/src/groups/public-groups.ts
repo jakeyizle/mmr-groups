@@ -73,6 +73,7 @@ function decodeCursor(raw: string): Cursor | null {
       JSON.parse(new TextDecoder().decode(bytes)),
     );
     return parsed.success ? parsed.data : null;
+    // Stryker disable next-line BlockStatement: undefined is rejected like null
   } catch {
     return null;
   }
@@ -111,6 +112,7 @@ export const publicGroupsRoutes = new Hono<AppEnv>().get(
       );
     }
 
+    // Stryker disable next-line StringLiteral: SQL orders ascending by default
     const order = dir === "asc" ? sql`asc` : sql`desc`;
     const rows = await c
       .get("db")
