@@ -392,7 +392,7 @@ describe("EDIT-010: stale edits are rejected", { tags: ["EDIT-010"] }, () => {
     const [m] = await record(g, [ranked(g.p.a, g.p.b, 1)]);
     if (!m) throw new Error("not recorded");
     const results = await Promise.all(
-      ["x", "y", "z"].map((notes) => edit(g, m, { notes })),
+      ["x", "y", "z"].map(async (notes) => edit(g, m, { notes })),
     );
     expect(results.map((r) => r.status).sort()).toEqual([200, 412, 412]);
   });
