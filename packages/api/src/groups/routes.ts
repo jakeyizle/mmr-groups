@@ -13,6 +13,7 @@ import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
 import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
+import { matchesRoutes } from "./matches";
 import { playersRoutes } from "./players";
 import {
   audienceFor,
@@ -159,7 +160,8 @@ const groupRoutes = new Hono<GroupEnv>()
       return c.json({ ok: true });
     },
   )
-  .route("/players", playersRoutes);
+  .route("/players", playersRoutes)
+  .route("/matches", matchesRoutes);
 
 export const groupsRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {

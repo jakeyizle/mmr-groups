@@ -51,7 +51,9 @@ export type MatchIssueCode =
   | "rank_required"
   | "invalid_ranks"
   | "tie_not_allowed"
-  | "too_far_in_future";
+  | "too_far_in_future"
+  /** Checked by the API: core doesn't know the group's players. */
+  | "unknown_player";
 
 export interface MatchIssue {
   path: (string | number)[];

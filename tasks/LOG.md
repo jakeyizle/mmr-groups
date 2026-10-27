@@ -21,3 +21,4 @@
 - T-017 | 2026-10-26 | core `replay()` over openskill (PL) with pre-match + as-of decay, `(playedAt, id)` order, display/provisional, `DEFAULT_RATING_CONFIG`
 - T-018 | 2026-10-26 | core `matchInputSchema`/`batchSchema` (shape, limits) + `validateMatch` (format, duplicates, scoring mode, competition ranks from scores or chosen placements, ties, ≤24 h ahead, UTC)
 - T-019 | 2026-10-26 | snapshot adds matches `(playedAt, id)`; public/member/admin serializers (public: names only, no recorders); ETag `"<version>-<audience>"` + 304
+- T-020 | 2026-10-26 | `POST /groups/:gid/matches` batch: schema + `validateMatch` per match + group-player check, 400 with `matches.<i>…` paths, one `auditedBatch` with a `match.created` per match
