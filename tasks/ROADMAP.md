@@ -101,6 +101,6 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] `mutate:changed` + PR CI job, core + api
 - [x] Web Vitest project, lib extractions, first component tests, add web to the check
 - [x] Audit: core
-- [ ] Audit: api auth + db → T-047
+- [x] Audit: api auth + db
 - [ ] Audit: api groups → T-048
 - [ ] Audit: web → T-049

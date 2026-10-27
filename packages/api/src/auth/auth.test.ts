@@ -138,6 +138,14 @@ describe("CSRF", () => {
       headers: { Cookie: cookie, "Content-Type": "application/json" },
     });
     expect(noHeader.status).toBe(403);
+    expect(
+      (await noHeader.json<{ error: { code: string } }>()).error.code,
+    ).toBe("csrf");
+    const noType = await request("/api/auth/logout", {
+      method: "POST",
+      headers: { Cookie: cookie, "X-Requested-With": "fetch" },
+    });
+    expect(noType.status).toBe(403);
     expect(await expiresAt(token)).toBeDefined();
   });
 });

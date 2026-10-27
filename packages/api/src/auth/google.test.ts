@@ -108,7 +108,9 @@ describe("Google redirect", () => {
     const start = await request("/api/auth/google");
     const flow = cookies(start);
     const res = await request("/api/auth/google/callback?code=abc&state=bad", {
-      headers: { Cookie: `oauth_state=${flow.oauth_state ?? ""}` },
+      headers: {
+        Cookie: `oauth_state=${flow.oauth_state ?? ""}; oauth_verifier=${flow.oauth_verifier ?? ""}`,
+      },
     });
     expect(res.headers.get("Location")).toBe("/login?error=state");
     expect(cookies(res)[SESSION_COOKIE]).toBeUndefined();

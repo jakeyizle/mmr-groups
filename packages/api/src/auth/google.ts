@@ -116,7 +116,7 @@ export const googleAuth = new Hono<AppEnv>()
         set: { email: claims.email, name, isSiteAdmin },
       })
       .returning({ id: users.id });
-    // Stryker disable next-line ConditionalExpression,BlockStatement: an upsert always returns its row
+    // Stryker disable next-line all: an upsert always returns its row
     if (!user) throw new Error("user upsert returned no row");
 
     const { token, expiresAt } = await createSession(db, user.id);
