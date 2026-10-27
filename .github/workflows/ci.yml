@@ -11,6 +11,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
@@ -21,6 +22,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
@@ -31,6 +33,7 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - run: pnpm --filter @mmr/e2e exec playwright install --with-deps chromium webkit
+        timeout-minutes: 5
       - run: pnpm e2e
       - if: failure()
         uses: actions/upload-artifact@v4
@@ -43,6 +46,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     needs: [checks, e2e]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: preview
       url: https://pr-${{ github.event.number }}-mmr-groups-preview.whiterbread.workers.dev
