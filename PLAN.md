@@ -322,7 +322,7 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 
 **Batch entry:** `useFieldArray` of match rows. Each row: teams (pickers constrained by team format), scores per scoring mode, winner/placement when no scores, `playedAt`. "Duplicate row" copies the previous row's players; "Add row" starts blank. First row defaults to now; each next row to previous + 1 min. Draft persisted to `localStorage` per group. One submit → one batch.
 
-**Team generator:** selected players → partitioned into as many matches of the format as fit; minimize Σ|P(team 1 wins) − 0.5| (2-team matches; for N teams, Σ of each team's |P − 1/N|) via `predictWin`; ties broken deterministically by player-ID order. Sit-outs: prefer players who have sat out fewest times this session. Exhaustive search up to 12 players; beyond that, randomized local search with a fixed seed.
+**Team generator:** selected players → partitioned into as many matches of the format as fit; minimize Σ|P(team 1 wins) − 0.5| (2-team matches; for N teams, Σ of each team's |P − 1/N|) via `predictWin`; ties broken deterministically by player-ID order. Sit-outs: prefer players who have sat out fewest times this session. Exhaustive search up to 12 players; beyond that, a swap search (any improving cross-team swap, until none) from a snake draft and seeded reshuffles, within a fixed evaluation budget; its distinct results, best first, stand in for the exhaustive ranking when regenerating.
 
 **Stats** (pure functions in core): see `scenarios/stats.md` for definitions.
 
