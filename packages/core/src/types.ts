@@ -21,5 +21,4 @@ export interface RatingConfig {
   /** σ² grows by decayPerWeek² per week inactive. */
   decayPerWeek: number;
   provisionalSigma: number;
-  useScores: boolean;
 }

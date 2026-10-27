@@ -12,7 +12,6 @@ export const DEFAULT_RATING_CONFIG: RatingConfig = {
   tau: 25 / 300,
   decayPerWeek: 0.5,
   provisionalSigma: 5,
-  useScores: false,
 };
 
 export function resolveRatingConfig(
@@ -53,15 +52,9 @@ export function ratingSystem(config: RatingConfig) {
   const options = { mu: config.mu, sigma: config.sigma, tau: config.tau };
   return {
     initial: (): Rating => ({ mu: config.mu, sigma: config.sigma }),
-    rateMatch: (teams: Rating[][], match: MatchTeam[]) => {
-      const scores = match.map((t) => t.score);
-      const useScores =
-        config.useScores && scores.every((s): s is number => s !== null);
-      return rate(teams, {
-        ...options,
-        ...(useScores ? { score: scores } : { rank: match.map((t) => t.rank) }),
-      });
-    },
+    // Scores only decide placement (MATCH-011), already folded into each rank.
+    rateMatch: (teams: Rating[][], match: MatchTeam[]) =>
+      rate(teams, { ...options, rank: match.map((t) => t.rank) }),
     predictWin: (teams: Rating[][]) => osPredictWin(teams, options),
   };
 }

@@ -57,7 +57,6 @@ describe("RATE-013: default rating settings", { tags: ["RATE-013"] }, () => {
       tau: 25 / 300,
       decayPerWeek: 0.5,
       provisionalSigma: 5,
-      useScores: false,
     });
   });
 

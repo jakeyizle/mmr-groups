@@ -230,15 +230,14 @@ Library: **[openskill](https://github.com/philihp/openskill.js)** (MIT, TS, N te
 
 **Defaults (`rating_config`, tune per R2):**
 
-| Param                  | Default                                         |
-| ---------------------- | ----------------------------------------------- |
-| model                  | Plackett-Luce                                   |
-| μ₀, σ₀                 | 25, 25/3                                        |
-| τ (openskill dynamics) | 25/300                                          |
-| decay `d` per week     | 0.5                                             |
-| display                | `round(1000 + 20 · (μ − 3σ))`                   |
-| provisional            | σ > 5                                           |
-| useScores              | false (scores stored, only used to derive rank) |
+| Param                  | Default                       |
+| ---------------------- | ----------------------------- |
+| model                  | Plackett-Luce                 |
+| μ₀, σ₀                 | 25, 25/3                      |
+| τ (openskill dynamics) | 25/300                        |
+| decay `d` per week     | 0.5                           |
+| display                | `round(1000 + 20 · (μ − 3σ))` |
+| provisional            | σ > 5                         |
 
 **Interface:** `RatingSystem { initial(); rateMatch(teams, ranks); predictWin(teams); display(rating) }` — openskill is the only implementation.
 
