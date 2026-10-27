@@ -10,6 +10,7 @@ import {
 } from "./auth/session";
 import type { AppEnv } from "./env";
 import { invitesRoutes } from "./groups/invite";
+import { claimRoutes } from "./groups/join";
 import { groupsRoutes } from "./groups/routes";
 
 export type { AppEnv, Bindings, SessionUser } from "./env";
@@ -30,6 +31,7 @@ export const app = new Hono<AppEnv>()
   })
   .route("/auth/google", googleAuth)
   .route("/groups", groupsRoutes)
-  .route("/invites", invitesRoutes);
+  .route("/invites", invitesRoutes)
+  .route("/invites", claimRoutes);
 
 export type AppType = typeof app;

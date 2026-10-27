@@ -111,6 +111,12 @@ export function describeEvent(e: AuditEvent, names: Map<string, string>) {
     }
     case "player.deleted":
       return `${who} removed ${player}`;
+    case "player.claimed":
+      return `${who} joined as ${player}`;
+    case "player.joined":
+      return `${who} joined as a new player`;
+    case "player.left":
+      return `${player} left the group`;
     case "player.unlinked":
       return `${who} unlinked ${player}'s account`;
     case "invite.created":

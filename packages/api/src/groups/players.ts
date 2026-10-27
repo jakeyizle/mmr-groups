@@ -21,7 +21,7 @@ import { serializePlayer } from "./serialize";
 export const MAX_PLAYERS = 200;
 
 /** INSERT … SELECT of one player, written only `where` holds. Columns in table order. */
-function insertPlayerWhere(db: Db, p: Player, where: SQL) {
+export function insertPlayerWhere(db: Db, p: Player, where: SQL) {
   return db.insert(players).select(sql`
     select ${p.id}, ${p.groupId}, ${p.displayName}, ${p.role}, ${p.userId}, ${p.createdAt}
     where ${where}`);
@@ -32,8 +32,11 @@ const inAnyMatch = (groupId: string, playerId: string) => sql`exists (
   select 1 from ${matches}, json_each(${matches.teams}) t, json_each(t.value, '$.playerIds') p
   where ${matches.groupId} = ${groupId} and p.value = ${playerId})`;
 
-const NAME_INDEX = "players_group_name_uq";
-const nameTaken = { code: "name_taken", message: "That name is already taken" };
+export const NAME_INDEX = "players_group_name_uq";
+export const nameTaken = {
+  code: "name_taken",
+  message: "That name is already taken",
+};
 
 export const playersRoutes = new Hono<GroupEnv>()
   .post(

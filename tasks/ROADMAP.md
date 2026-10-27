@@ -70,7 +70,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M4 — Joining (JOIN)
 
 - [x] Invite link API + settings UI
-- [ ] Claim/join API, leave → T-028
+- [x] Claim/join API, leave
 - [ ] Join flow UI (+ E2E for UI that needs a second linked member: GROUP-008 transfer, PLAYER-008 unlink, ROLE-005 grant admin) → T-029
 
 ## M5 — Insights (STATS, TEAMS)
