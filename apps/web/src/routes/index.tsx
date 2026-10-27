@@ -23,9 +23,17 @@ function Landing() {
       <p className="text-muted-foreground">
         Record matches with your regular crew and see who&apos;s on top.
       </p>
-      <Button asChild>
-        <Link to="/login">Sign in to get started</Link>
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild>
+          <Link to="/login">Sign in to get started</Link>
+        </Button>
+        {/* VIS-005: no sign-in needed. */}
+        <Button asChild variant="outline">
+          <Link to="/g/$gid" params={{ gid: "demo" }}>
+            See the demo league
+          </Link>
+        </Button>
+      </div>
     </section>
   );
 }

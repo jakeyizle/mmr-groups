@@ -85,7 +85,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M6 — Public & polish (VIS)
 
 - [x] Public group access end-to-end
-- [ ] Demo seed script + deploy wiring → T-037
+- [x] Demo seed script + deploy wiring
 - [ ] PWA → T-038
 - [ ] README → T-039
 - [ ] `scenarios:check --strict` in CI → T-040

@@ -14,6 +14,7 @@
     "db:generate": "pnpm --filter @mmr/api db:generate",
     "db:migrate:local": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview",
+    "db:seed:demo": "node scripts/seed-demo.ts",
     "e2e": "pnpm --filter @mmr/e2e test"
   },
   "devDependencies": {

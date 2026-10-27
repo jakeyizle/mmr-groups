@@ -27,6 +27,9 @@ jobs:
       - uses: ./.github/actions/setup
       # Before any build: a build redirects wrangler to the generated config.
       - run: pnpm db:migrate:remote
+      # Idempotent: inserts the demo group only where it's missing.
+      - run: pnpm db:seed:demo --remote
+      - run: pnpm db:seed:demo --remote --env preview
       - run: pnpm build
         env:
           CLOUDFLARE_ENV: preview
