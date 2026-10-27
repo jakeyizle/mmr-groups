@@ -131,7 +131,9 @@ describe(
           ["Cy", "viewer", false],
         ]);
         expect(body.matches[0]).toHaveProperty("recordedByPlayerId");
-        expect(text).not.toContain(inviteCode);
+        // Only admins get the invite link (JOIN-001).
+        if (session === recorder) expect(text).not.toContain(inviteCode);
+        else expect(text).toContain(inviteCode);
         expectNoAccountDetails(text, users);
       }
     });
