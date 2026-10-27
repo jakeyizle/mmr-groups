@@ -19,6 +19,8 @@
   ],
   "env": {
     "preview": {
+      // PR builds upload versions with --preview-alias pr-<n>.
+      "preview_urls": true,
       "d1_databases": [
         {
           "binding": "DB",

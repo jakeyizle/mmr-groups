@@ -5,6 +5,7 @@ const ci = Boolean(process.env.CI);
 
 export default defineConfig({
   testMatch: "**/*.spec.ts",
+  testIgnore: "prod/**",
   fullyParallel: true,
   forbidOnly: ci,
   retries: ci ? 1 : 0,
