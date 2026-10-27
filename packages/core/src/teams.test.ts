@@ -441,6 +441,25 @@ describe("sitting out", { tags: ["TEAMS-003"] }, () => {
       }),
     ).sittingOut;
 
+  it("lists those sitting out by id", () => {
+    const s = ok(
+      generateTeams({
+        playerIds: ids,
+        ratings: new Map(),
+        config,
+        format: { teams: 3, size: 1 },
+        sitOutCounts: new Map([
+          ["a", 2],
+          ["b", 1],
+          ["c", 2],
+          ["d", 0],
+          ["e", 2],
+        ]),
+      }),
+    );
+    expect(s.sittingOut).toEqual(["b", "d"]);
+  });
+
   it("sits out whoever has sat out least, ties by id", () => {
     expect(out()).toEqual(["a"]);
     expect(out(new Map([["a", 1]]))).toEqual(["b"]);
@@ -518,6 +537,166 @@ describe(
         s.matches.reduce((sum, m) => sum + score(m.teams, r), 0),
         9,
       );
+    });
+
+    describe("with several matches", () => {
+      const many = "abcdefghijklmnopqr".split(""); // 2 matches of 2×4, 2 out
+      const r = uneven(many);
+      const gen = (skip = 0, ratings = r) =>
+        ok(
+          generateTeams({
+            playerIds: many,
+            ratings,
+            config,
+            format: { teams: 2, size: 4 },
+            skip,
+          }),
+        );
+      const key = (s: ReturnType<typeof ok>) =>
+        s.matches
+          .map((m) =>
+            m.teams
+              .map((t) => [...t].sort().join(","))
+              .sort()
+              .join("|"),
+          )
+          .sort()
+          .join("/");
+
+      it("keeps each match to its own teams, even with nothing to improve", () => {
+        const s = gen(0, new Map());
+        expect(s.matches).toHaveLength(2);
+        for (const m of s.matches)
+          expect(m.teams.map((t) => t.length)).toEqual([4, 4]);
+        expect([...flat(s), ...s.sittingOut].sort()).toEqual(many);
+      });
+
+      it("ends where no swap between two teams lowers the imbalance", () => {
+        const s = gen();
+        const teams = s.matches.flatMap((m) => m.teams.map((t) => [...t]));
+        const total = () =>
+          [0, 1].reduce(
+            (sum, k) => sum + score(teams.slice(2 * k, 2 * k + 2), r),
+            0,
+          );
+        const best = total();
+        expect(s.imbalance).toBeCloseTo(best, 9);
+        for (let a = 0; a < teams.length; a++)
+          for (let b = a + 1; b < teams.length; b++)
+            for (let i = 0; i < 4; i++)
+              for (let j = 0; j < 4; j++) {
+                const ta = teams[a] ?? [];
+                const tb = teams[b] ?? [];
+                [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
+                expect(total()).toBeGreaterThan(best - 1e-9);
+                [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
+              }
+      });
+
+      it("pairs singles across matches until no swap helps", () => {
+        // Singles: only swaps between matches can improve anything.
+        const ids14 = many.slice(0, 14);
+        const r14 = uneven(ids14);
+        const solo = () =>
+          ok(
+            generateTeams({
+              playerIds: ids14,
+              ratings: r14,
+              config,
+              format: { teams: 2, size: 1 },
+            }),
+          );
+        const s = solo();
+        expect(s.matches).toHaveLength(7);
+        const pairs = s.matches.map((m) => m.teams.flat());
+        const total = () =>
+          pairs.reduce(
+            (sum, p) =>
+              sum +
+              score(
+                p.map((id) => [id]),
+                r14,
+              ),
+            0,
+          );
+        const best = total();
+        expect(s.imbalance).toBeCloseTo(best, 9);
+        for (let a = 0; a < pairs.length; a++)
+          for (let b = a + 1; b < pairs.length; b++)
+            for (let i = 0; i < 2; i++)
+              for (let j = 0; j < 2; j++) {
+                const pa = pairs[a] ?? [];
+                const pb = pairs[b] ?? [];
+                [pa[i], pb[j]] = [pb[j] ?? "", pa[i] ?? ""];
+                expect(total()).toBeGreaterThan(best - 1e-9);
+                [pa[i], pb[j]] = [pb[j] ?? "", pa[i] ?? ""];
+              }
+      });
+
+      it("counts a reordered arrangement as the same suggestion", () => {
+        // Every restart lands on the same pairs here, in various orders.
+        const ids14 = many.slice(0, 14);
+        const solo = (skip: number) =>
+          generateTeams({
+            playerIds: ids14,
+            ratings: uneven(ids14),
+            config,
+            format: { teams: 2, size: 1 },
+            skip,
+          });
+        expect(solo(1)).toEqual(solo(0));
+      });
+
+      it("keeps swapping until a full pass finds nothing", () => {
+        const ids = Array.from(
+          { length: 30 },
+          (_, i) => `p${String(i).padStart(2, "0")}`,
+        );
+        const r = new Map(
+          ids.map((id, i) => [
+            id,
+            { mu: 10 + ((i * 13) % 29) * 1.3, sigma: 1 + (i % 4) / 4 },
+          ]),
+        );
+        const s = ok(
+          generateTeams({
+            playerIds: ids,
+            ratings: r,
+            config,
+            format: { teams: 2, size: 1 },
+          }),
+        );
+        const pairs = s.matches.map((m) => m.teams.flat());
+        const total = () =>
+          pairs.reduce(
+            (sum, p) =>
+              sum +
+              score(
+                p.map((id) => [id]),
+                r,
+              ),
+            0,
+          );
+        const best = total();
+        for (let a = 0; a < pairs.length; a++)
+          for (let b = a + 1; b < pairs.length; b++)
+            for (let i = 0; i < 2; i++)
+              for (let j = 0; j < 2; j++) {
+                const pa = pairs[a] ?? [];
+                const pb = pairs[b] ?? [];
+                [pa[i], pb[j]] = [pb[j] ?? "", pa[i] ?? ""];
+                expect(total()).toBeGreaterThan(best - 1e-9);
+                [pa[i], pb[j]] = [pb[j] ?? "", pa[i] ?? ""];
+              }
+      });
+
+      it("offers distinct arrangements on regenerate, then wraps around", () => {
+        const keys = [0, 1, 2, 3].map((skip) => key(gen(skip)));
+        expect(new Set(keys).size).toBe(4);
+        const last = gen(1000);
+        expect(last.matches).toHaveLength(2);
+        expect(keys.slice(0, 1)).not.toContain(key(last));
+      });
     });
 
     it("treats a missing skip as 0, and regenerates differently", () => {

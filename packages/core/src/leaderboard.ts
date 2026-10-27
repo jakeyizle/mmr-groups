@@ -6,6 +6,7 @@ import {
   type ReplayMatch,
 } from "./rating";
 import { type Outcome, teamOutcome } from "./stats";
+import { byText } from "./text";
 import type { RatingConfig } from "./types";
 
 const PLURAL = {
@@ -36,8 +37,7 @@ function order(players: ReadonlyMap<string, PlayerRating>) {
   return [...players.entries()]
     .map(([id, r]) => ({ id, r, display: displayRating(r) }))
     .sort(
-      (a, b) =>
-        b.display - a.display || b.r.mu - a.r.mu || (a.id < b.id ? -1 : 1),
+      (a, b) => b.display - a.display || b.r.mu - a.r.mu || byText(a.id, b.id),
     );
 }
 

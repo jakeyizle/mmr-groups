@@ -6,6 +6,7 @@ import {
   replay,
   type ReplayMatch,
 } from "./rating";
+import { byText } from "./text";
 import type { MatchTeam, RatingConfig } from "./types";
 
 // Definitions: the header of scenarios/stats.md.
@@ -109,7 +110,8 @@ export function playerStats(
           ? "win"
           : mine.rank > other.rank
             ? "loss"
-            : "tie";
+            : // Stryker disable next-line StringLiteral: add() counts anything else as a tie
+              "tie";
       for (const id of other.playerIds) add(pair(opponents, id), vs);
     }
   }
@@ -288,8 +290,7 @@ export function biggestUpsets(
   }
   return upsets
     .sort(
-      (a, b) =>
-        a.probability - b.probability || (a.matchId < b.matchId ? -1 : 1),
+      (a, b) => a.probability - b.probability || byText(a.matchId, b.matchId),
     )
     .slice(0, 5);
 }

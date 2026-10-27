@@ -1,4 +1,5 @@
 import { type Rating, ratingSystem } from "./rating";
+import { byText } from "./text";
 import type { RatingConfig } from "./types";
 
 // PLAN §9 (Team generator) and scenarios/team-generator.md.
@@ -69,6 +70,7 @@ interface Split {
 }
 
 /** Deterministic PRNG for the local search (fixed seed: same input, same answer). */
+// Stryker disable all: any seeded sequence will do; restarts only need to differ
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -79,6 +81,7 @@ function mulberry32(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+// Stryker restore all
 
 export function generateTeams(input: GenerateInput): Suggestion {
   const { teams: T, size: S } = input.format;
@@ -103,9 +106,7 @@ export function generateTeams(input: GenerateInput): Suggestion {
   const sitOut = ids.length - matchCount * perMatch;
   const counts = input.sitOutCounts ?? new Map<string, number>();
   const sittingOut = [...ids]
-    .sort(
-      (a, b) => (counts.get(a) ?? 0) - (counts.get(b) ?? 0) || (a < b ? -1 : 1),
-    )
+    .sort((a, b) => (counts.get(a) ?? 0) - (counts.get(b) ?? 0) || byText(a, b))
     .slice(0, sitOut)
     .sort();
   const out = new Set(sittingOut);
@@ -120,6 +121,7 @@ export function generateTeams(input: GenerateInput): Suggestion {
     imbalance: matches.reduce((s, m) => s + m.score, 0),
   });
 
+  // Stryker disable next-line EqualityOperator: at the limit both searches find the best split
   if (playing.length > EXHAUSTIVE_LIMIT) {
     return result(
       localSearch(playing, matchCount, T, S, splitOf, input.skip ?? 0),
@@ -129,6 +131,7 @@ export function generateTeams(input: GenerateInput): Suggestion {
   // Every way to split one match's players into teams, best first (cached per player set).
   const splitsCache = new Map<string, Split[]>();
   const splitsFor = (players: string[]) => {
+    // Stryker disable next-line StringLiteral: ULIDs have a fixed length, so the separator doesn't matter
     const key = players.join(",");
     let splits = splitsCache.get(key);
     if (!splits) {
@@ -146,9 +149,10 @@ export function generateTeams(input: GenerateInput): Suggestion {
   const top: { score: number; matches: Split[] }[] = [];
   const offer = (score: number, matches: Split[]) => {
     let i = top.length;
-    // Stryker disable next-line LogicalOperator: i > 0, so top[i - 1] exists
+    // Stryker disable next-line all: scores are ≥ 0, top[i - 1] exists for i > 0, and the epsilon makes > and ≥ alike
     while (i > 0 && (top[i - 1]?.score ?? 0) > score + 1e-12) i--;
     top.splice(i, 0, { score, matches });
+    // Stryker disable next-line all: only bounds memory; the pick reads the sorted front
     if (top.length > keep) top.pop();
   };
   for (const grouping of groupings(playing, perMatch)) {
@@ -175,6 +179,8 @@ export function generateTeams(input: GenerateInput): Suggestion {
   return result(pick?.matches ?? []);
 }
 
+const sorted = (xs: readonly string[], sep: string) => [...xs].sort().join(sep);
+
 /** Match evaluations the local search may spend on restarts (deterministic, unlike a time limit). */
 const BUDGET = 40_000;
 const MAX_RESTARTS = 16;
@@ -198,9 +204,9 @@ function localSearch(
   const found = new Map<string, { total: number; matches: Split[] }>();
 
   let spent = 0;
-  // Stryker disable next-line EqualityOperator,ConditionalExpression,LogicalOperator: the budget trades balance for speed
   for (
     let restart = 0;
+    // Stryker disable next-line all: the budget trades balance for speed
     restart < MAX_RESTARTS && (restart < 2 || spent < BUDGET);
     restart++
   ) {
@@ -213,14 +219,15 @@ function localSearch(
       }
     // Stryker restore all
     const teams: string[][] = Array.from({ length: slots }, () => []);
+    // Stryker disable all: the snake draft only seeds the search
     order.forEach((id, i) => {
       const round = Math.floor(i / slots);
       const pos = round % 2 === 0 ? i % slots : slots - 1 - (i % slots);
       teams[pos]?.push(id);
     });
-    let matches = Array.from({ length: matchCount }, (_, m) =>
-      splitOf(teams.slice(m * T, m * T + T)),
-    );
+    // Stryker restore all
+    const evaluate = (k: number) => splitOf(teams.slice(k * T, k * T + T));
+    let matches = Array.from({ length: matchCount }, (_, k) => evaluate(k));
     let total = matches.reduce((sum, m) => sum + m.score, 0);
 
     let improved = true;
@@ -228,17 +235,21 @@ function localSearch(
       improved = false;
       teams.forEach((ta, a) => {
         teams.forEach((tb, b) => {
+          // Stryker disable next-line all: each pair once; other pairings only repeat swaps
           if (b <= a) return;
           for (let i = 0; i < S; i++) {
             for (let j = 0; j < S; j++) {
               // Stryker disable next-line StringLiteral: indices are within the teams
               [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
               const candidate = matches.map((m, k) => {
+                // Stryker disable next-line ConditionalExpression: recomputing an untouched match only spends budget
                 if (k !== matchOf(a) && k !== matchOf(b)) return m;
+                // Stryker disable next-line UpdateOperator: the budget trades balance for speed
                 spent++;
-                return splitOf(teams.slice(k * T, k * T + T));
+                return evaluate(k);
               });
               const score = candidate.reduce((sum, m) => sum + m.score, 0);
+              // Stryker disable next-line EqualityOperator: the epsilon makes < and ≤ alike
               if (score < total - 1e-12) {
                 matches = candidate;
                 total = score;
@@ -253,19 +264,22 @@ function localSearch(
       });
     }
     // The same arrangement in another order is the same suggestion.
-    const key = matches
-      .map((m) =>
-        m.teams
-          .map((t) => [...t].sort().join(","))
-          .sort()
-          .join("|"),
-      )
-      .sort()
-      .join("/");
+    // Stryker disable StringLiteral: ULIDs have a fixed length, so separators don't matter
+    const key = sorted(
+      matches.map((m) =>
+        sorted(
+          m.teams.map((t) => sorted(t, ",")),
+          "|",
+        ),
+      ),
+      "/",
+    );
+    // Stryker restore StringLiteral
+    // Stryker disable next-line ConditionalExpression: a repeat has the same total
     if (!found.has(key)) found.set(key, { total, matches });
   }
 
   const ranked = [...found.values()].sort((x, y) => x.total - y.total);
-  // Stryker disable next-line ArrayDeclaration: there is always at least one result
+  // Stryker disable next-line OptionalChaining,ArrayDeclaration: there is always at least one result
   return ranked[Math.min(skip, ranked.length - 1)]?.matches ?? [];
 }

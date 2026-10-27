@@ -1,5 +1,6 @@
 import { predictWin as osPredictWin, rate, type Rating } from "openskill";
 
+import { byText } from "./text";
 import type { MatchTeam, RatingConfig } from "./types";
 
 export type { Rating } from "openskill";
@@ -79,8 +80,7 @@ export interface Replay {
 
 /** MATCH-006: date-time order; same date-time falls back to creation (ULID) order. */
 export function compareMatches(a: ReplayMatch, b: ReplayMatch) {
-  if (a.playedAt !== b.playedAt) return a.playedAt < b.playedAt ? -1 : 1;
-  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  return byText(a.playedAt, b.playedAt) || byText(a.id, b.id);
 }
 
 /**
@@ -117,11 +117,11 @@ export function replay(
     const changes = new Map<string, { before: Rating; after: Rating }>();
     match.teams.forEach((team, t) => {
       team.playerIds.forEach((id, p) => {
-        // Stryker disable OptionalChaining,ConditionalExpression,LogicalOperator: openskill returns the input's shape
+        // Stryker disable all: openskill returns the input's shape
         const b = before[t]?.[p];
         const a = after[t]?.[p];
         if (!b || !a) throw new Error("openskill returned a different shape");
-        // Stryker restore OptionalChaining,ConditionalExpression,LogicalOperator
+        // Stryker restore all
         const next = { mu: a.mu, sigma: a.sigma };
         changes.set(id, { before: b, after: next });
         players.set(id, {

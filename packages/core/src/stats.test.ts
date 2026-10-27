@@ -103,7 +103,53 @@ describe("STATS-003: best and worst partners", { tags: ["STATS-003"] }, () => {
   });
 });
 
+describe("partner lists", { tags: ["STATS-003"] }, () => {
+  it("keep the 3 best, then the 3 worst of the rest, each in order", () => {
+    // Three matches with each partner; wins in insertion order b..i.
+    const wins: Record<string, number> = {
+      b: 1,
+      c: 3,
+      d: 0,
+      e: 2,
+      f: 3,
+      g: 1,
+      h: 2,
+      i: 0,
+    };
+    const history = Object.entries(wins).flatMap(([p, w], n) =>
+      [0, 1, 2].map((d) =>
+        m(n * 3 + d, d < w ? [`a${p}`, "xy"] : ["xy", `a${p}`]),
+      ),
+    );
+    const { partners } = playerStats(history, "a");
+    expect(partners.best.map((p) => p.playerId)).toEqual(["c", "f", "e"]);
+    expect(partners.worst.map((p) => p.playerId)).toEqual(["d", "i", "b"]);
+  });
+
+  it("rank equal win rates by more shared matches", () => {
+    const history = [3, 4, 5].flatMap((n, k) =>
+      Array.from({ length: n }, (_, d) =>
+        m(k * 10 + d, [`a${"bcd"[k] ?? ""}`, "xy"]),
+      ),
+    );
+    const { partners } = playerStats(history, "a");
+    expect(partners.best.map((p) => p.playerId)).toEqual(["d", "c", "b"]);
+  });
+});
+
 describe("STATS-004: head-to-head records", { tags: ["STATS-004"] }, () => {
+  it("lists opponents by matches played, then name", () => {
+    const history = [
+      ...[0, 1, 2].map((d) => m(d, ["a", "p"])),
+      ...[3, 4, 5, 6].map((d) => m(d, ["a", "q"])),
+      ...[7, 8, 9, 10, 11].map((d) => m(d, ["r", "a"])),
+      ...[12, 13, 14, 15].map((d) => m(d, ["a", "s"])),
+    ];
+    expect(playerStats(history, "a").headToHead.map((h) => h.playerId)).toEqual(
+      ["r", "q", "s", "p"],
+    );
+  });
+
   it("wins, losses and ties against each opponent by relative placement", () => {
     const history = [
       m(0, ["a", "b"]),
@@ -416,6 +462,61 @@ describe("bestDuos edges", { tags: ["STATS-008"] }, () => {
     expect(duos.slice(0, 2).map((d) => d.playerIds)).toEqual([
       ["c", "d"],
       ["y", "z"],
+    ]);
+  });
+});
+
+describe("list limits", () => {
+  it(
+    "keeps the top 5 duos, upsets and streaks",
+    { tags: ["STATS-008", "STATS-009", "STATS-010"] },
+    () => {
+      const pairs = ["ab", "cd", "ef", "gh", "ij", "kl"];
+      const history = pairs.flatMap((p, k) =>
+        [0, 1, 2].map((d) => m(k * 10 + d, [p, "yz"])),
+      );
+      expect(bestDuos(history)).toHaveLength(5);
+      expect(longestStreaks(history)).toHaveLength(5);
+      // Every decisive 2-team match is a candidate.
+      expect(biggestUpsets(history, config, at(1000))).toHaveLength(5);
+    },
+  );
+});
+
+describe("default names", () => {
+  it("break ties by ID", { tags: ["STATS-008", "STATS-010"] }, () => {
+    const history = [0, 1, 2].flatMap((d) => [
+      m(d, ["yz", "ab"]),
+      m(d + 10, ["cd", "wx"]),
+    ]);
+    expect(
+      bestDuos(history)
+        .slice(0, 2)
+        .map((d) => d.playerIds),
+    ).toEqual([
+      ["c", "d"],
+      ["y", "z"],
+    ]);
+    expect(
+      longestStreaks([m(0, ["z", "b"]), m(1, ["c", "d"])]).map(
+        (s) => s.playerId,
+      ),
+    ).toEqual(["c", "z"]);
+  });
+
+  it("separate names in a duo's label", { tags: ["STATS-008"] }, () => {
+    const names: Record<string, string> = { r: "AB", s: "C", p: "A", q: "BC" };
+    const history = [0, 1, 2].flatMap((d) => [
+      m(d, ["rs", "wx"]),
+      m(d + 10, ["pq", "wx"]),
+    ]);
+    expect(
+      bestDuos(history, (id) => names[id] ?? id)
+        .slice(0, 2)
+        .map((d) => d.playerIds),
+    ).toEqual([
+      ["p", "q"],
+      ["r", "s"],
     ]);
   });
 });
