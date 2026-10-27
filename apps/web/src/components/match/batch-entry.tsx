@@ -22,6 +22,7 @@ import {
   toMatchInput,
 } from "@/lib/batch";
 import { type GroupData, useGroupActor } from "@/lib/groups";
+import { usePredictWin } from "@/lib/ratings";
 
 type Issues = Record<number, string[]>;
 
@@ -41,6 +42,7 @@ export function BatchEntry({ data }: { data: GroupData }) {
   const gid = group.id;
   const draftKey = `mmr:draft:${gid}`;
   const actor = useGroupActor(data);
+  const predict = usePredictWin(data);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [issues, setIssues] = useState<Issues>({});
@@ -121,6 +123,7 @@ export function BatchEntry({ data }: { data: GroupData }) {
             form={form}
             players={players}
             settings={group}
+            predict={predict}
             issues={issues[i]}
             canRemove={count > 1}
             onRemove={() => {

@@ -193,3 +193,20 @@ test(
     ).toHaveText("Bea");
   },
 );
+
+test(
+  "complete teams show each team's chance to win",
+  { tag: "@MATCH-016" },
+  async ({ page }) => {
+    await openEntry(page);
+    await pickTeams(page, 1, ["Ann", "Bea", "Cal"]);
+    await expect(page.getByText(/% to win/)).toHaveCount(0);
+    await pickTeams(page, 1, ["Ann", "Bea", "Cal", "Dot"]);
+    const odds = page.getByText(/^\d+% to win$/);
+    await expect(odds).toHaveCount(2);
+    const values = (await odds.allTextContents()).map((t) => parseInt(t, 10));
+    expect(
+      Math.abs((values[0] ?? 0) + (values[1] ?? 0) - 100),
+    ).toBeLessThanOrEqual(1);
+  },
+);

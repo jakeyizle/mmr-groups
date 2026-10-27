@@ -1,6 +1,7 @@
 import {
   leaderboard,
   ratingSeries,
+  ratingSystem,
   replay,
   resolveRatingConfig,
 } from "@mmr/core";
@@ -42,4 +43,17 @@ export function useRatingSeries(data: GroupData) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the version identifies the snapshot
     [version, day],
   );
+}
+
+/** Predicted win probability per team from current ratings (MATCH-016). */
+export function usePredictWin(data: GroupData) {
+  const { players } = useReplay(data);
+  const { ratingConfig } = data.group;
+  return useMemo(() => {
+    const system = ratingSystem(resolveRatingConfig(ratingConfig));
+    return (teams: string[][]) =>
+      system.predictWin(
+        teams.map((t) => t.map((id) => players.get(id) ?? system.initial())),
+      );
+  }, [players, ratingConfig]);
 }

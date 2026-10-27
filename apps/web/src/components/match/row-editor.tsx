@@ -21,6 +21,7 @@ export function MatchRowEditor({
   form,
   players,
   settings,
+  predict,
   issues,
   canRemove,
   onRemove,
@@ -30,6 +31,8 @@ export function MatchRowEditor({
   form: UseFormReturn<BatchForm>;
   players: Player[];
   settings: MatchSettings;
+  /** MATCH-016: win probability per team, shown once every slot is filled. */
+  predict?: (teams: string[][]) => number[];
   issues: string[] | undefined;
   canRemove?: boolean;
   onRemove?: () => void;
@@ -42,6 +45,10 @@ export function MatchRowEditor({
   const flexible = settings.teamFormat.kind === "flexible";
   const chosen = new Set(row.teams.flatMap((t) => t.playerIds).filter(Boolean));
   const placement = needsPlacement(row, settings);
+  const ids = row.teams.flatMap((t) => t.playerIds);
+  const complete = ids.every(Boolean) && new Set(ids).size === ids.length;
+  const odds =
+    predict && complete ? predict(row.teams.map((t) => t.playerIds)) : null;
   const setTeams = (teams: MatchRow["teams"]) => {
     form.setValue(`${name}.teams`, teams, { shouldDirty: true });
   };
@@ -85,7 +92,14 @@ export function MatchRowEditor({
         return (
           <div key={t} className="space-y-2 rounded-md bg-muted/50 p-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium">Team {t + 1}</span>
+              <span className="text-sm font-medium">
+                Team {t + 1}
+                {odds?.[t] !== undefined && (
+                  <span className="ml-2 font-normal text-muted-foreground tabular-nums">
+                    {Math.round(odds[t] * 100)}% to win
+                  </span>
+                )}
+              </span>
               {flexible && row.teams.length > 2 && (
                 <Button
                   type="button"

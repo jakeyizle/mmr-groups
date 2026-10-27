@@ -80,7 +80,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Group stats UI
 - [x] Team generator (core) + perf benchmark
 - [x] Team generator UI
-- [ ] Stretch: win probability preview (MATCH-016) → T-035
+- [x] Stretch: win probability preview (MATCH-016)
 
 ## M6 — Public & polish (VIS)
 

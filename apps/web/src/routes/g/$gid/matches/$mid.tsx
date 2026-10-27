@@ -27,7 +27,7 @@ import {
   rowIssues,
 } from "@/lib/batch";
 import { type GroupData, groupQuery, useGroupActor } from "@/lib/groups";
-import { useReplay } from "@/lib/ratings";
+import { usePredictWin, useReplay } from "@/lib/ratings";
 
 export const Route = createFileRoute("/g/$gid/matches/$mid")({
   component: MatchPage,
@@ -175,6 +175,7 @@ function EditMatch({
     defaultValues: { rows: [fromMatch(match)] },
   });
   const [notes, setNotes] = useState(match.notes);
+  const predict = usePredictWin(data);
   const [issues, setIssues] = useState<string[]>();
 
   const save = useMutation({
@@ -234,6 +235,7 @@ function EditMatch({
         form={form}
         players={data.players}
         settings={data.group}
+        predict={predict}
         issues={issues}
       />
       <Field>
