@@ -86,7 +86,7 @@ export const playersRoutes = new Hono<GroupEnv>()
         }
         throw err;
       }
-      return c.json({ players: added.map(serializePlayer) }, 201);
+      return c.json({ players: added.map((p) => serializePlayer(p)) }, 201);
     },
   )
   .patch("/:pid", validate("json", updatePlayerSchema), async (c) => {

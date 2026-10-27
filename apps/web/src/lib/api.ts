@@ -30,8 +30,11 @@ type SuccessBody<R> =
       : T
     : never;
 
-/** Unwraps a Hono client response: the JSON body on 2xx, `ApiError` otherwise. */
-export async function unwrap<R extends ClientResponse<unknown, number, "json">>(
+/**
+ * Unwraps a Hono client response: the JSON body on 2xx, `ApiError` otherwise.
+ * Non-JSON variants (the snapshot's 304, which browsers resolve from cache) drop out of the type.
+ */
+export async function unwrap<R extends ClientResponse<unknown>>(
   res: R,
 ): Promise<SuccessBody<R>> {
   if (res.ok) return (await res.json()) as SuccessBody<R>;

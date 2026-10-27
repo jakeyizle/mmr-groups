@@ -55,7 +55,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Rating replay engine + default config (core)
 - [x] Match schemas + validation rules (core); also covers the match side of GROUP-003, GROUP-011
-- [ ] Snapshot endpoint: audience serializers, ETag/304 → T-019
+- [x] Snapshot endpoint: audience serializers, ETag/304
 - [ ] Batch match create API + audit → T-020
 - [ ] Batch entry form → T-021
 - [ ] Leaderboard → T-022

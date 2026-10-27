@@ -34,11 +34,13 @@ const ROLE_LABELS: Record<Role, string> = {
 
 /** Roles this actor may give this player (always including its current one). */
 function roleChoices(actor: Actor, p: Player): Role[] {
+  const { role, linked = false } = p;
+  if (!role) return [];
   return (["admin", "recorder", "viewer"] as const).filter(
     (to) =>
-      to === p.role ||
-      (can(actor, "player.setRole", { from: p.role, to }) &&
-        validRoleFor({ linked: p.linked }, to)),
+      to === role ||
+      (can(actor, "player.setRole", { from: role, to }) &&
+        validRoleFor({ linked }, to)),
   );
 }
 
@@ -135,7 +137,9 @@ function PlayerRow({
   const choices = roleChoices(actor, player);
   const canRename = can(actor, "player.manage");
   const canUnlink =
-    player.linked && can(actor, "player.unlink", { role: player.role });
+    player.linked === true &&
+    player.role !== undefined &&
+    can(actor, "player.unlink", { role: player.role });
   // Removing a claimed player also removes its user: same permission as unlinking.
   const canRemove = canRename && (!player.linked || canUnlink);
   const editable = canRename || choices.length > 1 || canUnlink;
@@ -145,12 +149,16 @@ function PlayerRow({
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-medium">{player.displayName}</p>
-          <p className="text-sm text-muted-foreground">
-            {player.linked ? "Claimed" : "Unclaimed"}
-          </p>
+          {player.linked !== undefined && (
+            <p className="text-sm text-muted-foreground">
+              {player.linked ? "Claimed" : "Unclaimed"}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant="secondary">{ROLE_LABELS[player.role]}</Badge>
+          {player.role && (
+            <Badge variant="secondary">{ROLE_LABELS[player.role]}</Badge>
+          )}
           {editable && (
             <Button
               variant="ghost"

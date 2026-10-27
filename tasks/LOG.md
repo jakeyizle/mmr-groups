@@ -20,3 +20,4 @@
 - T-011 | 2026-10-26 | Google sign-in (arctic, PKCE, flow cookies scoped to /api/auth/google); upsert by sub, site admin from verified email each login; safe returnTo; login error message
 - T-017 | 2026-10-26 | core `replay()` over openskill (PL) with pre-match + as-of decay, `(playedAt, id)` order, display/provisional, `DEFAULT_RATING_CONFIG`
 - T-018 | 2026-10-26 | core `matchInputSchema`/`batchSchema` (shape, limits) + `validateMatch` (format, duplicates, scoring mode, competition ranks from scores or chosen placements, ties, ≤24 h ahead, UTC)
+- T-019 | 2026-10-26 | snapshot adds matches `(playedAt, id)`; public/member/admin serializers (public: names only, no recorders); ETag `"<version>-<audience>"` + 304

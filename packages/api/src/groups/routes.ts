@@ -8,29 +8,48 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { auditedBatch, guardedBatch } from "../db/guarded-batch";
-import { groups, players } from "../db/schema";
+import { groups, matches, players } from "../db/schema";
 import type { AppEnv } from "../env";
 import { apiError } from "../errors";
 import { validate } from "../validate";
 import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
 import { playersRoutes } from "./players";
-import { serializeGroup, serializePlayer } from "./serialize";
+import {
+  audienceFor,
+  serializeGroup,
+  serializeMatch,
+  serializePlayer,
+} from "./serialize";
 
 const groupRoutes = new Hono<GroupEnv>()
   .use(groupAccess)
-  // Minimal member read until the M2 snapshot replaces it.
+  /** Snapshot (PLAN §8): settings, players, matches, shaped per audience. */
   .get("/", async (c) => {
     const group = c.get("group");
-    const rows = await c
-      .get("db")
-      .select()
-      .from(players)
-      .where(eq(players.groupId, group.id))
-      .orderBy(asc(players.displayName));
+    const audience = audienceFor(c.get("actor"));
+    const etag = `"${String(group.version)}-${audience}"`;
+    c.header("ETag", etag);
+    c.header("Cache-Control", "private, no-cache");
+    if (c.req.header("If-None-Match") === etag) return c.body(null, 304);
+
+    const db = c.get("db");
+    const [playerRows, matchRows] = await Promise.all([
+      db
+        .select()
+        .from(players)
+        .where(eq(players.groupId, group.id))
+        .orderBy(asc(players.displayName)),
+      db
+        .select()
+        .from(matches)
+        .where(eq(matches.groupId, group.id))
+        .orderBy(asc(matches.playedAt), asc(matches.id)),
+    ]);
     const me = c.get("me");
     return c.json({
       group: serializeGroup(group),
-      players: rows.map(serializePlayer),
+      players: playerRows.map((p) => serializePlayer(p, audience)),
+      matches: matchRows.map((m) => serializeMatch(m, audience)),
       me: me && { playerId: me.id, role: me.role },
     });
   })
