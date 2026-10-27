@@ -9,6 +9,7 @@ import {
   SESSION_COOKIE,
 } from "./auth/session";
 import type { AppEnv } from "./env";
+import { invitesRoutes } from "./groups/invite";
 import { groupsRoutes } from "./groups/routes";
 
 export type { AppEnv, Bindings, SessionUser } from "./env";
@@ -28,6 +29,7 @@ export const app = new Hono<AppEnv>()
     return c.json({ ok: true });
   })
   .route("/auth/google", googleAuth)
-  .route("/groups", groupsRoutes);
+  .route("/groups", groupsRoutes)
+  .route("/invites", invitesRoutes);
 
 export type AppType = typeof app;

@@ -14,6 +14,7 @@ import { apiError } from "../errors";
 import { validate } from "../validate";
 import { authorize, groupAccess, type GroupEnv, type Player } from "./access";
 import { auditRoutes } from "./audit";
+import { inviteRoutes, serializeInvite } from "./invite";
 import { matchesRoutes } from "./matches";
 import { playersRoutes } from "./players";
 import {
@@ -53,6 +54,7 @@ const groupRoutes = new Hono<GroupEnv>()
       players: playerRows.map((p) => serializePlayer(p, audience)),
       matches: matchRows.map((m) => serializeMatch(m, audience)),
       me: me && { playerId: me.id, role: me.role },
+      ...(audience === "admin" && { invite: serializeInvite(group) }),
     });
   })
   .patch(
@@ -163,7 +165,8 @@ const groupRoutes = new Hono<GroupEnv>()
   )
   .route("/players", playersRoutes)
   .route("/matches", matchesRoutes)
-  .route("/audit", auditRoutes);
+  .route("/audit", auditRoutes)
+  .route("/invite", inviteRoutes);
 
 export const groupsRoutes = new Hono<AppEnv>()
   .get("/", async (c) => {

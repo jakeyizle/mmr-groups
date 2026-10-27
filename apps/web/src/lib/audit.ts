@@ -113,6 +113,16 @@ export function describeEvent(e: AuditEvent, names: Map<string, string>) {
       return `${who} removed ${player}`;
     case "player.unlinked":
       return `${who} unlinked ${player}'s account`;
+    case "invite.created":
+    case "invite.regenerated": {
+      const expires =
+        typeof after.expiresAt === "string"
+          ? `, expiring ${dateFormat.format(new Date(after.expiresAt))}`
+          : "";
+      return `${who} ${e.action === "invite.created" ? "created" : "replaced"} the invite link${expires}`;
+    }
+    case "invite.revoked":
+      return `${who} revoked the invite link`;
     case "match.created":
       return `${who} recorded a match${matchDate(after)}: ${matchSummary(after, names)}`;
     case "match.updated":

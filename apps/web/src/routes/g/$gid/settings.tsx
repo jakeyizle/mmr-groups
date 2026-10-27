@@ -3,9 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DangerZone } from "@/components/group/danger-zone";
 import { GeneralSettings } from "@/components/group/general-settings";
+import { InviteSettings } from "@/components/group/invite-settings";
 import { PlayersSettings } from "@/components/group/players-settings";
 import { requireUser } from "@/lib/auth";
-import { groupQuery } from "@/lib/groups";
+import { Can } from "@/lib/can";
+import { groupQuery, useGroupActor } from "@/lib/groups";
 
 export const Route = createFileRoute("/g/$gid/settings")({
   beforeLoad: requireUser,
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/g/$gid/settings")({
 function Settings() {
   const { gid } = Route.useParams();
   const { data } = useQuery(groupQuery(gid));
+  const actor = useGroupActor(data);
   if (!data) return null;
   return (
     <div className="space-y-8">
@@ -28,6 +31,12 @@ function Settings() {
         </h2>
         <PlayersSettings data={data} />
       </section>
+      <Can actor={actor} action="invite.manage">
+        <section className="space-y-4">
+          <h2 className="font-heading text-lg font-semibold">Invite link</h2>
+          <InviteSettings data={data} />
+        </section>
+      </Can>
       <DangerZone data={data} />
     </div>
   );
