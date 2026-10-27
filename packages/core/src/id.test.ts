@@ -12,4 +12,6 @@ describe("newId", () => {
 
 it("clampPage", () => {
   expect(clampPage(5)).toBe(5);
+  expect(clampPage(1)).toBe(1);
+  expect(clampPage(0)).toBe(1);
 });
