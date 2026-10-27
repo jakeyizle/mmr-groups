@@ -58,7 +58,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Snapshot endpoint: audience serializers, ETag/304
 - [x] Batch match create API + audit
 - [x] Batch entry form
-- [ ] Leaderboard → T-022
+- [x] Leaderboard
 - [ ] Match history → T-023
 - [ ] Audit log API + UI → T-024
 

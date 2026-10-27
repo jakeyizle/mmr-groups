@@ -98,12 +98,19 @@ export function replay(
   history: readonly ReplayMatch[],
   config: RatingConfig,
   asOf: string,
+  /** Called after each match with the ratings just before and just after it (undecayed). */
+  observe?: (
+    match: ReplayMatch,
+    before: ReadonlyMap<string, PlayerRating>,
+    after: ReadonlyMap<string, PlayerRating>,
+  ) => void,
 ): Replay {
   const system = ratingSystem(config);
   const players = new Map<string, PlayerRating>();
   const matches: Replay["matches"] = new Map();
 
   for (const match of [...history].sort(compareMatches)) {
+    const previous = observe && new Map(players);
     const before = match.teams.map((team) =>
       team.playerIds.map((id) => {
         const current = players.get(id);
@@ -130,6 +137,7 @@ export function replay(
       });
     });
     matches.set(match.id, changes);
+    if (observe && previous) observe(match, previous, players);
   }
 
   for (const [id, p] of players) {
