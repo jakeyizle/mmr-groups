@@ -38,7 +38,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Drizzle schema + first migration
 - [x] API test harness (`@cloudflare/vitest-plugin`)
 - [x] Playwright harness + test-login route (AUTH-008)
-- [ ] GitHub Actions: checks, preview + production deploy, migrations → T-007
+- [x] GitHub Actions: checks, preview + production deploy, migrations
 - [x] Spike: guarded-batch optimistic concurrency in D1 (PLAN §5)
 
 ## M1 — Auth & groups (AUTH, GROUP, ROLE, PLAYER)
