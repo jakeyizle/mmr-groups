@@ -25,7 +25,7 @@ Depends on: T-010
 
 ## Done when
 
-- Listed scenarios have passing tagged tests; lint, typecheck, scenarios:check green
+- Listed scenarios have passing tagged tests; lint, typecheck, scenarios:check, mutate:changed green
 ```
 
 Each milestone ends deployed, with its scenarios passing.
@@ -98,7 +98,7 @@ Each milestone ends deployed, with its scenarios passing.
 ## M8 — Mutation testing (PLAN §10)
 
 - [x] Spike: Stryker on core + api (workerd mutant activation)
-- [ ] `mutate:changed` + PR CI job, core + api → T-044
+- [x] `mutate:changed` + PR CI job, core + api
 - [ ] Web Vitest project, lib extractions, first component tests, add web to the check → T-045
 - [ ] Audit: core
 - [ ] Audit: api auth + db
