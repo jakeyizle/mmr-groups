@@ -1,4 +1,4 @@
-# T-046: Web Vitest project + component tests
+# T-045: Web Vitest project + component tests
 
 Status: ready
 Milestone: M8

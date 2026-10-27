@@ -15,11 +15,15 @@
     "db:migrate:local": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote && pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --remote --env preview",
     "db:seed:demo": "node scripts/seed-demo.ts",
-    "e2e": "pnpm --filter @mmr/e2e test"
+    "e2e": "pnpm --filter @mmr/e2e test",
+    "mutate:changed": "node scripts/mutate-changed.ts",
+    "mutate": "stryker run"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "~1.4.7",
     "@eslint/js": "^10.0.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
     "@types/node": "^24.19.2",
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",

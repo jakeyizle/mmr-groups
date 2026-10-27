@@ -1,6 +1,6 @@
-# T-044: `mutate:changed` + PR CI job (core)
+# T-044: `mutate:changed` + PR CI job (core + api)
 
-Status: ready
+Status: in-progress
 Milestone: M8
 Scenarios: —
 Depends on: T-043

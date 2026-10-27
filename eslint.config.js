@@ -43,5 +43,5 @@ export default defineConfig(
     files: ["apps/web/src/routes/**"],
     rules: { "react-refresh/only-export-components": "off" },
   },
-  { files: ["**/*.js"], extends: [tseslint.configs.disableTypeChecked] },
+  { files: ["**/*.{js,mjs}"], extends: [tseslint.configs.disableTypeChecked] },
 );
