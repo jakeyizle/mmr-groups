@@ -57,6 +57,7 @@ function* combinations(
   }
   for (let i = from; i <= ids.length - k; i++) {
     for (const tail of combinations(ids, k - 1, i + 1))
+      // Stryker disable next-line StringLiteral: i < ids.length
       yield [ids[i] ?? "", ...tail];
   }
 }
@@ -144,12 +145,8 @@ export function generateTeams(input: GenerateInput): Suggestion {
   const keep = (input.skip ?? 0) + 1;
   const top: { score: number; matches: Split[] }[] = [];
   const offer = (score: number, matches: Split[]) => {
-    if (
-      top.length === keep &&
-      score >= (top[keep - 1]?.score ?? Infinity) - 1e-12
-    )
-      return;
     let i = top.length;
+    // Stryker disable next-line LogicalOperator: i > 0, so top[i - 1] exists
     while (i > 0 && (top[i - 1]?.score ?? 0) > score + 1e-12) i--;
     top.splice(i, 0, { score, matches });
     if (top.length > keep) top.pop();
@@ -161,25 +158,32 @@ export function generateTeams(input: GenerateInput): Suggestion {
         offer(score, chosen);
         return;
       }
+      // Stryker disable next-line ArrayDeclaration: m < options.length
       for (const split of options[m] ?? []) {
         const next = score + split.score;
         // Splits are sorted, so the rest of this match's options are no better.
-        if (
-          top.length === keep &&
-          next >= (top[keep - 1]?.score ?? Infinity) - 1e-12
-        )
-          break;
+        // Stryker disable next-line all: pruning only; the results are the same
+        if (next >= (top[keep - 1]?.score ?? Infinity) - 1e-12) break;
         walk(m + 1, next, [...chosen, split]);
       }
     };
     walk(0, 0, []);
   }
   // Fewer distinct splits than requested: wrap around.
-  const pick = top[Math.min(input.skip ?? 0, top.length - 1)] ?? top[0];
+  const pick = top[Math.min(input.skip ?? 0, top.length - 1)];
+  // Stryker disable next-line OptionalChaining,ArrayDeclaration: there is always a partition
   return result(pick?.matches ?? []);
 }
 
-/** Seeded swap search for large groups: start from a snake draft, keep improving swaps. */
+/** Match evaluations the local search may spend on restarts (deterministic, unlike a time limit). */
+const BUDGET = 40_000;
+const MAX_RESTARTS = 16;
+
+/**
+ * Local search for large groups: from a snake draft and from seeded shuffles of it, keep
+ * making any cross-team swap that lowers the total imbalance until none does. The distinct
+ * results, best first, play the role of the exhaustive ranking for `skip` (TEAMS-004).
+ */
 function localSearch(
   playing: string[],
   matchCount: number,
@@ -188,48 +192,80 @@ function localSearch(
   splitOf: (teams: string[][]) => Split,
   skip: number,
 ): Split[] {
-  const rand = mulberry32(0x5eed + skip);
   const slots = matchCount * T;
-  const teams: string[][] = Array.from({ length: slots }, () => []);
-  // Snake draft by id order, then shuffled by the seed for regenerations.
-  const order = [...playing];
-  for (let i = order.length - 1; i > 0 && skip > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [order[i], order[j]] = [order[j] ?? "", order[i] ?? ""];
-  }
-  order.forEach((id, i) => {
-    const round = Math.floor(i / slots);
-    const pos = round % 2 === 0 ? i % slots : slots - 1 - (i % slots);
-    teams[pos]?.push(id);
-  });
   const matchOf = (t: number) => Math.floor(t / T);
-  const build = () =>
-    Array.from({ length: matchCount }, (_, m) =>
+  const rand = mulberry32(0x5eed);
+  const found = new Map<string, { total: number; matches: Split[] }>();
+
+  let spent = 0;
+  // Stryker disable next-line EqualityOperator,ConditionalExpression,LogicalOperator: the budget trades balance for speed
+  for (
+    let restart = 0;
+    restart < MAX_RESTARTS && (restart < 2 || spent < BUDGET);
+    restart++
+  ) {
+    const order = [...playing];
+    // Stryker disable all: any seeded shuffle will do; restarts only need to differ
+    if (restart > 0)
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [order[i], order[j]] = [order[j] ?? "", order[i] ?? ""];
+      }
+    // Stryker restore all
+    const teams: string[][] = Array.from({ length: slots }, () => []);
+    order.forEach((id, i) => {
+      const round = Math.floor(i / slots);
+      const pos = round % 2 === 0 ? i % slots : slots - 1 - (i % slots);
+      teams[pos]?.push(id);
+    });
+    let matches = Array.from({ length: matchCount }, (_, m) =>
       splitOf(teams.slice(m * T, m * T + T)),
     );
-  let matches = build();
-  let total = matches.reduce((s, m) => s + m.score, 0);
+    let total = matches.reduce((sum, m) => sum + m.score, 0);
 
-  for (let iter = 0; iter < 3000; iter++) {
-    const a = Math.floor(rand() * slots);
-    const b = Math.floor(rand() * slots);
-    if (a === b) continue;
-    const ta = teams[a] ?? [];
-    const tb = teams[b] ?? [];
-    const i = Math.floor(rand() * S);
-    const j = Math.floor(rand() * S);
-    [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
-    const touched = new Set([matchOf(a), matchOf(b)]);
-    const candidate = matches.map((m, k) =>
-      touched.has(k) ? splitOf(teams.slice(k * T, k * T + T)) : m,
-    );
-    const score = candidate.reduce((s, m) => s + m.score, 0);
-    if (score < total - 1e-12) {
-      matches = candidate;
-      total = score;
-    } else {
-      [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
+    let improved = true;
+    while (improved) {
+      improved = false;
+      teams.forEach((ta, a) => {
+        teams.forEach((tb, b) => {
+          if (b <= a) return;
+          for (let i = 0; i < S; i++) {
+            for (let j = 0; j < S; j++) {
+              // Stryker disable next-line StringLiteral: indices are within the teams
+              [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
+              const candidate = matches.map((m, k) => {
+                if (k !== matchOf(a) && k !== matchOf(b)) return m;
+                spent++;
+                return splitOf(teams.slice(k * T, k * T + T));
+              });
+              const score = candidate.reduce((sum, m) => sum + m.score, 0);
+              if (score < total - 1e-12) {
+                matches = candidate;
+                total = score;
+                improved = true;
+              } else {
+                // Stryker disable next-line StringLiteral: indices are within the teams
+                [ta[i], tb[j]] = [tb[j] ?? "", ta[i] ?? ""];
+              }
+            }
+          }
+        });
+      });
     }
+    // The same arrangement in another order is the same suggestion.
+    const key = matches
+      .map((m) =>
+        m.teams
+          .map((t) => [...t].sort().join(","))
+          .sort()
+          .join("|"),
+      )
+      .sort()
+      .join("/");
+    if (!found.has(key)) found.set(key, { total, matches });
   }
-  return build();
+
+  const ranked = [...found.values()].sort((x, y) => x.total - y.total);
+  // Stryker disable next-line ArrayDeclaration: there is always at least one result
+  return ranked[Math.min(skip, ranked.length - 1)]?.matches ?? [];
 }

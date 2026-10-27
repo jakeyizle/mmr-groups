@@ -97,3 +97,20 @@ describe(
     });
   },
 );
+
+describe("ordering ties", { tags: ["BOARD-001"] }, () => {
+  it("orders equal ratings by ID, whatever order they first played in", () => {
+    // z and y tie twice: identical ratings.
+    const history = [
+      match([["z"], ["y"]], [1, 1]),
+      match([["y"], ["z"]], [1, 1]),
+    ];
+    const board = leaderboard(history, config, T);
+    expect(board.map((e) => [e.playerId, e.rank])).toEqual([
+      ["y", 1],
+      ["z", 1],
+    ]);
+    const reversed = leaderboard([...history].reverse(), config, T);
+    expect(reversed.map((e) => e.playerId)).toEqual(["y", "z"]);
+  });
+});

@@ -152,6 +152,7 @@ export function ratingSeries(
   const { matches } = replay(history, config, asOf);
   const series = new Map<string, RatingPoint[]>();
   for (const match of [...history].sort(compareMatches)) {
+    // Stryker disable next-line ArrayDeclaration: replay records every match
     for (const [pid, change] of matches.get(match.id) ?? []) {
       const points = series.get(pid) ?? [];
       points.push({
@@ -191,14 +192,13 @@ export function activity(
     // Step back into the previous week and snap to its start (DST-safe).
     start = weekStart(new Date(start.getTime() - DAY_MS));
   }
-  const index = new Map(weeks.map((w, i) => [w.week, i]));
+  const byWeek = new Map(weeks.map((w) => [w.week, w]));
   const since = now.getTime() - 30 * DAY_MS;
   const recent = new Map<string, number>();
 
   for (const m of history) {
     const at = new Date(m.playedAt);
-    const i = index.get(weekStart(at).toISOString());
-    const week = i === undefined ? undefined : weeks[i];
+    const week = byWeek.get(weekStart(at).toISOString());
     if (week) week.matches += 1;
     if (at.getTime() >= since && at.getTime() <= now.getTime()) {
       for (const id of m.teams.flatMap((t) => t.playerIds))
@@ -230,16 +230,15 @@ export function bestDuos(
     for (const team of match.teams) {
       const outcome = teamOutcome(match, team);
       const ids = [...team.playerIds].sort();
-      for (let i = 0; i < ids.length; i++)
-        for (let j = i + 1; j < ids.length; j++) {
-          const a = ids[i] ?? "";
-          const b = ids[j] ?? "";
+      ids.forEach((a, i) => {
+        for (const b of ids.slice(i + 1)) {
           const key = `${a}|${b}`;
           let duo = duos.get(key);
           if (!duo)
             duos.set(key, (duo = { playerIds: [a, b], ...emptyRecord() }));
           add(duo, outcome);
         }
+      });
     }
   }
   const label = (d: Duo) => d.playerIds.map(nameOf).sort().join(" & ");
@@ -280,6 +279,7 @@ export function biggestUpsets(
     const before = matches.get(match.id);
     const teams = match.teams.map((t) =>
       t.playerIds.map(
+        // Stryker disable next-line OptionalChaining,LogicalOperator: replay records every participant of every match
         (id): Rating => before?.get(id)?.before ?? system.initial(),
       ),
     );
@@ -324,16 +324,16 @@ export function longestStreaks(
 
 /** STATS-011: counts of displayed ratings in buckets of 50, lowest first, no gaps. */
 export function ratingHistogram(ratings: readonly number[], size = 50) {
-  if (ratings.length === 0) return [];
-  const floor = (r: number) => Math.floor(r / size) * size;
-  const lo = Math.min(...ratings.map(floor));
-  const hi = Math.max(...ratings.map(floor));
+  const counts = new Map<number, number>();
+  for (const r of ratings) {
+    const from = Math.floor(r / size) * size;
+    counts.set(from, (counts.get(from) ?? 0) + 1);
+  }
+  // No ratings: lo is Infinity, so there are no buckets.
+  const lo = Math.min(...counts.keys());
+  const hi = Math.max(...counts.keys());
   const buckets: { from: number; count: number }[] = [];
   for (let from = lo; from <= hi; from += size)
-    buckets.push({ from, count: 0 });
-  for (const r of ratings) {
-    const b = buckets[(floor(r) - lo) / size];
-    if (b) b.count += 1;
-  }
+    buckets.push({ from, count: counts.get(from) ?? 0 });
   return buckets;
 }

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_RATING_CONFIG as config, type Rating } from "./rating";
-import { generateTeams, type Suggestion } from "./teams";
+import {
+  DEFAULT_RATING_CONFIG as config,
+  type Rating,
+  ratingSystem,
+} from "./rating";
+import { EXHAUSTIVE_LIMIT, generateTeams, type Suggestion } from "./teams";
 
 const doubles = { teams: 2, size: 2 };
 
@@ -253,3 +257,273 @@ describe("larger groups", () => {
     expect(generateTeams(input)).toEqual(s);
   });
 });
+
+// Reference: every partition of `ids` into groups of `size`, canonical (each group led by its smallest id).
+function partitions(ids: string[], size: number): string[][][] {
+  if (ids.length === 0) return [[]];
+  const [first = "", ...rest] = ids;
+  const out: string[][][] = [];
+  const pick = (from: number, chosen: string[]) => {
+    if (chosen.length === size - 1) {
+      const left = rest.filter((id) => !chosen.includes(id));
+      for (const tail of partitions(left, size))
+        out.push([[first, ...chosen], ...tail]);
+      return;
+    }
+    for (let i = from; i < rest.length; i++)
+      pick(i + 1, [...chosen, rest[i] ?? ""]);
+  };
+  pick(0, []);
+  return out;
+}
+
+const system = ratingSystem(config);
+/** Imbalance of one match: Σ |p − 1/T|, as the generator defines it. */
+function score(teams: string[][], ratings: Map<string, Rating>) {
+  const p = system.predictWin(
+    teams.map((t) => t.map((id) => ratings.get(id) ?? system.initial())),
+  );
+  return p.reduce((sum, x) => sum + Math.abs(x - 1 / teams.length), 0);
+}
+/** Every full arrangement's imbalance, best first. */
+function reference(
+  ids: string[],
+  ratings: Map<string, Rating>,
+  T: number,
+  S: number,
+) {
+  return partitions(ids, T * S)
+    .flatMap((matches) =>
+      matches.reduce<string[][][][]>(
+        (acc, m) =>
+          acc.flatMap((prefix) =>
+            partitions(m, S).map((split) => [...prefix, split]),
+          ),
+        [[]],
+      ),
+    )
+    .map((arr) => arr.reduce((sum, teams) => sum + score(teams, ratings), 0))
+    .sort((a, b) => a - b);
+}
+
+/** Distinct, uneven ratings so no two arrangements tie. */
+const uneven = (ids: string[]) =>
+  new Map(
+    ids.map((id, i) => [
+      id,
+      { mu: 20 + ((i * 7) % 11) + i / 10, sigma: 2 + (i % 3) / 5 },
+    ]),
+  );
+
+describe(
+  "exhaustive search",
+  { tags: ["TEAMS-001", "TEAMS-002", "TEAMS-004"] },
+  () => {
+    it("returns the k-th best arrangement for skip = k, across matches", () => {
+      const ids = "abcdefgh".split("");
+      const ratings = uneven(ids);
+      const ref = reference(ids, ratings, 2, 2);
+      for (let skip = 0; skip < 6; skip++) {
+        const s = ok(
+          generateTeams({
+            playerIds: ids,
+            ratings,
+            config,
+            format: doubles,
+            skip,
+          }),
+        );
+        expect(s.imbalance).toBeCloseTo(ref[skip] ?? -1, 9);
+        expect(flat(s)).toEqual(ids);
+      }
+    });
+
+    it("is exhaustive up to the limit of 12 players", () => {
+      expect(EXHAUSTIVE_LIMIT).toBe(12);
+      const ids = "abcdefghijkl".split("");
+      const ratings = uneven(ids);
+      const ref = reference(ids, ratings, 2, 6);
+      for (const skip of [0, 1, 2]) {
+        const s = ok(
+          generateTeams({
+            playerIds: ids,
+            ratings,
+            config,
+            format: { teams: 2, size: 6 },
+            skip,
+          }),
+        );
+        expect(s.imbalance).toBeCloseTo(ref[skip] ?? -1, 9);
+      }
+    });
+
+    it("breaks ties in canonical order", () => {
+      // Unrated players: every split is equally balanced.
+      const at = (skip: number) =>
+        ok(
+          generateTeams({
+            playerIds: ["d", "c", "b", "a"],
+            ratings: new Map(),
+            config,
+            format: doubles,
+            skip,
+          }),
+        ).matches[0]?.teams;
+      expect([at(0), at(1), at(2)]).toEqual([
+        [
+          ["a", "b"],
+          ["c", "d"],
+        ],
+        [
+          ["a", "c"],
+          ["b", "d"],
+        ],
+        [
+          ["a", "d"],
+          ["b", "c"],
+        ],
+      ]);
+    });
+
+    it("wraps around when skipping past the last distinct split", () => {
+      const ids = ["a", "b", "c", "d"];
+      const ratings = uneven(ids);
+      const at = (skip: number) =>
+        ok(
+          generateTeams({
+            playerIds: ids,
+            ratings,
+            config,
+            format: doubles,
+            skip,
+          }),
+        );
+      expect(at(5)).toEqual(at(2));
+      expect(at(2)).not.toEqual(at(1));
+    });
+
+    it("ignores duplicate attendees", () => {
+      const s = generateTeams({
+        playerIds: ["a", "b", "a", "c"],
+        ratings: new Map(),
+        config,
+        format: doubles,
+      });
+      expect(s).toEqual({ needed: 1 });
+    });
+
+    it("keeps players with look-alike ids apart", () => {
+      // "a"+"bc" and "ab"+"c" read the same when joined without a separator.
+      const ids = ["a", "ab", "abc", "bc", "c", "ca", "x", "y"];
+      const s = ok(
+        generateTeams({
+          playerIds: ids,
+          ratings: uneven(ids),
+          config,
+          format: doubles,
+        }),
+      );
+      expect(flat(s)).toEqual([...ids].sort());
+    });
+  },
+);
+
+describe("sitting out", { tags: ["TEAMS-003"] }, () => {
+  const ids = ["a", "b", "c", "d", "e"];
+  const out = (counts?: Map<string, number>) =>
+    ok(
+      generateTeams({
+        playerIds: ids,
+        ratings: new Map(),
+        config,
+        format: doubles,
+        sitOutCounts: counts,
+      }),
+    ).sittingOut;
+
+  it("sits out whoever has sat out least, ties by id", () => {
+    expect(out()).toEqual(["a"]);
+    expect(out(new Map([["a", 1]]))).toEqual(["b"]);
+    expect(
+      out(
+        new Map([
+          ["a", 2],
+          ["b", 1],
+          ["c", 1],
+          ["d", 1],
+        ]),
+      ),
+    ).toEqual(["e"]);
+    expect(
+      out(
+        new Map([
+          ["e", 0],
+          ["a", 1],
+          ["b", 1],
+          ["c", 1],
+          ["d", 3],
+        ]),
+      ),
+    ).toEqual(["e"]);
+  });
+});
+
+describe(
+  "local search",
+  { tags: ["TEAMS-001", "TEAMS-002", "TEAMS-004"] },
+  () => {
+    const ids = "abcdefghijklmn".split(""); // 14: over the exhaustive limit
+    const ratings = uneven(ids);
+    const run = (skip?: number) =>
+      ok(
+        generateTeams({
+          playerIds: ids,
+          ratings,
+          config,
+          format: { teams: 2, size: 7 },
+          ...(skip === undefined ? {} : { skip }),
+        }),
+      );
+
+    it("places everyone once in teams of the right size, near the best possible balance", () => {
+      const s = run();
+      expect(flat(s)).toEqual(ids);
+      expect(s.matches).toHaveLength(1);
+      expect(s.matches[0]?.teams.map((t) => t.length)).toEqual([7, 7]);
+      const best = reference(ids, ratings, 2, 7)[0] ?? 0;
+      expect(s.imbalance).toBeLessThan(best + 0.01);
+      expect(s.imbalance).toBeCloseTo(
+        score(s.matches[0]?.teams ?? [], ratings),
+        9,
+      );
+    });
+
+    it("splits larger groups into several matches", () => {
+      const many = "abcdefghijklmnopqr".split(""); // 18 = 2 matches of 2×4, 2 out
+      const r = uneven(many);
+      const s = ok(
+        generateTeams({
+          playerIds: many,
+          ratings: r,
+          config,
+          format: { teams: 2, size: 4 },
+        }),
+      );
+      expect(s.matches).toHaveLength(2);
+      expect(s.sittingOut).toEqual(["a", "b"]);
+      expect([...flat(s), ...s.sittingOut].sort()).toEqual(many);
+      for (const m of s.matches)
+        expect(m.teams.map((t) => t.length)).toEqual([4, 4]);
+      expect(s.imbalance).toBeCloseTo(
+        s.matches.reduce((sum, m) => sum + score(m.teams, r), 0),
+        9,
+      );
+    });
+
+    it("treats a missing skip as 0, and regenerates differently", () => {
+      expect(run()).toEqual(run(0));
+      expect(run(1).matches[0]?.teams).not.toEqual(run(0).matches[0]?.teams);
+      expect(run(1)).toEqual(run(1));
+    });
+  },
+);

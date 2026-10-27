@@ -5,6 +5,7 @@ import {
   type MatchInput,
   matchInputSchema,
   type MatchSettings,
+  matchUpdateSchema,
   validateMatch,
 } from "./match";
 
@@ -337,3 +338,126 @@ describe(
     });
   },
 );
+
+/** Every issue in full: the UI shows messages, the API returns paths. */
+const issues = (m: MatchInput, settings = doubles) => {
+  const r = check(m, settings);
+  return r.ok ? [] : r.issues.map((i) => [i.path, i.code, i.message]);
+};
+
+describe(
+  "issue details",
+  {
+    tags: [
+      "MATCH-007",
+      "MATCH-009",
+      "MATCH-010",
+      "MATCH-012",
+      "MATCH-013",
+      "MATCH-017",
+      "MATCH-018",
+      "MATCH-020",
+    ],
+  },
+  () => {
+    it("team count and size", () => {
+      expect(
+        issues(
+          input([
+            team("ab", { rank: 1 }),
+            team("c", { rank: 2 }),
+            team("d", { rank: 3 }),
+          ]),
+        ),
+      ).toEqual([
+        [["teams"], "team_count", "Needs 2 teams"],
+        [["teams", 1, "playerIds"], "team_size", "Each team needs 2 players"],
+        [["teams", 2, "playerIds"], "team_size", "Each team needs 2 players"],
+      ]);
+      const singles = {
+        ...doubles,
+        teamFormat: { kind: "fixed", teams: 2, size: 1 },
+      } as const;
+      expect(
+        issues(
+          input([team("ab", { rank: 1 }), team("c", { rank: 2 })]),
+          singles,
+        ),
+      ).toEqual([
+        [["teams", 0, "playerIds"], "team_size", "Each team needs 1 player"],
+      ]);
+    });
+
+    it("duplicate players", () => {
+      expect(
+        issues(input([team("ab", { rank: 1 }), team("ca", { rank: 2 })])),
+      ).toEqual([
+        [
+          ["teams", 1, "playerIds", 1],
+          "duplicate_player",
+          "A player can only appear once",
+        ],
+      ]);
+    });
+
+    it("scoring modes", () => {
+      const partly = input([team("ab", { score: 3 }), team("cd")]);
+      expect(issues(partly, { ...doubles, scoringMode: "none" })).toEqual([
+        [["teams"], "scores_not_allowed", "This group doesn't record scores"],
+      ]);
+      expect(issues(partly, { ...doubles, scoringMode: "required" })).toEqual([
+        [["teams", 1, "score"], "scores_required", "Score required"],
+      ]);
+      expect(issues(partly)).toEqual([
+        [
+          ["teams", 1, "score"],
+          "scores_incomplete",
+          "Enter a score for every team, or none",
+        ],
+      ]);
+    });
+
+    it("placements", () => {
+      expect(issues(input([team("ab", { rank: 1 }), team("cd")]))).toEqual([
+        [["teams", 1, "rank"], "rank_required", "Choose a placement"],
+      ]);
+      expect(
+        issues(input([team("ab", { rank: 2 }), team("cd", { rank: 2 })])),
+      ).toEqual([[["teams"], "invalid_ranks", "Placements don't add up"]]);
+      expect(
+        issues(input([team("ab", { rank: 1 }), team("cd", { rank: 1 })])),
+      ).toEqual([
+        [["teams"], "tie_not_allowed", "This group doesn't allow ties"],
+      ]);
+    });
+
+    it("date-time", () => {
+      expect(
+        issues(input(won, { playedAt: "2026-06-03T12:00:00.000Z" })),
+      ).toEqual([
+        [
+          ["playedAt"],
+          "too_far_in_future",
+          "Can't be more than 24 hours from now",
+        ],
+      ]);
+    });
+  },
+);
+
+describe("matchUpdateSchema", { tags: ["EDIT-011"] }, () => {
+  it("needs at least one field", () => {
+    const r = matchUpdateSchema.safeParse({});
+    expect(r.success).toBe(false);
+    expect(r.error?.issues.map((i) => i.message)).toEqual([
+      "Nothing to change",
+    ]);
+    expect(matchUpdateSchema.safeParse({ notes: "" }).success).toBe(true);
+  });
+
+  it("trims notes", () => {
+    expect(matchUpdateSchema.parse({ notes: "  hi  " })).toEqual({
+      notes: "hi",
+    });
+  });
+});

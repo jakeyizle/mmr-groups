@@ -2,12 +2,14 @@ import { rate } from "openskill";
 import { describe, expect, it } from "vitest";
 
 import {
+  compareMatches,
   DEFAULT_RATING_CONFIG as config,
   decay,
   displayRating,
   isProvisional,
   replay,
   resolveRatingConfig,
+  ratingSystem,
   type ReplayMatch,
 } from "./rating";
 import type { MatchTeam } from "./types";
@@ -349,3 +351,37 @@ describe(
     });
   },
 );
+
+describe("compareMatches", { tags: ["MATCH-006"] }, () => {
+  const m = (id: string, playedAt: string) => ({ id, playedAt, teams: [] });
+  it("orders by date-time, then by ID", () => {
+    expect(compareMatches(m("B", at(0)), m("A", at(1)))).toBe(-1);
+    expect(compareMatches(m("A", at(1)), m("B", at(0)))).toBe(1);
+    expect(compareMatches(m("A", at(0)), m("B", at(0)))).toBe(-1);
+    expect(compareMatches(m("B", at(0)), m("A", at(0)))).toBe(1);
+    expect(compareMatches(m("A", at(0)), m("A", at(0)))).toBe(0);
+  });
+});
+
+describe("ratingSystem", { tags: ["RATE-013"] }, () => {
+  it("rates with the group's settings", () => {
+    const custom = resolveRatingConfig({ mu: 30, sigma: 6, tau: 0.5 });
+    const system = ratingSystem(custom);
+    expect(system.initial()).toEqual({ mu: 30, sigma: 6 });
+    const teams = [[system.initial()], [system.initial()]];
+    const options = { mu: 30, sigma: 6, tau: 0.5 };
+    expect(
+      system.rateMatch(teams, [
+        { playerIds: ["a"], rank: 1, score: null },
+        { playerIds: ["b"], rank: 2, score: null },
+      ]),
+    ).toEqual(rate(teams, { ...options, rank: [1, 2] }));
+    expect(
+      system.rateMatch(teams, [
+        { playerIds: ["a"], rank: 1, score: null },
+        { playerIds: ["b"], rank: 2, score: null },
+      ]),
+    ).not.toEqual(rate(teams, { rank: [1, 2] }));
+    expect(system.predictWin(teams)).toEqual([0.5, 0.5]);
+  });
+});

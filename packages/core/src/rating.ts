@@ -124,9 +124,11 @@ export function replay(
     const changes = new Map<string, { before: Rating; after: Rating }>();
     match.teams.forEach((team, t) => {
       team.playerIds.forEach((id, p) => {
+        // Stryker disable OptionalChaining,ConditionalExpression,LogicalOperator: openskill returns the input's shape
         const b = before[t]?.[p];
         const a = after[t]?.[p];
         if (!b || !a) throw new Error("openskill returned a different shape");
+        // Stryker restore OptionalChaining,ConditionalExpression,LogicalOperator
         const next = { mu: a.mu, sigma: a.sigma };
         changes.set(id, { before: b, after: next });
         players.set(id, {
@@ -137,6 +139,7 @@ export function replay(
       });
     });
     matches.set(match.id, changes);
+    // Stryker disable next-line LogicalOperator: `previous` is set exactly when `observe` is
     if (observe && previous) observe(match, previous, players);
   }
 

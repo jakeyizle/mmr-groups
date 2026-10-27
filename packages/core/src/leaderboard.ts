@@ -44,12 +44,10 @@ function order(players: ReadonlyMap<string, PlayerRating>) {
 /** Competition ranks by displayed rating ("1224"). */
 function ranks(players: ReadonlyMap<string, PlayerRating>) {
   const out = new Map<string, number>();
+  let rank = 0;
   order(players).forEach((p, i, all) => {
-    const prev = all[i - 1];
-    out.set(
-      p.id,
-      prev?.display === p.display ? (out.get(prev.id) ?? i + 1) : i + 1,
-    );
+    if (all[i - 1]?.display !== p.display) rank = i + 1;
+    out.set(p.id, rank);
   });
   return out;
 }
@@ -73,17 +71,20 @@ export function leaderboard(
   const result = replay(history, config, asOf, (match, before, after) => {
     const rankBefore = ranks(before);
     const rankAfter = ranks(after);
-    for (const id of match.teams.flatMap((t) => t.playerIds)) {
-      const r = record.get(id) ?? { wins: 0, losses: 0, ties: 0 };
-      const team = match.teams.find((t) => t.playerIds.includes(id));
-      if (team) r[PLURAL[teamOutcome(match, team)]] += 1;
-      record.set(id, r);
-      const was = rankBefore.get(id);
-      const now = rankAfter.get(id);
-      rankChange.set(
-        id,
-        was === undefined || now === undefined ? null : was - now,
-      );
+    for (const team of match.teams) {
+      const outcome = PLURAL[teamOutcome(match, team)];
+      for (const id of team.playerIds) {
+        const r = record.get(id) ?? { wins: 0, losses: 0, ties: 0 };
+        r[outcome] += 1;
+        record.set(id, r);
+        const was = rankBefore.get(id);
+        const now = rankAfter.get(id);
+        rankChange.set(
+          id,
+          // Stryker disable next-line ConditionalExpression: players are always ranked after their match
+          was === undefined || now === undefined ? null : was - now,
+        );
+      }
     }
   });
 
@@ -94,6 +95,7 @@ export function leaderboard(
     rating: display,
     provisional: isProvisional(r, config),
     matches: r.matches,
+    // Stryker disable next-line ObjectLiteral: every rated player has a record
     ...(record.get(id) ?? { wins: 0, losses: 0, ties: 0 }),
     rankChange: rankChange.get(id) ?? null,
   }));

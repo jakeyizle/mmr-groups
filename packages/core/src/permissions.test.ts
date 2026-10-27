@@ -193,3 +193,22 @@ describe("non-members", () => {
     expect(can(actor, "match.edit", { recordedByPlayerId: null })).toBe(false);
   });
 });
+
+describe("targets", () => {
+  it("own-match checks need a match target", () => {
+    expect(can(as("recorder"), "match.edit")).toBe(false);
+    expect(can(as("recorder"), "match.delete", { role: "viewer" })).toBe(false);
+  });
+
+  it("role changes need a from/to target", () => {
+    expect(can(as("owner"), "player.setRole")).toBe(false);
+    expect(can(as("owner"), "player.setRole", { role: "viewer" })).toBe(false);
+  });
+
+  it("unlinking needs a role target", () => {
+    expect(can(as("owner"), "player.unlink")).toBe(false);
+    expect(
+      can(as("owner"), "player.unlink", { from: "viewer", to: "recorder" }),
+    ).toBe(false);
+  });
+});

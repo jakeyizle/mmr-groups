@@ -8,5 +8,5 @@ test-results/
 playwright-report/
 *.log
 dist-e2e/
-.stryker-tmp/
+.stryker-tmp*/
 reports/
