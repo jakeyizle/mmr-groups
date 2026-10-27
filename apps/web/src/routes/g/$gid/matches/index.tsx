@@ -81,41 +81,47 @@ function History({ data }: { data: GroupData }) {
           {list.map((m) => {
             const changes = ratings.matches.get(m.id);
             return (
-              <li key={m.id} className="space-y-2 rounded-lg border p-3">
-                <p className="text-sm text-muted-foreground">
-                  {dateFormat.format(new Date(m.playedAt))}
-                </p>
-                {[...m.teams]
-                  .sort((a, b) => a.rank - b.rank)
-                  .map((t, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex items-start justify-between gap-2 rounded-md px-2 py-1",
-                        t.rank === 1 && "bg-muted",
-                      )}
-                    >
-                      <ul className="min-w-0 space-y-0.5">
-                        {t.playerIds.map((pid) => {
-                          const c = changes?.get(pid);
-                          const delta = c
-                            ? displayRating(c.after) - displayRating(c.before)
-                            : 0;
-                          return (
-                            <li key={pid} className="flex gap-2">
-                              <span className="truncate">
-                                {names.get(pid) ?? "Removed player"}
-                              </span>
-                              <Delta value={delta} />
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <span className="shrink-0 text-sm font-medium tabular-nums">
-                        {t.score ?? placeLabel(t.rank, m.teams)}
-                      </span>
-                    </div>
-                  ))}
+              <li key={m.id}>
+                <Link
+                  to="/g/$gid/matches/$mid"
+                  params={{ gid, mid: m.id }}
+                  className="block space-y-2 rounded-lg border p-3 hover:bg-muted/30"
+                >
+                  <p className="text-sm text-muted-foreground">
+                    {dateFormat.format(new Date(m.playedAt))}
+                  </p>
+                  {[...m.teams]
+                    .sort((a, b) => a.rank - b.rank)
+                    .map((t, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex items-start justify-between gap-2 rounded-md px-2 py-1",
+                          t.rank === 1 && "bg-muted",
+                        )}
+                      >
+                        <ul className="min-w-0 space-y-0.5">
+                          {t.playerIds.map((pid) => {
+                            const c = changes?.get(pid);
+                            const delta = c
+                              ? displayRating(c.after) - displayRating(c.before)
+                              : 0;
+                            return (
+                              <li key={pid} className="flex gap-2">
+                                <span className="truncate">
+                                  {names.get(pid) ?? "Removed player"}
+                                </span>
+                                <Delta value={delta} />
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        <span className="shrink-0 text-sm font-medium tabular-nums">
+                          {t.score ?? placeLabel(t.rank, m.teams)}
+                        </span>
+                      </div>
+                    ))}
+                </Link>
               </li>
             );
           })}

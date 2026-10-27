@@ -1,5 +1,7 @@
 import {
   type MatchInput,
+  type MatchTeam,
+  type MatchUpdate,
   matchInputSchema,
   type MatchSettings,
   type TeamFormat,
@@ -73,6 +75,49 @@ export function toMatchInput(row: MatchRow): MatchInput {
       ...(t.rank === "" ? {} : { rank: Number(t.rank) }),
     })),
   };
+}
+
+/** A stored match as an editable row (placements only for unscored teams). */
+export function fromMatch(m: {
+  playedAt: string;
+  teams: MatchTeam[];
+}): MatchRow {
+  return {
+    playedAt: toLocalInput(new Date(m.playedAt)),
+    teams: m.teams.map((t) => ({
+      playerIds: [...t.playerIds],
+      score: t.score === null ? "" : String(t.score),
+      rank: t.score === null ? String(t.rank) : "",
+    })),
+  };
+}
+
+/**
+ * EDIT-011: send only what changed, so untouched fields aren't re-validated
+ * against newer settings. Teams compare on what the recorder entered.
+ */
+export function matchChanges(
+  original: { playedAt: string; teams: MatchTeam[]; notes: string },
+  row: MatchRow,
+  notes: string,
+): MatchUpdate {
+  const input = toMatchInput(row);
+  const entered = (teams: MatchInput["teams"] | MatchTeam[]) =>
+    JSON.stringify(
+      teams.map((t) => ({
+        playerIds: t.playerIds,
+        score: t.score ?? null,
+        rank: t.score == null ? t.rank : undefined,
+      })),
+    );
+  const changes: MatchUpdate = {};
+  // Compared at minute precision, as the input shows it.
+  if (toLocalInput(new Date(original.playedAt)) !== row.playedAt)
+    changes.playedAt = input.playedAt;
+  if (entered(original.teams) !== entered(input.teams))
+    changes.teams = input.teams;
+  if (original.notes !== notes.trim()) changes.notes = notes;
+  return changes;
 }
 
 const hasScores = (row: MatchRow) => row.teams.some((t) => t.score !== "");

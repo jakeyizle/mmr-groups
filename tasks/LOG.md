@@ -27,3 +27,4 @@
 - T-023 | 2026-10-26 | match history: newest-first cards, winners first with score/placement, per-player display-rating deltas from `replay`, `?player=` filter
 - T-024 | 2026-10-26 | `GET /groups/:gid/audit` (members via `group.view`, keyset pages of 50, actor as player name); plain-language audit page with "Show older"; queries skip retries on 4xx
 - T-025 | 2026-10-26 | match PATCH/DELETE with `If-Match` (428/412 + current match), guarded on version; only changed teams/date re-validated; `match.updated`/`match.deleted` audits + audit lines
+- T-026 | 2026-10-26 | match detail page (teams, deltas, notes, recorder) with edit form (shared `MatchRowEditor`, sends only changed fields) and delete dialog; on 412 the form resets to the latest version with a notice
