@@ -30,3 +30,4 @@
 - T-026 | 2026-10-26 | match detail page (teams, deltas, notes, recorder) with edit form (shared `MatchRowEditor`, sends only changed fields) and delete dialog; on 412 the form resets to the latest version with a notice
 - T-027 | 2026-10-26 | invite PUT/DELETE (12-char code, optional expiry, audited without the code), admin snapshot `invite`, `GET /invites/:code` (moved here from T-028), settings invite section
 - T-028 | 2026-10-26 | `POST /invites/:code/claim` (first claim wins via guarded `user_id IS NULL`, or new player with default role + cap/name checks), members short-circuit; `POST /groups/:gid/leave` (owner blocked, admin reset); audited
+- T-029 | 2026-10-26 | join page (sign-in return, claim buttons, "not listed" name, member redirect, invalid-link message, claim_lost retry), leave group in settings; two-context E2E incl. deferred GROUP-008/PLAYER-008/ROLE-005

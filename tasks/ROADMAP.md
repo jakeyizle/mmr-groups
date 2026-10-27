@@ -71,7 +71,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Invite link API + settings UI
 - [x] Claim/join API, leave
-- [ ] Join flow UI (+ E2E for UI that needs a second linked member: GROUP-008 transfer, PLAYER-008 unlink, ROLE-005 grant admin) → T-029
+- [x] Join flow UI (+ E2E for UI that needs a second linked member: GROUP-008 transfer, PLAYER-008 unlink, ROLE-005 grant admin)
 
 ## M5 — Insights (STATS, TEAMS)
 

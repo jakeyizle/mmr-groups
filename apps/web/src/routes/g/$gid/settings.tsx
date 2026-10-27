@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DangerZone } from "@/components/group/danger-zone";
 import { GeneralSettings } from "@/components/group/general-settings";
 import { InviteSettings } from "@/components/group/invite-settings";
+import { LeaveGroup } from "@/components/group/leave-group";
 import { PlayersSettings } from "@/components/group/players-settings";
 import { requireUser } from "@/lib/auth";
 import { Can } from "@/lib/can";
@@ -37,6 +38,7 @@ function Settings() {
           <InviteSettings data={data} />
         </section>
       </Can>
+      <LeaveGroup data={data} />
       <DangerZone data={data} />
     </div>
   );
