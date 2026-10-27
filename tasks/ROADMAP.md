@@ -99,7 +99,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Spike: Stryker on core + api (workerd mutant activation)
 - [x] `mutate:changed` + PR CI job, core + api
-- [ ] Web Vitest project, lib extractions, first component tests, add web to the check → T-045
+- [x] Web Vitest project, lib extractions, first component tests, add web to the check
 - [ ] Audit: core
 - [ ] Audit: api auth + db
 - [ ] Audit: api groups

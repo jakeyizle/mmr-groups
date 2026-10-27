@@ -53,6 +53,7 @@ export function IndexVisibility({ data }: { data: GroupData }) {
           Site admins only. The group stays viewable by its link.
         </FieldDescription>
         <FieldError
+          // Stryker disable next-line ArrayDeclaration: FieldError skips entries without a message
           errors={save.error ? [{ message: save.error.message }] : []}
         />
       </FieldContent>

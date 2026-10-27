@@ -45,6 +45,16 @@ describe("isMutable", () => {
     expect(isMutable("packages/api/migrations/0001_x.sql")).toBe(false);
     expect(isMutable("scripts/mutate.ts")).toBe(false);
   });
+
+  it("covers web source, not generated, shadcn or bootstrap files", () => {
+    expect(isMutable("apps/web/src/lib/api.ts")).toBe(true);
+    expect(isMutable("apps/web/src/routes/groups/index.tsx")).toBe(true);
+    expect(isMutable("apps/web/src/routes/groups/index.test.tsx")).toBe(false);
+    expect(isMutable("apps/web/src/routeTree.gen.ts")).toBe(false);
+    expect(isMutable("apps/web/src/components/ui/button.tsx")).toBe(false);
+    expect(isMutable("apps/web/src/main.tsx")).toBe(false);
+    expect(isMutable("apps/web/worker/index.ts")).toBe(false);
+  });
 });
 
 describe("changedRanges", () => {

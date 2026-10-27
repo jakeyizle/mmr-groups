@@ -1,4 +1,7 @@
+import { fileURLToPath } from "node:url";
+
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 import { scenarioTags } from "./scripts/scenarios.ts";
@@ -14,6 +17,21 @@ export default defineConfig({
       {
         extends: true,
         test: { name: "scripts", include: ["scripts/**/*.test.ts"] },
+      },
+      {
+        extends: true,
+        plugins: [react()],
+        resolve: {
+          alias: {
+            "@": fileURLToPath(new URL("./apps/web/src", import.meta.url)),
+          },
+        },
+        test: {
+          name: "web",
+          environment: "jsdom",
+          include: ["apps/web/src/**/*.test.{ts,tsx}"],
+          setupFiles: ["./apps/web/test/setup.ts"],
+        },
       },
       {
         extends: true,

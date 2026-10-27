@@ -4,19 +4,27 @@
 export const MUTATE = [
   "packages/core/src/**/*.ts",
   "packages/api/src/**/*.ts",
-  "!**/*.test.ts",
+  "apps/web/src/**/*.{ts,tsx}",
+  "!**/*.test.{ts,tsx}",
   "!**/*.d.ts",
   "!packages/api/src/db/schema.ts",
+  "!apps/web/src/routeTree.gen.ts",
+  "!apps/web/src/components/ui/**",
+  "!apps/web/src/main.tsx",
 ];
 
 const INCLUDE = [
   /^packages\/core\/src\/.*\.ts$/,
   /^packages\/api\/src\/.*\.ts$/,
+  /^apps\/web\/src\/.*\.tsx?$/,
 ];
 const EXCLUDE = [
   /\.test\.tsx?$/,
   /\.d\.ts$/,
   /^packages\/api\/src\/db\/schema\.ts$/,
+  /^apps\/web\/src\/routeTree\.gen\.ts$/,
+  /^apps\/web\/src\/components\/ui\//,
+  /^apps\/web\/src\/main\.tsx$/,
 ];
 
 export const isMutable = (file: string) =>

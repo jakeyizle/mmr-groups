@@ -12,26 +12,16 @@ import { nativeSelect } from "@/components/match/row-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { client, unwrap } from "@/lib/api";
+import {
+  ago,
+  type Dir,
+  plural,
+  validateBrowseSearch,
+} from "@/lib/public-groups";
 
-type Dir = "asc" | "desc";
-interface BrowseSearch {
-  q?: string;
-  sort?: PublicGroupSort;
-  dir?: Dir;
-}
-
-const isSort = (v: unknown): v is PublicGroupSort =>
-  PUBLIC_GROUP_SORTS.includes(v as PublicGroupSort);
-
+// Stryker disable next-line StringLiteral: routeTree.gen sets the path at runtime
 export const Route = createFileRoute("/groups/")({
-  // Defaults stay out of the URL (VIS-010).
-  validateSearch: (search: Record<string, unknown>): BrowseSearch => ({
-    ...(typeof search.q === "string" && search.q.trim() && { q: search.q }),
-    ...(isSort(search.sort) && { sort: search.sort }),
-    ...((search.dir === "asc" || search.dir === "desc") && {
-      dir: search.dir,
-    }),
-  }),
+  validateSearch: validateBrowseSearch,
   component: Browse,
 });
 
@@ -55,23 +45,11 @@ const absolute = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-const DAY_MS = 86_400_000;
-
-function ago(iso: string) {
-  const days = Math.round((new Date(iso).getTime() - Date.now()) / DAY_MS);
-  if (days > -7) return relative.format(days, "day");
-  if (days > -60) return relative.format(Math.round(days / 7), "week");
-  if (days > -730) return relative.format(Math.round(days / 30), "month");
-  return relative.format(Math.round(days / 365), "year");
-}
-
-const plural = (n: number, one: string, many = `${one}s`) =>
-  `${String(n)} ${n === 1 ? one : many}`;
 
 /** VIS-009..012: the public group index. */
 function Browse() {
   const search = Route.useSearch();
+  // Stryker disable next-line ObjectLiteral: `from` only narrows the search type
   const navigate = useNavigate({ from: Route.fullPath });
   const sort = search.sort ?? "name";
   const dir = search.dir ?? defaultSortDir(sort);

@@ -4,7 +4,8 @@ import { MUTATE } from "./scripts/mutate.ts";
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   // pnpm's layout hides plugins from Stryker's auto-discovery.
-  plugins: ["@stryker-mutator/vitest-runner"],
+  plugins: ["@stryker-mutator/vitest-runner", "./scripts/stryker-noise.ts"],
+  ignorers: ["noise"],
   testRunner: "vitest",
   vitest: { configFile: "vitest.config.ts" },
   mutate: MUTATE,
