@@ -320,7 +320,11 @@ describe(
           { playerIds: ["nobody"], score: 1 },
         ],
       ]) {
-        expect((await edit(g, m, { teams })).status).toBe(400);
+        const res = await edit(g, m, { teams });
+        expect(res.status).toBe(400);
+        expect((await res.json<{ error: { code: string } }>()).error.code).toBe(
+          "invalid",
+        );
       }
       expect(
         (await edit(g, m, { playedAt: "2099-01-01T00:00:00Z" })).status,
@@ -395,6 +399,25 @@ describe("EDIT-010: stale edits are rejected", { tags: ["EDIT-010"] }, () => {
       ["x", "y", "z"].map(async (notes) => edit(g, m, { notes })),
     );
     expect(results.map((r) => r.status).sort()).toEqual([200, 412, 412]);
+  });
+
+  it("reads If-Match with or without quotes and spaces", async () => {
+    const g = await singles();
+    const [m] = await record(g, [ranked(g.p.a, g.p.b, 1)]);
+    const patch = (ifMatch: string) =>
+      request(`/api/groups/${g.gid}/matches/${m?.id ?? ""}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "fetch",
+          Cookie: `session=${g.session}`,
+          "If-Match": ifMatch,
+        },
+        body: JSON.stringify({ notes: "n" }),
+      });
+    expect((await patch("v1")).status).toBe(428);
+    expect((await patch('"12"')).status).toBe(412);
+    expect((await patch('" 1 "')).status).toBe(200);
   });
 
   it("If-Match is required", async () => {

@@ -32,6 +32,7 @@ const inAnyMatch = (groupId: string, playerId: string) => sql`exists (
   select 1 from ${matches}, json_each(${matches.teams}) t, json_each(t.value, '$.playerIds') p
   where ${matches.groupId} = ${groupId} and p.value = ${playerId})`;
 
+// Stryker disable next-line StringLiteral: no other unique index fails these writes outside races
 export const NAME_INDEX = "players_group_name_uq";
 export const nameTaken = {
   code: "name_taken",
@@ -84,6 +85,7 @@ export const playersRoutes = new Hono<GroupEnv>()
           );
         }
       } catch (err) {
+        // Stryker disable next-line ConditionalExpression: only a name clash can fail this insert
         if (isUniqueViolation(err, NAME_INDEX)) {
           return apiError(c, 409, nameTaken.code, nameTaken.message);
         }

@@ -39,6 +39,7 @@ function sortValue(sort: PublicGroupSort, r: Row): string | number {
     case "name":
       return r.name;
     case "played":
+      // Stryker disable next-line StringLiteral: listed groups have played
       return r.lastPlayedAt ?? "";
     case "matches":
       return r.matchCount;
@@ -59,23 +60,24 @@ type Cursor = z.infer<typeof cursorSchema>;
 
 function encodeCursor(c: Cursor) {
   const bytes = new TextEncoder().encode(JSON.stringify(c));
+  // Stryker disable Regex: "=" only ever pads the end
   return btoa(String.fromCharCode(...bytes))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replace(/=+$/, "");
+  // Stryker restore Regex
 }
 
-function decodeCursor(raw: string): Cursor | null {
+function decodeCursor(raw: string): Cursor | undefined {
   try {
     const bin = atob(raw.replaceAll("-", "+").replaceAll("_", "/"));
     const bytes = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
     const parsed = cursorSchema.safeParse(
       JSON.parse(new TextDecoder().decode(bytes)),
     );
-    return parsed.success ? parsed.data : null;
-    // Stryker disable next-line BlockStatement: undefined is rejected like null
+    return parsed.success ? parsed.data : undefined;
   } catch {
-    return null;
+    // Not base64 or not JSON: rejected like a bad shape.
   }
 }
 

@@ -19,6 +19,7 @@ import {
 } from "./players";
 
 /** Unique (group, user): a user has at most one player per group. */
+// Stryker disable next-line StringLiteral: only when the same user joins twice at once
 const USER_INDEX = "players.user_id";
 
 const claimSchema = z.union([
@@ -33,7 +34,7 @@ export const claimRoutes = new Hono<AppEnv>().post(
   async (c) => {
     const db = c.get("db");
     const user = c.get("user");
-    // Stryker disable next-line ConditionalExpression: mutationsRequireUser answers first (AUTH-007)
+    // Stryker disable next-line all: mutationsRequireUser answers first (AUTH-007)
     if (!user) return apiError(c, 401, "unauthenticated", "Sign in required");
     const group = await groupForInvite(db, c.req.param("code"));
     if (!group) {
@@ -119,6 +120,7 @@ export const claimRoutes = new Hono<AppEnv>().post(
       }
       return c.json({ groupId: group.id, playerId: player.id }, 201);
     } catch (err) {
+      // Stryker disable next-line ConditionalExpression: other errors come only from races
       if (isUniqueViolation(err, NAME_INDEX)) {
         return apiError(c, 409, nameTaken.code, nameTaken.message);
       }
@@ -162,6 +164,7 @@ export const leaveRoutes = new Hono<GroupEnv>().post("/", async (c) => {
       .where(
         and(
           eq(players.id, me.id),
+          // Stryker disable next-line StringLiteral: a member's player has a user
           eq(players.userId, me.userId ?? ""),
           eq(players.role, me.role),
         ),

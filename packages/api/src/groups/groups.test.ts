@@ -146,6 +146,7 @@ describe(
   { tags: ["GROUP-005", "ROLE-012"] },
   () => {
     it("saves every editable setting, audits it, and bumps the version", async () => {
+      await owner(); // another group, created first
       const { groupId } = await owner();
       const admin = await member(groupId, "admin");
       const changes = {
@@ -162,6 +163,9 @@ describe(
         json: changes,
       });
       expect(res.status).toBe(200);
+      expect(
+        (await res.json<{ group: { id: string; version: number } }>()).group,
+      ).toMatchObject({ id: groupId, ...changes, version: 2 });
       expect(await getGroup(groupId)).toMatchObject({ ...changes, version: 2 });
       const audit = await db.query.auditEvents.findFirst({
         where: and(

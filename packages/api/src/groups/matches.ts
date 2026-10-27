@@ -63,7 +63,7 @@ function ifMatch(c: Context) {
 const stale = (c: Context, current: Match | undefined) =>
   apiError(c, 412, "stale", "This match changed since you opened it", {
     // Stryker disable next-line StringLiteral: any audience but "public" gets member fields
-    match: current ? serializeMatch(current, "member") : null,
+    match: current ? serializeMatch(current) : null,
   });
 
 const sameJson = (a: unknown, b: unknown) =>
@@ -123,10 +123,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
         rows.map((m) => db.insert(matches).values(m)),
         audits,
       );
-      return c.json(
-        { matches: rows.map((m) => serializeMatch(m, "member")) },
-        201,
-      );
+      return c.json({ matches: rows.map((m) => serializeMatch(m)) }, 201);
     },
   )
   .patch("/:mid", validate("json", matchUpdateSchema), async (c) => {
@@ -146,6 +143,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
     if (version === undefined) {
       return apiError(c, 428, "version_required", "If-Match is required");
     }
+    // Stryker disable next-line ConditionalExpression: the guarded write rejects a stale version too; this answers early
     if (version !== match.version) return stale(c, match);
 
     const input = c.req.valid("json");
@@ -190,7 +188,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
       (k) => !sameJson(next[k], match[k]),
     );
     if (keys.length === 0) {
-      return c.json({ match: serializeMatch(match, "member") });
+      return c.json({ match: serializeMatch(match) });
     }
     const pick = (m: typeof next) =>
       Object.fromEntries(keys.map((k) => [k, m[k]]));
@@ -229,7 +227,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
       );
     }
     // Stryker restore all
-    return c.json({ match: serializeMatch(updated, "member") });
+    return c.json({ match: serializeMatch(updated) });
   })
   .delete("/:mid", async (c) => {
     const db = c.get("db");
@@ -248,6 +246,7 @@ export const matchesRoutes = new Hono<GroupEnv>()
     if (version === undefined) {
       return apiError(c, 428, "version_required", "If-Match is required");
     }
+    // Stryker disable next-line ConditionalExpression: the guarded write rejects a stale version too; this answers early
     if (version !== match.version) return stale(c, match);
 
     const ok = await guardedBatch(

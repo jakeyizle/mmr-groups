@@ -271,6 +271,27 @@ describe("JOIN-010: members can leave a group", { tags: ["JOIN-010"] }, () => {
     expect(list.groups).toEqual([]);
   });
 
+  it("anyone else who leaves keeps their role", async () => {
+    const { gid } = await setup({ defaultRole: "viewer" });
+    const user = await seedUser();
+    const id = newId();
+    await db.insert(players).values({
+      id,
+      groupId: gid,
+      displayName: "Rex",
+      role: "recorder",
+      userId: user.id,
+      createdAt: new Date().toISOString(),
+    });
+    await api(`/api/groups/${gid}/leave`, {
+      method: "POST",
+      session: await signIn(user.id),
+      json: {},
+    });
+    const [p] = await db.select().from(players).where(eq(players.id, id));
+    expect(p).toMatchObject({ userId: null, role: "recorder" });
+  });
+
   it("an admin who leaves is reset to the default role", async () => {
     const { gid } = await setup({ defaultRole: "viewer" });
     const user = await seedUser();

@@ -102,5 +102,5 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Web Vitest project, lib extractions, first component tests, add web to the check
 - [x] Audit: core
 - [x] Audit: api auth + db
-- [ ] Audit: api groups → T-048
+- [x] Audit: api groups
 - [ ] Audit: web → T-049

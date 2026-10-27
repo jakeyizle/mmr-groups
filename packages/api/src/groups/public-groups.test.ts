@@ -485,12 +485,18 @@ describe("index paging details", { tags: ["VIS-010", "VIS-012"] }, () => {
   });
 
   it("uses URL-safe cursors that survive the round trip", async () => {
-    // Names whose cursors encode to "+" and "/" in plain base64.
+    // "???" and ">>>" put a "?" (→ "/") and a ">" (→ "+") last in some 3-byte group.
     for (let i = 0; i < 27; i++)
-      await fixture(newId(), `cursor ?>?~ ${String(i).padStart(2, "0")}`);
-    const first = await list({ q: "cursor ?>?~" });
+      await fixture(newId(), `cursor ???>>> ${String(i).padStart(2, "0")}`);
+    const query = { q: "cursor ???>>>", sort: "name" };
+    const first = await list(query);
+    const plain = atob(
+      (first.body.nextCursor ?? "").replaceAll("-", "+").replaceAll("_", "/"),
+    );
+    expect(btoa(plain)).toMatch(/\+/);
+    expect(btoa(plain)).toMatch(/\//);
     expect(first.body.nextCursor).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(await walk({ q: "cursor ?>?~" })).toHaveLength(27);
+    expect(await walk(query)).toHaveLength(27);
   });
 
   it("lists without a search", async () => {
@@ -517,5 +523,13 @@ describe("index paging details", { tags: ["VIS-010", "VIS-012"] }, () => {
     );
     expect(res.status).toBe(400);
     expect(await res.json()).toMatchObject({ error: { code: "bad_cursor" } });
+  });
+
+  it("rejects a cursor whose value doesn't fit the sort", async () => {
+    const forged = btoa(
+      JSON.stringify({ sort: "name", dir: "asc", value: 5, id: "x" }),
+    ).replace(/=+$/, "");
+    const res = await request(`/api/public-groups?sort=name&cursor=${forged}`);
+    expect(res.status).toBe(400);
   });
 });

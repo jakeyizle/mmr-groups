@@ -200,7 +200,7 @@ describe(
       const added = await add(groupId, ownerSession, [{ name: "dave" }]);
       expect(added.status).toBe(409);
       expect(await added.json()).toMatchObject({
-        error: { code: "name_taken" },
+        error: { code: "name_taken", message: "That name is already taken" },
       });
 
       const sue = await member(groupId, "recorder", { linked: false });

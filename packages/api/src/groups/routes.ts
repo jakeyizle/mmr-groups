@@ -207,7 +207,7 @@ export const groupsRoutes = new Hono<AppEnv>()
   .post("/", validate("json", createGroupSchema), async (c) => {
     const db = c.get("db");
     const user = c.get("user");
-    // Stryker disable next-line ConditionalExpression: mutationsRequireUser answers first (AUTH-007)
+    // Stryker disable next-line all: mutationsRequireUser answers first (AUTH-007)
     if (!user) return apiError(c, 401, "unauthenticated", "Sign in required");
     const { playerName, ...settings } = c.req.valid("json");
     const now = new Date().toISOString();

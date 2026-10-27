@@ -65,7 +65,11 @@ export function serializePlayer(
   return { ...base, role: p.role, linked: p.userId !== null };
 }
 
-export function serializeMatch(m: Match, audience: Audience): SnapshotMatch {
+export function serializeMatch(
+  m: Match,
+  // Stryker disable next-line StringLiteral: any audience but "public" gets member fields
+  audience: Audience = "member",
+): SnapshotMatch {
   const base = {
     id: m.id,
     playedAt: m.playedAt,
