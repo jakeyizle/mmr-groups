@@ -35,3 +35,4 @@
 - T-031 | 2026-10-27 | player profile: Recharts rating line (validated series tokens, tooltip), record/streak tiles, best/worst partners, head-to-head, 10 recent matches (shared `MatchCard`); leaderboard names link to profiles
 - T-032 | 2026-10-27 | group stats page: multi-line ratings (≤8, slots stick to players, legend toggles), weekly activity bars + most active, duos, upsets (linked), streaks, rating histogram
 - T-033 | 2026-10-27 | core `generateTeams`: canonical exhaustive search ≤12 (per-match split cache, top-k with pruning, ~19 ms for 12 in 2×2), seeded local search beyond, fewest-sat-out rotation, `skip` for next-best, `needed` when short
+- T-034 | 2026-10-27 | team generator page: remembered attendee checklist, flexible format picker, generate/regenerate (sit-out rotation or next-best), win %, "needed" message, "Record these" prefills the batch draft

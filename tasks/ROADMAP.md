@@ -79,7 +79,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Player profile UI
 - [x] Group stats UI
 - [x] Team generator (core) + perf benchmark
-- [ ] Team generator UI → T-034
+- [x] Team generator UI
 - [ ] Stretch: win probability preview (MATCH-016) → T-035
 
 ## M6 — Public & polish (VIS)
