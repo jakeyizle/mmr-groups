@@ -94,3 +94,14 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Index data + API: counters, hide flag, sorted/searchable/paged endpoint
 - [x] Index UI, home links, site-admin hide control
+
+## M8 — Mutation testing (PLAN §10)
+
+- [ ] Spike: Stryker on core + api (workerd mutant activation) → T-043
+- [ ] `mutate:changed` + PR CI job, core → T-044
+- [ ] Add api to the mutation check → T-045
+- [ ] Web Vitest project, lib extractions, first component tests, add web to the check → T-046
+- [ ] Audit: core
+- [ ] Audit: api auth + db
+- [ ] Audit: api groups
+- [ ] Audit: web

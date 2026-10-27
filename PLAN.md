@@ -341,6 +341,15 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 - E2E uses the test-login route and a fresh local D1 per run.
 - Rating tests use fixed fixtures and a fixed `asOf`, asserting against openskill outputs with tolerances.
 
+**Mutation testing (Stryker).** Scope: core, api, and web (logic + components via jsdom/Testing Library component tests). E2E covers each scenario's happy path; component tests cover a component's branches and tag scenario IDs.
+
+- `pnpm mutate:changed` mutates only lines changed vs the base branch (`git diff -U0 -M --diff-filter=AMR`, new-side ranges → `--mutate file:a-b`). Empty diff → skip (never run Stryker without `--mutate`). CI runs it on PRs (`fetch-depth: 0`, `github.base_ref`).
+- Pass = no Survived/NoCoverage mutants; Timeout counts as killed; survivors get one rerun before failing.
+- An unkillable (equivalent) mutant is disabled inline with `// Stryker disable next-line <mutator>: <reason>`; a reason is required, and the script lists disables added by the PR. Static (module-level) survivors need a test, not a disable.
+- Not mutated: tests, `*.d.ts`, migrations, `meta/`, `routeTree.gen.ts`, `components/ui/*`, `db/schema.ts`. Noise excluded by config, not disables: logging, error-message strings, `cn()`/class strings, constant config objects.
+- Known gaps: deleted lines (incl. deleted tests) aren't checked; a mutant only partly overlapping a changed range is skipped.
+- One-time audit brings every file to zero unresolved survivors (M8); until then, a PR inherits old survivors on lines it touches.
+
 ---
 
 ## 11. CI/CD (GitHub Actions)
