@@ -86,6 +86,6 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Public group access end-to-end
 - [x] Demo seed script + deploy wiring
-- [ ] PWA → T-038
+- [x] PWA
 - [ ] README → T-039
 - [ ] `scenarios:check --strict` in CI → T-040

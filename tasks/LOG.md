@@ -39,3 +39,4 @@
 - T-035 | 2026-10-27 | win probability per team in the match row editor once every slot is filled (`usePredictWin`), in batch entry and match edit
 - T-036 | 2026-10-27 | visibility tests over every group endpoint (private ≡ missing; public read-only; private flip immediate), demo groups unjoinable, member-only tabs hidden; signed-out public E2E tour
 - T-037 | 2026-10-27 | seeded demo generator (12 players, 16 weeks of 2v2 to 11, id `demo`) → idempotent SQL; `pnpm db:seed:demo` via `wrangler d1 execute`; seeded in E2E server and on deploy (preview + prod); landing links to it
+- T-038 | 2026-10-27 | PWA: vite-plugin-pwa 1.3 (autoUpdate, manifest, icons rendered from one SVG), shell-only precache, `/api/*` excluded from the navigation fallback, disabled in e2e builds
