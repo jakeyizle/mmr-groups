@@ -75,12 +75,12 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M5 — Insights (STATS, TEAMS)
 
-- [ ] Stats functions (core)
-- [ ] Player profile UI
-- [ ] Group stats UI
-- [ ] Team generator (core) + perf benchmark
-- [ ] Team generator UI
-- [ ] Stretch: win probability preview (MATCH-016)
+- [ ] Stats functions (core) → T-030
+- [ ] Player profile UI → T-031
+- [ ] Group stats UI → T-032
+- [ ] Team generator (core) + perf benchmark → T-033
+- [ ] Team generator UI → T-034
+- [ ] Stretch: win probability preview (MATCH-016) → T-035
 
 ## M6 — Public & polish (VIS)
 
