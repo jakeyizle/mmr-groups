@@ -43,8 +43,35 @@ export const createGroupSchema = z.strictObject({
 export type CreateGroupInput = z.input<typeof createGroupSchema>;
 
 /** Strict: the team format (and anything unknown) can't be changed after creation. */
-export const updateGroupSchema = z.strictObject(settings).partial();
+export const updateGroupSchema = z
+  .strictObject({
+    ...settings,
+    /** Changing it is site-admin only (VIS-013). */
+    hiddenFromIndex: z.boolean(),
+  })
+  .partial();
 export type UpdateGroupInput = z.input<typeof updateGroupSchema>;
+
+/** Public group index (PLAN §8). Name sorts ascending by default, the rest descending. */
+export const PUBLIC_GROUP_SORTS = [
+  "name",
+  "played",
+  "matches",
+  "players",
+  "created",
+] as const;
+export type PublicGroupSort = (typeof PUBLIC_GROUP_SORTS)[number];
+
+export const defaultSortDir = (sort: PublicGroupSort) =>
+  sort === "name" ? "asc" : "desc";
+
+export const publicGroupsQuerySchema = z.strictObject({
+  q: z.string().trim().max(100).optional(),
+  sort: z.enum(PUBLIC_GROUP_SORTS).default("name"),
+  dir: z.enum(["asc", "desc"]).optional(),
+  cursor: z.string().max(500).optional(),
+});
+export type PublicGroupsQuery = z.input<typeof publicGroupsQuerySchema>;
 
 export const transferSchema = z.strictObject({ playerId: z.string() });
 

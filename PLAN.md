@@ -212,7 +212,7 @@ audit_events     id, group_id, actor_user_id, action, entity_type, entity_id,
 - Every mutation, its audit row(s), and the `groups.version` bump are one `db.batch()` (atomic).
 - **Optimistic concurrency:** match edit/delete requires the match's `version` (`If-Match`). `guardedBatch()` (`packages/api/src/db/guarded-batch.ts`): a guarded `UPDATE/DELETE … WHERE id = ? AND version = ?`, then the audit row inserted `WHERE changes() = 1` (the commit marker), then follow-ups and the group bump conditioned on the marker existing, so a stale write changes nothing; the API returns 412 and the client refetches. Claims use `UPDATE players SET user_id = ? WHERE id = ? AND user_id IS NULL` (first claim wins). New matches can't conflict.
 - Players with matches can't be deleted (rename instead).
-- **Index counters:** `player_count`, `match_count`, `last_played_at` exist only so the public index can sort and page without aggregating. The version bump that ends every batch recomputes them from `players`/`matches` (subqueries scoped to the group). Writes outside the API (demo seed SQL, test helpers) run the same recompute. No indexes for the index: public groups are few and the name search scans anyway.
+- **Index counters:** `player_count`, `match_count`, `last_played_at` exist only so the public index can sort and page without aggregating. SQLite triggers on `players`/`matches` (migration `0001`) recompute them from group-scoped subqueries, so every write keeps them current, raw SQL included (demo seed, test fixtures). Drizzle doesn't model triggers: a later migration that rebuilds `players` or `matches` must recreate them. No indexes for the index: public groups are few and the name search scans anyway.
 
 ---
 

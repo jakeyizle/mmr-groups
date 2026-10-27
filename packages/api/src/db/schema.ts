@@ -58,6 +58,12 @@ export const groups = sqliteTable("groups", {
     .default({}),
   inviteCode: text().unique(),
   inviteExpiresAt: text(),
+  /** Site admins only (VIS-013). */
+  hiddenFromIndex: integer({ mode: "boolean" }).notNull().default(false),
+  /** Public index sort keys, kept current by triggers in migration 0001 (PLAN §5). */
+  playerCount: integer().notNull().default(0),
+  matchCount: integer().notNull().default(0),
+  lastPlayedAt: text(),
   /** Bumped on every change; snapshot ETag. */
   version: integer().notNull().default(1),
   createdAt: text().notNull(),

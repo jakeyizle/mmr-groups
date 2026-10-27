@@ -42,3 +42,4 @@
 - T-038 | 2026-10-27 | PWA: vite-plugin-pwa 1.3 (autoUpdate, manifest, icons rendered from one SVG), shell-only precache, `/api/*` excluded from the navigation fallback, disabled in e2e builds
 - T-039 | 2026-10-27 | README: what it is, live + demo links, phone screenshot (.github/readme.png), stack, develop/test commands, scenario workflow, deploy
 - T-040 | 2026-10-27 | CI runs `scenarios:check --strict` (151/151 required covered); PLAN §1 updated
+- T-041 | 2026-10-27 | public index API: `GET /api/public-groups` (public, ≥1 match, not hidden; 5 sorts × dir, NOCASE names, escaped LIKE search, keyset cursor bound to sort/dir); counters kept by SQLite triggers (migration 0001, backfilled); `hiddenFromIndex` site-admin only, admin snapshot only

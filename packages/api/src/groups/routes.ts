@@ -55,7 +55,10 @@ const groupRoutes = new Hono<GroupEnv>()
       players: playerRows.map((p) => serializePlayer(p, audience)),
       matches: matchRows.map((m) => serializeMatch(m, audience)),
       me: me && { playerId: me.id, role: me.role },
-      ...(audience === "admin" && { invite: serializeInvite(group) }),
+      ...(audience === "admin" && {
+        invite: serializeInvite(group),
+        hiddenFromIndex: group.hiddenFromIndex,
+      }),
     });
   })
   .patch(
@@ -70,6 +73,10 @@ const groupRoutes = new Hono<GroupEnv>()
         (k) => changes[k] !== group[k],
       );
       if (keys.length === 0) return c.json({ group: serializeGroup(group) });
+      // VIS-013: owners can't hide or unhide, but may resend the current value.
+      if (keys.includes("hiddenFromIndex") && !c.get("actor").isSiteAdmin) {
+        return apiError(c, 403, "forbidden", "Only site admins can do that");
+      }
 
       const before = Object.fromEntries(keys.map((k) => [k, group[k]]));
       const after = Object.fromEntries(keys.map((k) => [k, changes[k]]));

@@ -50,3 +50,40 @@
 - **Given** the demo group
 - **When** anyone other than a site admin tries to change it
 - **Then** the change is rejected
+
+### VIS-009: Anyone can browse an index of public groups
+
+- **Given** public groups, private groups, and a public group with no matches
+- **When** anyone, signed in or not, opens the public group index from the home page
+- **Then** they see every public group that has at least one match, and no others
+- **And** each shows its name, description, player count, match count, and when its latest match was played
+- **And** recording, editing, or deleting matches and changing visibility are reflected on the next visit
+
+### VIS-010: The index can be sorted
+
+- **Given** the public group index
+- **When** a visitor opens it
+- **Then** groups are sorted by name, A to Z, ignoring case
+- **And** they can instead sort by latest match played, match count, player count, or creation date, which start newest or largest first
+- **And** any sort can be reversed
+
+### VIS-011: The index can be searched by name
+
+- **Given** the public group index
+- **When** a visitor searches for part of a group's name, ignoring case
+- **Then** only groups whose names contain it are listed, in the chosen sort
+
+### VIS-012: The index is paged
+
+- **Given** more public groups than fit on one page
+- **When** a visitor loads more
+- **Then** the next groups in the chosen sort appear
+- **And** while the listed groups don't change, none are repeated or skipped, even when groups share a sort value
+
+### VIS-013: Site admins can hide a group from the index
+
+- **Given** a public group in the index
+- **When** a site admin hides it
+- **Then** it is no longer listed, but stays viewable by anyone with its link
+- **And** its admins see in settings that it is hidden from the index
+- **And** only site admins can hide or unhide a group

@@ -23,7 +23,7 @@ import {
   VISIBILITY_OPTIONS,
 } from "@/lib/groups";
 
-const formSchema = updateGroupSchema.required();
+const formSchema = updateGroupSchema.omit({ hiddenFromIndex: true }).required();
 type FormInput = z.input<typeof formSchema>;
 
 export function GeneralSettings({ data }: { data: GroupData }) {
