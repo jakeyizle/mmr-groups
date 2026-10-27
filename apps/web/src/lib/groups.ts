@@ -43,5 +43,5 @@ export function formatLabel(f: GroupData["group"]["teamFormat"]) {
 export const ROLE_OPTIONS = { recorder: "Recorder", viewer: "Viewer" };
 export const VISIBILITY_OPTIONS = {
   private: "Private (members only)",
-  public: "Public (anyone with the link)",
+  public: "Public (anyone can find and view it)",
 };

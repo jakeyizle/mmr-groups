@@ -5,9 +5,10 @@ export async function signIn(
   page: Page,
   name = "Test User",
   email = `${crypto.randomUUID()}@example.com`,
+  { isSiteAdmin = false } = {},
 ) {
   const res = await page.request.post("/api/test/login", {
-    data: { name, email },
+    data: { name, email, isSiteAdmin },
     headers: { "X-Requested-With": "fetch" },
   });
   expect(res.ok()).toBe(true);

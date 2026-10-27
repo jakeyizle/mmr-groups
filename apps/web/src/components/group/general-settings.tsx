@@ -46,7 +46,7 @@ export function GeneralSettings({ data }: { data: GroupData }) {
   });
 
   const save = useMutation({
-    mutationFn: async (json: z.output<typeof formSchema>) =>
+    mutationFn: async (json: Partial<z.output<typeof formSchema>>) =>
       unwrap(
         await client.groups[":gid"].$patch({ param: { gid: group.id }, json }),
       ),
@@ -63,7 +63,15 @@ export function GeneralSettings({ data }: { data: GroupData }) {
     <form
       onSubmit={(e) =>
         void form.handleSubmit((values) => {
-          save.mutate(values);
+          // Only what changed: a true partial PATCH (PLAN §8).
+          const { dirtyFields } = form.formState;
+          save.mutate(
+            Object.fromEntries(
+              Object.entries(values).filter(
+                ([k]) => dirtyFields[k as keyof typeof values],
+              ),
+            ),
+          );
         })(e)
       }
       noValidate

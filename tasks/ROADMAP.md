@@ -93,4 +93,4 @@ Each milestone ends deployed, with its scenarios passing.
 ## M7 — Public group index (VIS)
 
 - [x] Index data + API: counters, hide flag, sorted/searchable/paged endpoint
-- [ ] Index UI, home links, site-admin hide control → T-042
+- [x] Index UI, home links, site-admin hide control

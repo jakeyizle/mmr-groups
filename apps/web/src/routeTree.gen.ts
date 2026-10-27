@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GGidRouteRouteImport } from './routes/g/$gid/route'
+import { Route as GroupsIndexRouteImport } from './routes/groups/index'
 import { Route as GroupsNewRouteImport } from './routes/groups/new'
 import { Route as JoinCodeRouteImport } from './routes/join/$code'
 import { Route as GGidIndexRouteImport } from './routes/g/$gid/index'
@@ -37,6 +38,11 @@ const LoginRoute = LoginRouteImport.update({
 const GGidRouteRoute = GGidRouteRouteImport.update({
   id: '/g/$gid',
   path: '/g/$gid',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsIndexRoute = GroupsIndexRouteImport.update({
+  id: '/groups/',
+  path: '/groups/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroupsNewRoute = GroupsNewRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/g/$gid': typeof GGidRouteRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/join/$code': typeof JoinCodeRoute
+  '/groups/': typeof GroupsIndexRoute
   '/g/$gid/audit': typeof GGidAuditRoute
   '/g/$gid/settings': typeof GGidSettingsRoute
   '/g/$gid/stats': typeof GGidStatsRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/groups/new': typeof GroupsNewRoute
   '/join/$code': typeof JoinCodeRoute
+  '/groups': typeof GroupsIndexRoute
   '/g/$gid/audit': typeof GGidAuditRoute
   '/g/$gid/settings': typeof GGidSettingsRoute
   '/g/$gid/stats': typeof GGidStatsRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/g/$gid': typeof GGidRouteRouteWithChildren
   '/groups/new': typeof GroupsNewRoute
   '/join/$code': typeof JoinCodeRoute
+  '/groups/': typeof GroupsIndexRoute
   '/g/$gid/audit': typeof GGidAuditRoute
   '/g/$gid/settings': typeof GGidSettingsRoute
   '/g/$gid/stats': typeof GGidStatsRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/g/$gid'
     | '/groups/new'
     | '/join/$code'
+    | '/groups/'
     | '/g/$gid/audit'
     | '/g/$gid/settings'
     | '/g/$gid/stats'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/groups/new'
     | '/join/$code'
+    | '/groups'
     | '/g/$gid/audit'
     | '/g/$gid/settings'
     | '/g/$gid/stats'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/g/$gid'
     | '/groups/new'
     | '/join/$code'
+    | '/groups/'
     | '/g/$gid/audit'
     | '/g/$gid/settings'
     | '/g/$gid/stats'
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   GGidRouteRoute: typeof GGidRouteRouteWithChildren
   GroupsNewRoute: typeof GroupsNewRoute
   JoinCodeRoute: typeof JoinCodeRoute
+  GroupsIndexRoute: typeof GroupsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/g/$gid'
       fullPath: '/g/$gid'
       preLoaderRoute: typeof GGidRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups/': {
+      id: '/groups/'
+      path: '/groups'
+      fullPath: '/groups/'
+      preLoaderRoute: typeof GroupsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/groups/new': {
@@ -338,6 +358,7 @@ const rootRouteChildren: RootRouteChildren = {
   GGidRouteRoute: GGidRouteRouteWithChildren,
   GroupsNewRoute: GroupsNewRoute,
   JoinCodeRoute: JoinCodeRoute,
+  GroupsIndexRoute: GroupsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

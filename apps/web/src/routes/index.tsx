@@ -33,6 +33,9 @@ function Landing() {
             See the demo league
           </Link>
         </Button>
+        <Button asChild variant="outline">
+          <Link to="/groups">Browse public groups</Link>
+        </Button>
       </div>
     </section>
   );
@@ -72,6 +75,12 @@ function MyGroups() {
           ))}
         </ul>
       )}
+      <Link
+        to="/groups"
+        className="inline-block text-sm underline underline-offset-4"
+      >
+        Browse public groups
+      </Link>
     </section>
   );
 }

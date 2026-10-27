@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { DangerZone } from "@/components/group/danger-zone";
 import { GeneralSettings } from "@/components/group/general-settings";
+import { IndexVisibility } from "@/components/group/index-visibility";
 import { InviteSettings } from "@/components/group/invite-settings";
 import { LeaveGroup } from "@/components/group/leave-group";
 import { PlayersSettings } from "@/components/group/players-settings";
@@ -25,6 +26,7 @@ function Settings() {
       <section className="space-y-4">
         <h2 className="font-heading text-lg font-semibold">General</h2>
         <GeneralSettings data={data} />
+        <IndexVisibility data={data} />
       </section>
       <section className="space-y-4">
         <h2 className="font-heading text-lg font-semibold">
