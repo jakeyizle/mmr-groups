@@ -30,6 +30,18 @@ export const matchInputSchema = z.strictObject({
 export type MatchInput = z.input<typeof matchInputSchema>;
 export type ParsedMatchInput = z.output<typeof matchInputSchema>;
 
+/** An edit: any subset of a match's fields (PLAN §8 PATCH). */
+export const matchUpdateSchema = z
+  .strictObject({
+    playedAt: matchInputSchema.shape.playedAt,
+    teams: matchInputSchema.shape.teams,
+    // No default here: an omitted field means "unchanged".
+    notes: z.string().trim().max(500),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: "Nothing to change" });
+export type MatchUpdate = z.input<typeof matchUpdateSchema>;
+
 export const batchSchema = z.strictObject({
   matches: z.array(matchInputSchema).min(1).max(MAX_BATCH),
 });
@@ -69,6 +81,11 @@ export interface ValidMatch {
 
 export type MatchValidation =
   { ok: true; match: ValidMatch } | { ok: false; issues: MatchIssue[] };
+
+/** MATCH-020: more than 24 hours ahead of `now`. */
+export function isTooFarInFuture(playedAt: string, now: Date) {
+  return Date.parse(playedAt) > now.getTime() + MAX_FUTURE_MS;
+}
 
 /** Standard competition ranking ("1224"): 1 + the number of teams strictly ahead. */
 function competitionRanks(
@@ -172,7 +189,7 @@ export function validateMatch(
   }
 
   const playedAt = new Date(input.playedAt);
-  if (playedAt.getTime() > now.getTime() + MAX_FUTURE_MS) {
+  if (isTooFarInFuture(input.playedAt, now)) {
     issue(
       ["playedAt"],
       "too_far_in_future",

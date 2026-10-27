@@ -64,7 +64,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M3 — Editing (EDIT)
 
-- [ ] Match edit/delete API with versions → T-025
+- [x] Match edit/delete API with versions
 - [ ] Match detail/edit UI, stale-edit handling → T-026
 
 ## M4 — Joining (JOIN)

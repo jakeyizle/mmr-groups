@@ -37,8 +37,8 @@ function value(key: string, v: unknown): string {
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-function describeMatch(after: Fields, names: Map<string, string>) {
-  const teams = (after.teams as MatchTeam[] | undefined) ?? [];
+function matchSummary(m: Fields, names: Map<string, string>) {
+  const teams = (m.teams as MatchTeam[] | undefined) ?? [];
   const sorted = [...teams].sort((a, b) => a.rank - b.rank);
   const label = (t: MatchTeam) =>
     t.playerIds.map((id) => names.get(id) ?? "a removed player").join(" & ");
@@ -48,11 +48,32 @@ function describeMatch(after: Fields, names: Map<string, string>) {
     : sorted.length === 2 && sorted[0]?.rank !== sorted[1]?.rank
       ? `${label(sorted[0] ?? { playerIds: [], score: null, rank: 1 })} beat ${label(sorted[1] ?? { playerIds: [], score: null, rank: 2 })}`
       : sorted.map(label).join(" vs ");
-  const at =
-    typeof after.playedAt === "string"
-      ? ` on ${dateFormat.format(new Date(after.playedAt))}`
-      : "";
-  return `recorded a match${at}: ${summary}`;
+  return summary;
+}
+
+const matchDate = (m: Fields) =>
+  typeof m.playedAt === "string"
+    ? ` on ${dateFormat.format(new Date(m.playedAt))}`
+    : "";
+
+/** e.g. "changed the result from A 11 – B 7 to A 11 – B 8 of a match on Oct 12" */
+function describeMatchEdit(
+  before: Fields,
+  after: Fields,
+  names: Map<string, string>,
+) {
+  const parts: string[] = [];
+  if ("teams" in after)
+    parts.push(
+      `the result from ${matchSummary(before, names)} to ${matchSummary(after, names)}`,
+    );
+  if ("playedAt" in after)
+    parts.push(
+      `the date from ${dateFormat.format(new Date(String(before.playedAt)))} to ${dateFormat.format(new Date(String(after.playedAt)))}`,
+    );
+  if ("notes" in after) parts.push("the notes");
+  const when = matchDate(before);
+  return `changed ${parts.join(", ")} of a match${when}`;
 }
 
 export function describeEvent(e: AuditEvent, names: Map<string, string>) {
@@ -93,7 +114,11 @@ export function describeEvent(e: AuditEvent, names: Map<string, string>) {
     case "player.unlinked":
       return `${who} unlinked ${player}'s account`;
     case "match.created":
-      return `${who} ${describeMatch(after, names)}`;
+      return `${who} recorded a match${matchDate(after)}: ${matchSummary(after, names)}`;
+    case "match.updated":
+      return `${who} ${describeMatchEdit(before, after, names)}`;
+    case "match.deleted":
+      return `${who} deleted a match${matchDate(before)}: ${matchSummary(before, names)}`;
     default:
       return `${who}: ${e.action}`;
   }
