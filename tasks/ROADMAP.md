@@ -104,3 +104,8 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Audit: api auth + db
 - [x] Audit: api groups
 - [x] Audit: web
+
+## M9 — Player profiles (STATS)
+
+- [ ] Profile links from player names, own-profile entry → T-050
+- [ ] Full match history on profile → T-051
