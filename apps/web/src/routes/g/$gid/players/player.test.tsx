@@ -5,6 +5,7 @@ import {
   resolveRatingConfig,
 } from "@mmr/core";
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SERIES } from "@/lib/charts";
@@ -158,6 +159,11 @@ describe(
           record.getByText("Matches").nextElementSibling?.textContent,
         ).toBe("5");
       });
+      expect(
+        within(
+          screen.getByRole("list", { name: "Match history" }),
+        ).getAllByLabelText("Result"),
+      ).toHaveLength(5);
       expect(screen.getAllByText("Bobby").length).toBeGreaterThan(0);
     });
 
@@ -215,53 +221,110 @@ describe(
       expect(screen.getByRole("list", { name: "Head to head" })).toBeTruthy();
     });
 
-    it("links the ten latest matches, newest first, and the full history", async () => {
-      const many = Array.from({ length: 12 }, (_, i) =>
-        match(`m${String(i + 1)}`, i, [
-          [["a"], 1],
-          [["b"], 2],
-        ]),
-      );
-      open(
-        "a",
-        snapshot({
-          matches: [
-            ...many,
-            match("x", 20, [
-              [["b"], 1],
-              [["c"], 2],
-            ]),
-          ],
-        }),
-      );
-      const recent = await screen.findByRole("list", {
-        name: "Recent matches",
-      });
-      expect(
-        within(recent)
-          .getAllByRole("link")
-          .map((a) => a.getAttribute("href"))
-          .filter((href) => href?.includes("/matches/"))
-          .map((href) => href?.split("/").pop()),
-      ).toEqual([
-        "m12",
-        "m11",
-        "m10",
-        "m9",
-        "m8",
-        "m7",
-        "m6",
-        "m5",
-        "m4",
-        "m3",
-      ]);
-      expect(within(recent).getAllByText(/^[+−]\d+$/).length).toBeGreaterThan(
-        0,
-      );
-      expect(
-        screen.getByRole("link", { name: "All matches" }).getAttribute("href"),
-      ).toBe("/g/g1/matches?player=a");
-    });
+    it(
+      "lists every match newest first, twenty at a time, with results",
+      { tags: ["STATS-012"] },
+      async () => {
+        // 45 of Ann's matches, out of order, and one she didn't play.
+        const all = Array.from({ length: 45 }, (_, i) =>
+          match(`m${String(i + 1).padStart(2, "0")}`, i, [
+            [["a"], i % 2 ? 1 : 2],
+            [["b"], i % 2 ? 2 : 1],
+          ]),
+        );
+        const many = [
+          ...all.filter((_, i) => i % 2),
+          ...all.filter((_, i) => !(i % 2)),
+        ];
+        many.splice(
+          10,
+          0,
+          match("x", 100, [
+            [["b"], 1],
+            [["c"], 2],
+          ]),
+        );
+        open("a", snapshot({ matches: many }));
+        const history = await screen.findByRole("list", {
+          name: "Match history",
+        });
+        const ids = () =>
+          within(history)
+            .getAllByRole("link")
+            .map((a) => a.getAttribute("href"))
+            .filter((href) => href?.includes("/matches/"))
+            .map((href) => href?.split("/").pop());
+        const expected = Array.from(
+          { length: 45 },
+          (_, i) => `m${String(45 - i).padStart(2, "0")}`,
+        );
+        expect(ids()).toEqual(expected.slice(0, 20));
+        const results = within(history).getAllByLabelText("Result");
+        expect(results.map((r) => r.textContent.split(" · ")[0])).toEqual(
+          expected.slice(0, 20).map((_, i) => (i % 2 ? "Won" : "Lost")),
+        );
+        expect(results[0]?.textContent).toMatch(/^Lost · \d+ → \d+$/);
+
+        const more = () => screen.getByRole("button", { name: "Show more" });
+        await userEvent.click(more());
+        expect(ids()).toEqual(expected.slice(0, 40));
+        await userEvent.click(more());
+        expect(ids()).toEqual(expected);
+        expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+      },
+    );
+
+    it(
+      "offers no more after exactly one page",
+      { tags: ["STATS-012"] },
+      async () => {
+        const twenty = Array.from({ length: 20 }, (_, i) =>
+          match(`m${String(i)}`, i, [
+            [["a"], 1],
+            [["b"], 2],
+          ]),
+        );
+        open("a", snapshot({ matches: twenty }));
+        const history = await screen.findByRole("list", {
+          name: "Match history",
+        });
+        expect(within(history).getAllByLabelText("Result")).toHaveLength(20);
+        expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+      },
+    );
+
+    it(
+      "starts another player's history from the first page",
+      { tags: ["STATS-012", "STATS-013"] },
+      async () => {
+        const many = Array.from({ length: 25 }, (_, i) =>
+          match(`m${String(i)}`, i, [
+            [["a", "b"], 1],
+            [["c", "d"], 2],
+          ]),
+        );
+        open("a", data(many));
+        await userEvent.click(
+          await screen.findByRole("button", { name: "Show more" }),
+        );
+        const history = screen.getByRole("list", { name: "Match history" });
+        expect(within(history).getAllByLabelText("Result")).toHaveLength(25);
+        await userEvent.click(
+          within(screen.getByRole("list", { name: "Best partners" })).getByRole(
+            "link",
+            { name: "Bob" },
+          ),
+        );
+        expect(
+          await screen.findByRole("heading", { name: "Bob" }),
+        ).toBeTruthy();
+        expect(
+          within(
+            screen.getByRole("list", { name: "Match history" }),
+          ).getAllByLabelText("Result"),
+        ).toHaveLength(20);
+      },
+    );
 
     it("shows unrated players without stats", async () => {
       open("c", snapshot());

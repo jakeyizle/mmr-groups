@@ -3,9 +3,9 @@ import { expect, test } from "@playwright/test";
 import { seeded } from "./seed";
 
 test(
-  "a profile shows rating chart, record, partners, head-to-head and recent matches",
+  "a profile shows rating chart, record, partners, head-to-head and match history",
   {
-    tag: ["@STATS-001", "@STATS-002", "@STATS-003", "@STATS-004", "@STATS-005"],
+    tag: ["@STATS-001", "@STATS-002", "@STATS-003", "@STATS-004", "@STATS-012"],
   },
   async ({ page }) => {
     const gid = await seeded(page);
@@ -37,11 +37,15 @@ test(
     await expect(h2h).toContainText(/Cal.*4–2/);
     await expect(h2h).toContainText(/Bea.*3–3/);
 
-    await expect(
-      page.getByRole("list", { name: "Recent matches" }).locator("> li"),
-    ).toHaveCount(10);
-    await page.getByRole("link", { name: "All matches" }).click();
-    await expect(page).toHaveURL(/player=/);
+    // All 12 fit on the first page; Ann's latest is a loss.
+    const history = page.getByRole("list", { name: "Match history" });
+    await expect(history.locator("> li")).toHaveCount(12);
+    await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(
+      0,
+    );
+    await expect(history.getByLabel("Result").first()).toHaveText(
+      /^Lost · \d+ → \d+$/,
+    );
   },
 );
 

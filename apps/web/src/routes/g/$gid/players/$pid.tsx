@@ -1,12 +1,13 @@
-import { type PairRecord, playerStats } from "@mmr/core";
+import { compareMatches, type PairRecord, playerStats } from "@mmr/core";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 
 import { RatingChart } from "@/components/charts/rating-chart";
 import { MatchCard } from "@/components/match/match-card";
 import { PlayerLink } from "@/components/player-link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SERIES } from "@/lib/charts";
 import { type GroupData, groupQuery } from "@/lib/groups";
 import { useLeaderboard, useRatingSeries, useReplay } from "@/lib/ratings";
@@ -23,13 +24,15 @@ function PlayerPage() {
   if (!player) {
     return <p className="text-muted-foreground">No such player.</p>;
   }
-  return <Profile data={data} pid={pid} name={player.displayName} />;
+  // Keyed so paging restarts on another player's profile.
+  return <Profile key={pid} data={data} pid={pid} name={player.displayName} />;
 }
 
 const pct = (x: number) => `${String(Math.round(x * 100))}%`;
 const wlt = (r: { wins: number; losses: number; ties: number }) =>
   `${String(r.wins)}–${String(r.losses)}${r.ties > 0 ? `–${String(r.ties)}` : ""}`;
 const STREAK = { win: "W", loss: "L", tie: "T" } as const;
+const PAGE = 20;
 
 function Profile({
   data,
@@ -53,10 +56,15 @@ function Profile({
     [data.matches, pid, names],
   );
   const entry = board.find((e) => e.playerId === pid);
-  const recent = data.matches
-    .filter((m) => m.teams.some((t) => t.playerIds.includes(pid)))
-    .slice(-10)
-    .reverse();
+  // STATS-012: all their matches, newest first.
+  const history = useMemo(
+    () =>
+      data.matches
+        .filter((m) => m.teams.some((t) => t.playerIds.includes(pid)))
+        .sort((a, b) => compareMatches(b, a)),
+    [data.matches, pid],
+  );
+  const [shown, setShown] = useState(PAGE);
   const { record } = stats;
 
   return (
@@ -144,29 +152,31 @@ function Profile({
           />
 
           <section className="space-y-2">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-sm font-medium">Recent matches</h3>
-              <Link
-                to="/g/$gid/matches"
-                params={{ gid }}
-                search={{ player: pid }}
-                className="text-sm text-muted-foreground underline"
-              >
-                All matches
-              </Link>
-            </div>
-            <ol aria-label="Recent matches" className="space-y-3">
-              {recent.map((m) => (
+            <h3 className="text-sm font-medium">Match history</h3>
+            <ol aria-label="Match history" className="space-y-3">
+              {history.slice(0, shown).map((m) => (
                 <li key={m.id}>
                   <MatchCard
                     gid={gid}
                     match={m}
                     names={names}
                     changes={ratings.matches.get(m.id)}
+                    perspective={pid}
                   />
                 </li>
               ))}
             </ol>
+            {shown < history.length && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShown((n) => n + PAGE);
+                }}
+              >
+                Show more
+              </Button>
+            )}
           </section>
         </>
       )}

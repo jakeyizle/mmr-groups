@@ -32,11 +32,12 @@ Definitions used below:
 - **When** their profile is viewed
 - **Then** it shows their wins, losses, and ties against each opponent
 
-### STATS-005: Recent matches on profile
+### STATS-012: Player match history on profile
 
 - **Given** a player with match history
 - **When** their profile is viewed
-- **Then** their 10 most recent matches are listed with rating changes
+- **Then** all their matches are listed newest first, 20 at a time
+- **And** each shows their result and their displayed rating before and after
 
 ### STATS-006: Group ratings over time
 

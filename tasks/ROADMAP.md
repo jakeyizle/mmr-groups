@@ -108,4 +108,4 @@ Each milestone ends deployed, with its scenarios passing.
 ## M9 — Player profiles (STATS)
 
 - [x] Profile links from player names, own-profile entry
-- [ ] Full match history on profile → T-051
+- [x] Full match history on profile

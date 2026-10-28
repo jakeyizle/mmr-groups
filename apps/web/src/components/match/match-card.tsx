@@ -1,4 +1,9 @@
-import { displayRating, type MatchTeam, type Rating } from "@mmr/core";
+import {
+  displayRating,
+  type MatchTeam,
+  type Rating,
+  teamOutcome,
+} from "@mmr/core";
 import { Link } from "@tanstack/react-router";
 
 import { PlayerLink } from "@/components/player-link";
@@ -8,32 +13,55 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
+const RESULT = { win: "Won", loss: "Lost", tie: "Tied" } as const;
 
 /**
  * One match in a list: winners first, each player's displayed-rating change (BOARD-005).
  * The date links to the match and stretches over the card; names sit above it and link
- * to profiles (STATS-013), since links can't nest.
+ * to profiles (STATS-013), since links can't nest. With a `perspective` player, it also
+ * shows their result and rating before → after (STATS-012).
  */
 export function MatchCard({
   gid,
   match,
   names,
   changes,
+  perspective,
 }: {
   gid: string;
   match: { id: string; playedAt: string; teams: MatchTeam[] };
   names: Map<string, string>;
   changes: Map<string, { before: Rating; after: Rating }> | undefined;
+  perspective?: string;
 }) {
+  // Stryker disable ConditionalExpression: no player ID is undefined, so the lookups find nothing anyway
+  const mine =
+    perspective === undefined
+      ? undefined
+      : match.teams.find((t) => t.playerIds.includes(perspective));
+  const change =
+    perspective === undefined ? undefined : changes?.get(perspective);
+  // Stryker restore ConditionalExpression
   return (
     <div className="relative space-y-2 rounded-lg border p-3 hover:bg-muted/30">
-      <Link
-        to="/g/$gid/matches/$mid"
-        params={{ gid, mid: match.id }}
-        className="block text-sm text-muted-foreground after:absolute after:inset-0"
-      >
-        {dateFormat.format(new Date(match.playedAt))}
-      </Link>
+      <p className="flex items-baseline justify-between gap-2 text-sm">
+        <Link
+          to="/g/$gid/matches/$mid"
+          params={{ gid, mid: match.id }}
+          className="text-muted-foreground after:absolute after:inset-0"
+        >
+          {dateFormat.format(new Date(match.playedAt))}
+        </Link>
+        {mine && (
+          <span aria-label="Result" className="shrink-0 tabular-nums">
+            <span className="font-medium">
+              {RESULT[teamOutcome(match, mine)]}
+            </span>
+            {change &&
+              ` · ${String(displayRating(change.before))} → ${String(displayRating(change.after))}`}
+          </span>
+        )}
+      </p>
       {[...match.teams]
         .sort((a, b) => a.rank - b.rank)
         .map((t, i) => (
@@ -56,7 +84,10 @@ export function MatchCard({
                       gid={gid}
                       id={pid}
                       names={names}
-                      className="relative truncate"
+                      className={cn(
+                        "relative truncate",
+                        pid === perspective && "font-semibold",
+                      )}
                     />
                     <Delta value={delta} />
                   </li>

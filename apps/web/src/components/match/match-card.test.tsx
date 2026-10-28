@@ -19,6 +19,7 @@ const team = (playerIds: string[], rank: number, score: number | null = null) =>
 async function card(
   teams: MatchTeam[],
   changes?: Map<string, { before: Rating; after: Rating }>,
+  perspective?: string,
 ) {
   renderInRouter(
     <MatchCard
@@ -26,11 +27,12 @@ async function card(
       match={{ id: "m1", playedAt: PLAYED, teams }}
       names={names}
       changes={changes}
+      perspective={perspective}
     />,
   );
-  // The card is the date link's parent.
+  // The card holds the date link.
   const [date] = await screen.findAllByRole("link");
-  const root = date?.parentElement;
+  const root = date?.closest("div");
   if (!root) throw new Error("no card");
   return root;
 }
@@ -137,5 +139,51 @@ describe("MatchCard", { tags: ["BOARD-005"] }, () => {
       `−${String(-d(r(23)))}`,
       "±0",
     ]);
+  });
+});
+
+describe("MatchCard for one player", { tags: ["STATS-012"] }, () => {
+  const r = (mu: number): Rating => ({ mu, sigma: 3 });
+  const changes = new Map([
+    ["a", { before: r(25), after: r(27) }],
+    ["b", { before: r(25), after: r(23) }],
+  ]);
+  const result = (root: HTMLElement) =>
+    within(root).getByLabelText("Result").textContent;
+  const shift = (id: string) => {
+    const c = changes.get(id);
+    if (!c) throw new Error("no change");
+    return `${String(displayRating(c.before))} → ${String(displayRating(c.after))}`;
+  };
+
+  it("shows a win with their rating before and after", async () => {
+    const root = await card([team(["a"], 1), team(["b"], 2)], changes, "a");
+    expect(result(root)).toBe(`Won · ${shift("a")}`);
+    expect(within(root).getByRole("link", { name: "Ann" }).className).toContain(
+      "font-semibold",
+    );
+    expect(
+      within(root).getByRole("link", { name: "Bob" }).className,
+    ).not.toContain("font-semibold");
+  });
+
+  it("shows a loss", async () => {
+    const root = await card([team(["a"], 1), team(["b"], 2)], changes, "b");
+    expect(result(root)).toBe(`Lost · ${shift("b")}`);
+  });
+
+  it("shows a tie, without ratings it doesn't have", async () => {
+    const root = await card([team(["a"], 1), team(["c"], 1)], changes, "c");
+    expect(result(root)).toBe("Tied");
+  });
+
+  it("shows no result for a player not in the match", async () => {
+    const root = await card([team(["a"], 1), team(["b"], 2)], changes, "d");
+    expect(within(root).queryByLabelText("Result")).toBeNull();
+  });
+
+  it("shows no result without a player", async () => {
+    const root = await card([team(["a"], 1), team(["b"], 2)], changes);
+    expect(within(root).queryByLabelText("Result")).toBeNull();
   });
 });
