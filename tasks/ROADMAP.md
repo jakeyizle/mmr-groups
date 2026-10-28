@@ -109,3 +109,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Profile links from player names, own-profile entry
 - [x] Full match history on profile
+
+## Maintenance
+
+- [ ] Fix flaky unsaved-batch e2e test → T-052
