@@ -37,8 +37,9 @@ function GroupLayout() {
       <h1 className="truncate font-heading text-2xl font-semibold">
         {data?.group.name ?? " "}
       </h1>
-      <nav className="-mx-4 overflow-x-auto border-b px-4">
-        <ul className="flex gap-4 text-sm whitespace-nowrap">
+      {/* Border lives on the ul so the tabs' -mb-px overlap doesn't overflow the scroller vertically. */}
+      <nav className="-mx-4 overflow-x-auto">
+        <ul className="flex w-max min-w-full gap-4 border-b px-4 text-sm whitespace-nowrap">
           {tabs.map((tab) => (
             <li key={tab.to}>
               <Link
