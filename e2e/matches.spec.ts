@@ -169,6 +169,11 @@ test(
       .click();
     await save(page);
     await expect(page).toHaveURL(new RegExp(`/g/${gid}/matches$`));
+    // The URL changes before the client-side navigation settles; a goto in between can be
+    // interrupted by it. Wait for the history to render first.
+    await expect(
+      page.getByRole("list", { name: "Matches" }).locator("> li"),
+    ).toHaveCount(1);
     await page.goto(`/g/${gid}/matches/new`);
     await expect(page.getByLabel("Match 1 team 1 score")).toHaveValue("");
     await expect(page.getByLabel("Match 2 date and time")).toHaveCount(0);

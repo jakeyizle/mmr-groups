@@ -112,4 +112,4 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## Maintenance
 
-- [ ] Fix flaky unsaved-batch e2e test → T-052
+- [x] Fix flaky unsaved-batch e2e test
