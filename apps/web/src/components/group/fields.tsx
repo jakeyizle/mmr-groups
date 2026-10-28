@@ -60,8 +60,10 @@ export function TextField<T extends FieldValues>({
                 );
               }}
               value={
+                // Stryker disable next-line ConditionalExpression: only number fields hold NaN
                 type === "number" && Number.isNaN(field.value)
-                  ? ""
+                  ? // Stryker disable next-line StringLiteral: a number input shows any non-number as empty
+                    ""
                   : field.value
               }
               aria-invalid={fieldState.invalid}

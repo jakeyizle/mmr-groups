@@ -10,3 +10,4 @@ playwright-report/
 dist-e2e/
 .stryker-tmp*/
 reports/
+.tanstack/

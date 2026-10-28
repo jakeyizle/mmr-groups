@@ -220,11 +220,38 @@ describe("saving", { tags: ["MATCH-003"] }, () => {
     expect(posts("/api/groups/g1/matches")).toEqual([]);
   });
 
+  it(
+    "duplicates the last match to the end",
+    { tags: ["MATCH-004"] },
+    async () => {
+      draft([filled("2026-10-12T18:05"), filled("2026-10-12T19:00", "b", "a")]);
+      setup();
+      await userEvent.click(
+        within(await screen.findByRole("group", { name: "Match 2" })).getByRole(
+          "button",
+          { name: "Duplicate" },
+        ),
+      );
+      expect(screen.getByLabelText("Match 1 date and time")).toHaveProperty(
+        "value",
+        "2026-10-12T18:05",
+      );
+      expect(screen.getByLabelText("Match 3 date and time")).toHaveProperty(
+        "value",
+        "2026-10-12T19:01",
+      );
+    },
+  );
+
   it("clears issues when a row is removed", async () => {
-    draft([filled("2026-10-12T18:05"), filled("2026-10-12T18:06", "a", "a")]);
+    draft([
+      filled("2026-10-12T18:05"),
+      filled("2026-10-12T18:06", "a", "a"),
+      filled("2026-10-12T18:07"),
+    ]);
     setup();
     await userEvent.click(
-      await screen.findByRole("button", { name: "Save 2 matches" }),
+      await screen.findByRole("button", { name: "Save 3 matches" }),
     );
     expect(screen.getByRole("alert")).toBeTruthy();
     await userEvent.click(

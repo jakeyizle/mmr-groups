@@ -28,19 +28,22 @@ function Teams() {
   return <Generator data={data} />;
 }
 
+type Teams = Exclude<Suggestion, { needed: number }>;
+interface Run {
+  skip: number;
+  counts: Map<string, number>;
+}
+
 const pct = (x: number) => `${String(Math.round(x * 100))}%`;
 const RANGE = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
-function loadAttendees(key: string): string[] {
+function loadAttendees(key: string): unknown {
   try {
-    const raw = localStorage.getItem(key);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((x) => typeof x === "string")
-      : [];
+    // Stryker disable next-line StringLiteral: unparsable storage reads as null too
+    return JSON.parse(localStorage.getItem(key) ?? "null");
   } catch {
-    return [];
+    // Unreadable: treated like nothing saved.
   }
 }
 
@@ -52,8 +55,11 @@ function Generator({ data }: { data: GroupData }) {
   const ratings = useReplay(data);
   const groupFormat = data.group.teamFormat;
   const [selected, setSelected] = useState<Set<string>>(() => {
-    const ids = new Set(data.players.map((p) => p.id));
-    return new Set(loadAttendees(attendeesKey).filter((id) => ids.has(id)));
+    const saved = loadAttendees(attendeesKey);
+    const ids = data.players.map((p) => p.id);
+    return new Set(
+      Array.isArray(saved) ? ids.filter((id) => saved.includes(id)) : [],
+    );
   });
   // TEAMS-007: flexible groups pick the shape for this suggestion.
   const [format, setFormat] = useState(
@@ -61,10 +67,7 @@ function Generator({ data }: { data: GroupData }) {
       ? { teams: groupFormat.teams, size: groupFormat.size }
       : { teams: 2, size: 2 },
   );
-  const [run, setRun] = useState<{
-    skip: number;
-    counts: Map<string, number>;
-  } | null>(null);
+  const [run, setRun] = useState<Run | null>(null);
 
   const names = new Map(data.players.map((p) => [p.id, p.displayName]));
   const setAttendees = (next: Set<string>) => {
@@ -78,23 +81,25 @@ function Generator({ data }: { data: GroupData }) {
   };
 
   const config = resolveRatingConfig(data.group.ratingConfig);
-  const suggestion: Suggestion | null = useMemo(
+  const current = useMemo(
     () =>
-      run &&
-      generateTeams({
-        playerIds: [...selected],
-        ratings: ratings.players,
-        config,
-        format,
-        sitOutCounts: run.counts,
-        skip: run.skip,
-      }),
+      run && {
+        run,
+        suggestion: generateTeams({
+          playerIds: [...selected],
+          ratings: ratings.players,
+          config,
+          format,
+          sitOutCounts: run.counts,
+          skip: run.skip,
+        }),
+      },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- config derives from the snapshot in `ratings`
     [run, selected, ratings, format],
   );
+  const suggestion = current?.suggestion;
 
-  const regenerate = () => {
-    if (!suggestion || "needed" in suggestion || !run) return;
+  const regenerate = (run: Run, suggestion: Teams) => {
     if (suggestion.sittingOut.length > 0) {
       // TEAMS-003: whoever sat out this time has sat out once more.
       const counts = new Map(run.counts);
@@ -107,8 +112,7 @@ function Generator({ data }: { data: GroupData }) {
     }
   };
 
-  const record = () => {
-    if (!suggestion || "needed" in suggestion) return;
+  const record = (suggestion: Teams) => {
     let playedAt = toLocalInput(new Date());
     const draft: BatchForm = {
       rows: suggestion.matches.map((m, i) => {
@@ -196,11 +200,12 @@ function Generator({ data }: { data: GroupData }) {
         <Button
           className="flex-1"
           onClick={() => {
-            if (run) regenerate();
+            if (current && !("needed" in current.suggestion))
+              regenerate(current.run, current.suggestion);
             else setRun({ skip: 0, counts: new Map() });
           }}
         >
-          {run && suggestion && !("needed" in suggestion)
+          {suggestion && !("needed" in suggestion)
             ? "Regenerate"
             : "Generate teams"}
         </Button>
@@ -245,7 +250,13 @@ function Generator({ data }: { data: GroupData }) {
             </p>
           )}
           {can(actor, "match.record") && (
-            <Button variant="outline" className="w-full" onClick={record}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                record(suggestion);
+              }}
+            >
               Record these
             </Button>
           )}

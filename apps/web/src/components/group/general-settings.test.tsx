@@ -55,6 +55,7 @@ describe("GeneralSettings", { tags: ["GROUP-005"] }, () => {
       "Tuesdays",
     );
     expect(screen.getByText("Flexible (any teams and sizes)")).toBeTruthy();
+    expect(screen.queryByRole("status")).toBeNull();
     expect(screen.getByRole("combobox", { name: "Scoring" }).textContent).toBe(
       "Scores optional",
     );

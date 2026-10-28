@@ -95,6 +95,7 @@ function Board({ data }: { data: GroupData }) {
 /** BOARD-003: places moved in the player's latest match. */
 function RankChange({ value }: { value: number | null }) {
   if (value === null || value === 0) return null;
+  // Stryker disable next-line EqualityOperator: 0 returned above
   const up = value > 0;
   return (
     <p

@@ -32,15 +32,19 @@ const ROLE_LABELS: Record<Role, string> = {
   viewer: "Viewer",
 };
 
-/** Roles this actor may give this player (always including its current one). */
+/**
+ * Roles this actor may give this player. Whenever there's a choice, it includes
+ * the current role: an unclaimed player is never an admin (ROLE-014).
+ */
 function roleChoices(actor: Actor, p: Player): Role[] {
+  // Stryker disable all: role and linked are member-only fields, sent together
   const { role, linked = false } = p;
   if (!role) return [];
+  // Stryker restore all
   return (["admin", "recorder", "viewer"] as const).filter(
     (to) =>
-      to === role ||
-      (can(actor, "player.setRole", { from: role, to }) &&
-        validRoleFor({ linked }, to)),
+      can(actor, "player.setRole", { from: role, to }) &&
+      validRoleFor({ linked }, to),
   );
 }
 
@@ -138,11 +142,13 @@ function PlayerRow({
   const canRename = can(actor, "player.manage");
   const canUnlink =
     player.linked === true &&
+    // Stryker disable next-line ConditionalExpression: role and linked are sent together
     player.role !== undefined &&
     can(actor, "player.unlink", { role: player.role });
   // Removing a claimed player also removes its user: same permission as unlinking.
   const canRemove = canRename && (!player.linked || canUnlink);
-  const editable = canRename || choices.length > 1 || canUnlink;
+  // Role changes and unlinking need admin, like renaming.
+  const editable = canRename;
 
   return (
     <li className="px-4 py-3">
@@ -264,7 +270,8 @@ function PlayerEditor({
           </Field>
         </form>
       )}
-      {choices.length > 1 && (
+      {/* There's never exactly one choice: see roleChoices. */}
+      {choices.length > 0 && (
         <Field>
           <FieldLabel htmlFor={roleId}>Role</FieldLabel>
           <Select
@@ -292,32 +299,35 @@ function PlayerEditor({
           )}
         </Field>
       )}
-      {(canUnlink || canRemove) && (
-        <div className="flex flex-wrap gap-2">
-          {canUnlink && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                unlink.mutate();
-              }}
-            >
-              Unlink account
-            </Button>
-          )}
-          {canRemove && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                remove.mutate();
-              }}
-            >
-              Remove player
-            </Button>
-          )}
-        </div>
-      )}
+      {
+        // Stryker disable next-line ConditionalExpression: an empty row only adds spacing
+        (canUnlink || canRemove) && (
+          <div className="flex flex-wrap gap-2">
+            {canUnlink && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  unlink.mutate();
+                }}
+              >
+                Unlink account
+              </Button>
+            )}
+            {canRemove && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  remove.mutate();
+                }}
+              >
+                Remove player
+              </Button>
+            )}
+          </div>
+        )
+      }
       <FieldError errors={[remove.error ?? unlink.error ?? undefined]} />
     </div>
   );

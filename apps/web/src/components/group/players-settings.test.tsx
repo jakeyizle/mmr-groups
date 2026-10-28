@@ -93,6 +93,7 @@ describe("adding players", { tags: ["PLAYER-001", "PLAYER-002"] }, () => {
     );
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
     const box = await screen.findByRole("textbox", { name: "Add players" });
+    expect(box.getAttribute("placeholder")).toBe("Dave\nSue");
     expect(screen.getByRole("button", { name: "Add player" })).toHaveProperty(
       "disabled",
       true,

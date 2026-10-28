@@ -85,7 +85,7 @@ describe("match details", { tags: ["BOARD-005"] }, () => {
       `Place 27Bob${sign(delta("b"))}`,
     ]);
     expect(delta("b")).toBeLessThan(0);
-    expect(screen.getByText("Close one")).toBeTruthy();
+    expect(screen.getByText("Close one").tagName).toBe("P");
     expect(screen.getByText("Recorded by Bob")).toBeTruthy();
   });
 
@@ -111,11 +111,42 @@ describe("match details", { tags: ["BOARD-005"] }, () => {
     expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
   });
 
+  it("shows an unchanged rating as +0", async () => {
+    // Alternating wins and ties: by m18 one of Ann's changes rounds to zero.
+    const history = Array.from({ length: 19 }, (_, i) => {
+      const [w, l] = i % 3 === 0 ? ["b", "a"] : ["a", "b"];
+      return match(`m${String(i)}`, i - 19, [
+        [[w], 1],
+        [[l], i % 2 === 0 ? 1 : 2],
+      ]);
+    });
+    const { matches } = replay(
+      history,
+      resolveRatingConfig(undefined),
+      new Date().toISOString(),
+    );
+    const c = matches.get("m18")?.get("a");
+    expect(c && displayRating(c.after) - displayRating(c.before)).toBe(0);
+    stubApi({
+      "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+      "GET /api/groups/g1": () =>
+        snapshot({
+          role: "viewer",
+          group: { allowTies: true },
+          matches: history,
+        }),
+    });
+    renderRoute("/g/g1/matches/m18");
+    const teams = await screen.findByRole("list", { name: "Teams" });
+    expect(within(teams).getByText("Ann").nextSibling?.textContent).toBe("+0");
+  });
+
   it("explains a deleted match", async () => {
     open("viewer", { data: () => snapshot({ role: "viewer" }) });
     expect(
-      await screen.findByText(/This match doesn't exist anymore\./),
-    ).toBeTruthy();
+      (await screen.findByText(/This match doesn't exist anymore\./))
+        .textContent,
+    ).toBe("This match doesn't exist anymore. Back to matches");
     expect(
       screen
         .getByRole("link", { name: "Back to matches" })
@@ -287,7 +318,7 @@ describe(
 describe("stale edits", { tags: ["EDIT-010"] }, () => {
   it("shows the newer version and asks to edit again", async () => {
     let version = 3;
-    const { writes } = open("admin", {
+    const { writes, queryClient } = open("admin", {
       data: () =>
         snapshot({
           role: "admin",
@@ -305,6 +336,7 @@ describe("stale edits", { tags: ["EDIT-010"] }, () => {
       },
     });
     await edit();
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
     await userEvent.type(screen.getByRole("textbox", { name: "Notes" }), "!");
     await saveChanges();
     expect((await screen.findByRole("alert")).textContent).toBe(
@@ -318,6 +350,9 @@ describe("stale edits", { tags: ["EDIT-010"] }, () => {
       );
     });
     expect(writes()).toHaveLength(1);
+    expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([
+      ["group", "g1"],
+    ]);
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     await edit();
     expect(screen.queryByRole("alert")).toBeNull();

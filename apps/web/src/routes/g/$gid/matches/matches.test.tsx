@@ -47,6 +47,11 @@ describe(
         "/g/g1/matches/m2",
         "/g/g1/matches/m1",
       ]);
+      expect(
+        screen.getByRole<HTMLSelectElement>("combobox", {
+          name: "Filter by player",
+        }).selectedIndex,
+      ).toBe(0);
       // Every player in a rated match shows a change.
       const [first] = within(
         screen.getByRole("list", { name: "Matches" }),

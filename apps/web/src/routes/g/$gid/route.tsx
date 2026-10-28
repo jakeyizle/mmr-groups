@@ -46,6 +46,7 @@ function GroupLayout() {
                 params={{ gid }}
                 activeOptions={{ exact: "exact" in tab }}
                 className="-mb-px block border-b-2 border-transparent py-2 text-muted-foreground"
+                // Stryker disable next-line ObjectLiteral: only styles the tab; aria-current marks it
                 activeProps={{
                   className: "border-foreground! text-foreground!",
                 }}

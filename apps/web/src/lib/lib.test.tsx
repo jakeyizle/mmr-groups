@@ -6,9 +6,11 @@ import { renderWithQuery, stubApi } from "../../test/render";
 import { ApiError, client, meQuery, unwrap } from "./api";
 import { requireUser } from "./auth";
 import { Can } from "./can";
+import { SERIES } from "./charts";
 import {
   formatLabel,
   type GroupData,
+  groupQuery,
   groupsQuery,
   useGroupActor,
 } from "./groups";
@@ -70,6 +72,12 @@ describe("queries", () => {
     expect(await qc.query(groupsQuery)).toEqual([{ id: "g1" }]);
     expect(meQuery.staleTime).toBe(300_000);
   });
+
+  it("are keyed the way mutations invalidate them", () => {
+    expect(meQuery.queryKey).toEqual(["me"]);
+    expect(groupsQuery.queryKey).toEqual(["groups"]);
+    expect(groupQuery("g1").queryKey).toEqual(["group", "g1"]);
+  });
 });
 
 describe("requireUser", { tags: ["AUTH-005"] }, () => {
@@ -122,6 +130,14 @@ describe("Can", { tags: ["ROLE-008"] }, () => {
     );
     expect(screen.getByText("yes")).toBeTruthy();
     expect(screen.queryByText("no")).toBeNull();
+  });
+});
+
+describe("SERIES", () => {
+  it("names the eight palette colors in order", () => {
+    expect(SERIES).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `var(--series-${String(i)})`),
+    );
   });
 });
 

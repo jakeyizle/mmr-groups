@@ -103,4 +103,4 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Audit: core
 - [x] Audit: api auth + db
 - [x] Audit: api groups
-- [ ] Audit: web → T-049
+- [x] Audit: web

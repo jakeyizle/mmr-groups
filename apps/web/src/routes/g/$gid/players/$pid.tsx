@@ -92,8 +92,10 @@ function Profile({
                 {
                   id: pid,
                   name,
+                  // Stryker disable all: SERIES has colors, and every rated player a series
                   color: SERIES[0] ?? "",
                   points: series.get(pid) ?? [],
+                  // Stryker restore all
                 },
               ]}
             />
@@ -107,6 +109,7 @@ function Profile({
                 ["Matches", String(record.matches)],
                 [
                   "Streak",
+                  // Stryker disable next-line all: a player with matches always has a current streak
                   stats.currentStreak
                     ? `${STREAK[stats.currentStreak.outcome]}${String(stats.currentStreak.length)}`
                     : "–",

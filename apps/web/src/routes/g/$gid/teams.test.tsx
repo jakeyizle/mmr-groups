@@ -1,5 +1,11 @@
 import { generateTeams, replay, resolveRatingConfig } from "@mmr/core";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -120,6 +126,10 @@ describe("attendees", { tags: ["TEAMS-001"] }, () => {
     localStorage.setItem(KEY, "{oops");
     open(singles());
     await screen.findByRole("heading", { name: "Who's playing? (0)" });
+    cleanup();
+    localStorage.setItem(KEY, JSON.stringify("abcde"));
+    open(singles());
+    await screen.findByRole("heading", { name: "Who's playing? (0)" });
     localStorage.setItem(KEY, JSON.stringify({ a: 1 }));
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("full");
@@ -151,6 +161,10 @@ describe(
         "Select 1 more player for a match of 2 teams of 1.",
       );
       expect(generate().textContent).toBe("Generate teams");
+      await userEvent.click(generate());
+      expect(screen.getByRole("alert").textContent).toBe(
+        "Select 1 more player for a match of 2 teams of 1.",
+      );
     });
 
     it("suggests balanced teams with win chances, and the next best on regenerate", async () => {
@@ -161,6 +175,8 @@ describe(
       );
       const ids = ["a", "b", "c", "d"];
       expect(suggestion()).toEqual(lines(expected(ids)));
+      expect(screen.getByText("Match 1")).toBeTruthy();
+      expect(screen.getByText("Match 2")).toBeTruthy();
       expect(screen.queryByText(/Sitting out/)).toBeNull();
       expect(generate().textContent).toBe("Regenerate");
       await userEvent.click(generate());
@@ -220,8 +236,10 @@ describe("recording a suggestion", () => {
     await userEvent.click(
       await screen.findByRole("button", { name: "Generate teams" }),
     );
-    const before = toLocalInput(new Date());
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 4, 1, 10, 0, 30));
     await userEvent.click(screen.getByRole("button", { name: "Record these" }));
+    vi.useRealTimers();
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/g/g1/matches/new");
     });
@@ -236,7 +254,7 @@ describe("recording a suggestion", () => {
     );
     expect(draft.rows).toHaveLength(2);
     const [one, two] = draft.rows;
-    expect([before, nextMinute(before)]).toContain(one?.playedAt);
+    expect(one?.playedAt).toBe(toLocalInput(new Date(2026, 4, 1, 10, 0)));
     expect(two?.playedAt).toBe(nextMinute(one?.playedAt ?? ""));
   });
 
@@ -288,6 +306,11 @@ describe("flexible groups", { tags: ["TEAMS-007"] }, () => {
     await userEvent.click(generate());
     expect(suggestion()).toEqual(
       lines(expected(["a", "b", "c", "d", "e"], { teams: 3, size: 1 })),
+    );
+    expect(screen.getByText(/^Sitting out:/).textContent).toBe(
+      `Sitting out: ${expected(["a", "b", "c", "d", "e"], { teams: 3, size: 1 })
+        .sittingOut.map((id) => id.toUpperCase())
+        .join(", ")}`,
     );
     expect(screen.getByRole("button", { name: "Record these" })).toBeTruthy();
   });

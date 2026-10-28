@@ -160,6 +160,55 @@ describe(
       );
     });
 
+    it("counts single matches and tied duos", async () => {
+      vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+      const ties = [
+        ...[1, 2].map((h) =>
+          match(`w${String(h)}`, 24 * 14 + h, [
+            [["a", "b"], 1],
+            [["c", "d"], 2],
+          ]),
+        ),
+        match("t", 24 * 14 + 3, [
+          [["a", "b"], 1],
+          [["c", "d"], 1],
+        ]),
+        match("x", 24 * 14 + 4, [
+          [["a", "gone"], 1],
+          [["b", "c"], 2],
+        ]),
+      ];
+      open(data(ties));
+      await screen.findByRole("heading", { name: "Best duos" });
+      expect(ranked("Most active, last 30 days")).toContain(
+        "5Removed player1 match",
+      );
+      expect(ranked("Best duos")[0]).toBe("1Ann & Bob2–0–1 · 83%");
+    });
+
+    it("updates when the snapshot does", async () => {
+      vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+      const { queryClient } = open(data());
+      await screen.findByRole("heading", { name: "Activity" });
+      const before = ranked("Most active, last 30 days");
+      const next = data([
+        ...DOUBLES,
+        match("n", 24 * 18 + 1, [
+          [["d", "gone"], 1],
+          [["a", "b"], 2],
+        ]),
+      ]);
+      next.group.version = 2;
+      next.players = next.players.map((p) =>
+        p.id === "a" ? { ...p, displayName: "Anna" } : p,
+      );
+      queryClient.setQueryData(["group", "g1"], next);
+      await waitFor(() => {
+        expect(ranked("Most active, last 30 days")).not.toEqual(before);
+      });
+      expect(ranked("Most active, last 30 days")).toContain("1Anna6 matches");
+    });
+
     it("charts the rating distribution", async () => {
       vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
       open(data());

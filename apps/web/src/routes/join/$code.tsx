@@ -91,7 +91,7 @@ function Claim({
       }
     },
   });
-  const nameValid = newName !== null && nameSchema.safeParse(newName).success;
+  const nameValid = nameSchema.safeParse(newName).success;
 
   return (
     <section className="space-y-4">

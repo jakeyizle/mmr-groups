@@ -12,8 +12,10 @@ type Player = GroupData["players"][number];
 const MAX_TEAMS = 8;
 const MAX_TEAM_SIZE = 8;
 
+// Stryker disable StringLiteral: class names
 export const nativeSelect =
   "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive";
+// Stryker restore StringLiteral
 
 /** One match's teams, scores and placement; rows live in a `BatchForm` (one row when editing). */
 export function MatchRowEditor({
@@ -43,14 +45,14 @@ export function MatchRowEditor({
   const row = useWatch({ control: form.control, name }) as MatchRow | undefined;
   if (!row) return null;
   const flexible = settings.teamFormat.kind === "flexible";
-  const chosen = new Set(row.teams.flatMap((t) => t.playerIds).filter(Boolean));
   const placement = needsPlacement(row, settings);
   const ids = row.teams.flatMap((t) => t.playerIds);
+  const chosen = new Set(ids);
   const complete = ids.every(Boolean) && new Set(ids).size === ids.length;
   const odds =
     predict && complete ? predict(row.teams.map((t) => t.playerIds)) : null;
   const setTeams = (teams: MatchRow["teams"]) => {
-    form.setValue(`${name}.teams`, teams, { shouldDirty: true });
+    form.setValue(`${name}.teams`, teams);
   };
 
   return (
@@ -221,9 +223,7 @@ export function MatchRowEditor({
           allowTies={settings.allowTies}
           onChange={(ranks) => {
             ranks.forEach((r, t) => {
-              form.setValue(`${name}.teams.${t}.rank`, r, {
-                shouldDirty: true,
-              });
+              form.setValue(`${name}.teams.${t}.rank`, r);
             });
           }}
         />

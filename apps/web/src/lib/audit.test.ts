@@ -189,6 +189,12 @@ describe("describeEvent", { tags: ["AUDIT-003"] }, () => {
     expect(
       say({
         action: "match.created",
+        after: { teams: [team(["p2"], 2, 7), team(["p1"], 1)] },
+      }),
+    ).toBe("Ann recorded a match: Ann beat Bob");
+    expect(
+      say({
+        action: "match.created",
         after: { teams: [team(["p1"], 1), team(["p2"], 1)] },
       }),
     ).toBe("Ann recorded a match: Ann vs Bob");
@@ -240,5 +246,16 @@ describe("describeEvent", { tags: ["AUDIT-003"] }, () => {
     expect(
       say({ action: "match.updated", before: {}, after: { notes: "x" } }),
     ).toBe("Ann changed the notes of a match");
+    expect(
+      say({ action: "match.updated", before, after: { playedAt: later } }),
+    ).toBe(
+      `Ann changed the date from ${day(PLAYED)} to ${day(later)} of a match on ${day(PLAYED)}`,
+    );
+  });
+
+  it("reads non-object payloads as empty", () => {
+    expect(say({ action: "match.updated", before: 1, after: "x" })).toBe(
+      "Ann changed  of a match",
+    );
   });
 });

@@ -91,7 +91,9 @@ describe(
       renderWithQuery(
         <InviteSettings data={data({ code: "abc", expiresAt: null })} />,
       );
-      expect(screen.getByText(/It doesn't expire\./)).toBeTruthy();
+      expect(screen.getByText(/It doesn't expire\./).textContent).toBe(
+        "Anyone with this link can join and claim an unclaimed player. It doesn't expire.",
+      );
       const field = screen.getByRole<HTMLInputElement>("textbox", {
         name: "Invite link",
       });

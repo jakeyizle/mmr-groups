@@ -99,6 +99,7 @@ function GroupStats({ data }: { data: GroupData }) {
           label="Best duos"
           empty="Duos appear after 3 matches as teammates."
           items={derived.duos.map((d) => ({
+            // Stryker disable next-line StringLiteral: a React key
             key: d.playerIds.join("|"),
             name: d.playerIds.map(nameOf).join(" & "),
             value: `${String(d.wins)}–${String(d.losses)}${d.ties ? `–${String(d.ties)}` : ""} · ${pct(d.winRate)}`,
@@ -113,6 +114,7 @@ function GroupStats({ data }: { data: GroupData }) {
           items={derived.upsets.map((u) => {
             const m = matchById.get(u.matchId);
             const team = (i: number) =>
+              // Stryker disable next-line all: upsets come from these matches, all with two teams
               (m?.teams[i]?.playerIds ?? []).map(nameOf).join(" & ");
             return {
               key: u.matchId,
@@ -221,8 +223,11 @@ function GroupRatings({
       if (next.has(id)) next.delete(id);
       else {
         const used = new Set(next.values());
-        const free = SERIES.findIndex((_, i) => !used.has(i));
-        if (free >= 0) next.set(id, free);
+        // Hidden players' buttons are disabled while every color is in use.
+        next.set(
+          id,
+          SERIES.findIndex((_, i) => !used.has(i)),
+        );
       }
       return next;
     });
@@ -236,8 +241,10 @@ function GroupRatings({
         series={shown.map((e) => ({
           id: e.playerId,
           name: nameOf(e.playerId),
+          // Stryker disable all: every shown player has a slot, and every ranked one a series
           color: SERIES[slots.get(e.playerId) ?? 0] ?? "",
           points: series.get(e.playerId) ?? [],
+          // Stryker restore all
         }))}
       />
       {/* Legend and toggles: identity is never color alone. */}
@@ -264,6 +271,7 @@ function GroupRatings({
                   aria-hidden
                   className="size-2.5 rounded-full border"
                   style={
+                    // Stryker disable next-line ConditionalExpression: SERIES[undefined] is no background too
                     slot === undefined
                       ? undefined
                       : { background: SERIES[slot] }

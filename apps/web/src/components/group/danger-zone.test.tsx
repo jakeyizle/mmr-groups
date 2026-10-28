@@ -115,6 +115,7 @@ describe(
         <DangerZone data={data("owner")} />,
       );
       queryClient.setQueryData(["group", "g1"], { cached: true });
+      queryClient.setQueryData(["group", "g2"], { cached: true });
       const invalidate = vi.spyOn(queryClient, "invalidateQueries");
       await userEvent.click(
         await screen.findByRole("button", { name: "Delete group" }),
@@ -136,6 +137,9 @@ describe(
       });
       expect(writes(calls)).toEqual([["DELETE /api/groups/g1", undefined]]);
       expect(queryClient.getQueryData(["group", "g1"])).toBeUndefined();
+      expect(queryClient.getQueryData(["group", "g2"])).toEqual({
+        cached: true,
+      });
       expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([
         ["groups"],
       ]);

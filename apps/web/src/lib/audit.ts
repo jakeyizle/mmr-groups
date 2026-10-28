@@ -43,12 +43,14 @@ function matchSummary(m: Fields, names: Map<string, string>) {
   const label = (t: MatchTeam) =>
     t.playerIds.map((id) => names.get(id) ?? "a removed player").join(" & ");
   const scored = sorted.every((t) => t.score !== null);
-  const summary = scored
-    ? sorted.map((t) => `${label(t)} ${String(t.score)}`).join(" – ")
-    : sorted.length === 2 && sorted[0]?.rank !== sorted[1]?.rank
-      ? `${label(sorted[0] ?? { playerIds: [], score: null, rank: 1 })} beat ${label(sorted[1] ?? { playerIds: [], score: null, rank: 2 })}`
-      : sorted.map(label).join(" vs ");
-  return summary;
+  if (scored)
+    return sorted.map((t) => `${label(t)} ${String(t.score)}`).join(" – ");
+  const [first, second] = sorted;
+  // Stryker disable next-line OptionalChaining: both exist when there are two
+  if (sorted.length === 2 && first?.rank !== second?.rank)
+    // Stryker disable next-line ObjectLiteral,ArrayDeclaration: as above
+    return `${label(first ?? { playerIds: [], score: null, rank: 1 })} beat ${label(second ?? { playerIds: [], score: null, rank: 2 })}`;
+  return sorted.map(label).join(" vs ");
 }
 
 const matchDate = (m: Fields) =>

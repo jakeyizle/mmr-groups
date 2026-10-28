@@ -31,7 +31,8 @@ export function stubApi(handlers: Record<string, (body: unknown) => unknown>) {
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       await Promise.resolve();
       const raw = input instanceof Request ? input.url : input.toString();
-      const url = new URL(raw, "http://localhost");
+      // A page-relative request would miss the handlers.
+      const url = new URL(raw, "http://localhost/some/page");
       const method = init?.method ?? "GET";
       const body: unknown =
         typeof init?.body === "string" ? JSON.parse(init.body) : undefined;

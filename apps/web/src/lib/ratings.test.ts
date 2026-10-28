@@ -96,4 +96,16 @@ describe("usePredictWin", { tags: ["MATCH-016"] }, () => {
       system.predictWin([[system.initial()], [rating("b")]]),
     );
   });
+
+  it("follows a newer snapshot", () => {
+    vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+    const { result, rerender } = renderHook(({ d }) => usePredictWin(d), {
+      initialProps: { d: data(1, [match("m1", "a", "b", 1)]) },
+    });
+    const [before] = result.current([["a"], ["b"]]);
+    rerender({ d: data(2, [match("m1", "b", "a", 1)]) });
+    const [after] = result.current([["a"], ["b"]]);
+    expect(before).toBeGreaterThan(0.5);
+    expect(after).toBeLessThan(0.5);
+  });
 });

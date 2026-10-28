@@ -19,7 +19,6 @@ import {
   validateBrowseSearch,
 } from "@/lib/public-groups";
 
-// Stryker disable next-line StringLiteral: routeTree.gen sets the path at runtime
 export const Route = createFileRoute("/groups/")({
   validateSearch: validateBrowseSearch,
   component: Browse,

@@ -129,6 +129,12 @@ describe("MatchRowEditor", { tags: ["MATCH-001", "MATCH-007"] }, () => {
       "Bob",
       "Cy",
     ]);
+    expect(
+      within(match()).getByText("Team 1", { selector: "span" }),
+    ).toBeTruthy();
+    expect(
+      within(match()).getByText("Team 2", { selector: "span" }),
+    ).toBeTruthy();
     fireEvent.change(first, { target: { value: "a" } });
     expect(values().rows[0]?.teams[0]?.playerIds).toEqual(["a", ""]);
     const disabled = (s: HTMLSelectElement) =>
@@ -183,6 +189,7 @@ describe("flexible teams", { tags: ["MATCH-008"] }, () => {
     expect(button("− Player")).toBeNull();
     expect(button("Remove team")).toBeNull();
     await userEvent.click(nth("+ Player", 0));
+    expect(values().rows[0]?.teams[0]?.playerIds).toEqual(["", ""]);
     expect(teams()).toEqual([2, 1]);
     expect(screen.getAllByRole("button", { name: "− Player" })).toHaveLength(1);
     await userEvent.click(screen.getByRole("button", { name: "+ Team" }));
@@ -195,6 +202,14 @@ describe("flexible teams", { tags: ["MATCH-008"] }, () => {
     await userEvent.click(nth("Remove team", 1));
     expect(teams()).toEqual([1, 1]);
     expect(button("Remove team")).toBeNull();
+  });
+
+  it("removes a team's last player", async () => {
+    const { values } = setup([row(team(["a", "b", "c"]), team(["c"]))], {
+      settings: flexible,
+    });
+    await userEvent.click(screen.getByRole("button", { name: "− Player" }));
+    expect(values().rows[0]?.teams[0]?.playerIds).toEqual(["a", "b"]);
   });
 
   it("removes the chosen team", async () => {
@@ -247,6 +262,13 @@ describe("placement", { tags: ["MATCH-012", "MATCH-019"] }, () => {
     ]);
     await userEvent.click(screen.getByRole("radio", { name: "Team 1" }));
     expect(values().rows[0]?.teams.map((t) => t.rank)).toEqual(["1", "2"]);
+    expect(radios()).toEqual([
+      ["Team 1", "true"],
+      ["Team 2", "false"],
+    ]);
+    expect(
+      screen.getAllByRole("radio").map((r) => r.getAttribute("data-variant")),
+    ).toEqual(["default", "outline"]);
   });
 
   it("offers a tie when allowed", async () => {

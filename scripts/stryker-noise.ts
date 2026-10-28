@@ -8,6 +8,8 @@ interface Path {
     value?: unknown;
     callee?: Node;
     arguments?: unknown[];
+    properties?: { shorthand?: boolean; key?: Node }[];
+    key?: Node;
   };
   parentPath: Path | null;
 }
@@ -27,7 +29,7 @@ const calleeName = (p: Path) => {
   return c?.type === "MemberExpression" ? c.object?.name : c?.name;
 };
 
-/** PLAN §10 noise: class names, logging, error-message strings, "/" route paths. */
+/** PLAN §10 noise: class names, logging, error-message strings, route paths and params. */
 function reason(path: Path) {
   // Hono treats "" like "/" for a route's own path.
   const parent = path.parentPath?.node;
@@ -40,6 +42,33 @@ function reason(path: Path) {
     ROUTE_METHODS.has(parent.callee.property?.name ?? "")
   )
     return "route path";
+  // routeTree.gen sets a file route's path at runtime.
+  if (
+    path.node.type === "StringLiteral" &&
+    parent?.type === "CallExpression" &&
+    parent.arguments?.[0] === path.node &&
+    parent.callee?.type === "Identifier" &&
+    parent.callee.name === "createFileRoute"
+  )
+    return "route path";
+  // TanStack Router keeps the current params: `params: { gid }` within /g/$gid.
+  const props = path.node.properties;
+  if (
+    path.node.type === "ObjectExpression" &&
+    props?.length === 1 &&
+    props[0]?.shorthand === true &&
+    props[0].key?.name === "gid"
+  ) {
+    const holder =
+      parent?.type === "JSXExpressionContainer"
+        ? path.parentPath?.parentPath?.node
+        : parent;
+    const key =
+      holder?.type === "JSXAttribute"
+        ? (holder.name as Node | undefined)?.name
+        : holder?.key?.name;
+    if (key === "params") return "current route params";
+  }
   for (
     let p: Path | null = path, child = path;
     p;
@@ -50,6 +79,8 @@ function reason(path: Path) {
       node.type === "JSXAttribute" &&
       (node.name as { name?: string } | undefined)?.name === "className"
     )
+      return "class names";
+    if (node.type === "ObjectProperty" && node.key?.name === "className")
       return "class names";
     if (!isCall(p)) continue;
     const callee = calleeName(p);

@@ -12,9 +12,14 @@ const data = (me: { role: string } | null) =>
 
 describe("LeaveGroup", { tags: ["JOIN-010", "JOIN-011"] }, () => {
   it("renders nothing for non-members", async () => {
-    renderInRouter(<LeaveGroup data={data(null)} />);
+    renderInRouter(
+      <>
+        <LeaveGroup data={data(null)} />
+        <p>Next</p>
+      </>,
+    );
     await waitFor(() => {
-      expect(document.body.textContent).toBe("");
+      expect(document.body.textContent).toBe("Next");
     });
   });
 
@@ -34,6 +39,7 @@ describe("LeaveGroup", { tags: ["JOIN-010", "JOIN-011"] }, () => {
       <LeaveGroup data={data({ role: "recorder" })} />,
     );
     queryClient.setQueryData(["group", "g1"], { cached: true });
+    queryClient.setQueryData(["group", "g2"], { cached: true });
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
 
     await userEvent.click(
@@ -57,6 +63,7 @@ describe("LeaveGroup", { tags: ["JOIN-010", "JOIN-011"] }, () => {
       "POST /api/groups/g1/leave",
     ]);
     expect(queryClient.getQueryData(["group", "g1"])).toBeUndefined();
+    expect(queryClient.getQueryData(["group", "g2"])).toEqual({ cached: true });
     expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([
       ["groups"],
     ]);

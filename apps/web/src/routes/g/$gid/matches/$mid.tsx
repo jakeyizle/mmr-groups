@@ -128,10 +128,11 @@ function MatchView({ data, match }: { data: GroupData; match: Match }) {
                 <span>
                   {t.rank === 1 ? "Winner" : `Place ${String(t.rank)}`}
                 </span>
-                {t.score !== null && <span>{t.score}</span>}
+                <span>{t.score}</span>
               </div>
               <ul>
                 {t.playerIds.map((pid) => {
+                  // Stryker disable next-line OptionalChaining: every match in the snapshot is replayed
                   const c = changes?.get(pid);
                   const delta = c
                     ? displayRating(c.after) - displayRating(c.before)
@@ -208,6 +209,7 @@ function EditMatch({
 
   const onSubmit = (values: BatchForm) => {
     const row = values.rows[0];
+    // Stryker disable next-line ConditionalExpression: the form always holds this one row
     if (!row) return;
     const changes = matchChanges(match, row, notes);
     if (Object.keys(changes).length === 0) {

@@ -20,6 +20,15 @@ function open(
 }
 
 describe("header", { tags: ["AUTH-003", "AUTH-004"] }, () => {
+  it("shows neither sign-in nor the landing page until it knows the user", async () => {
+    stubApi({ "GET /api/me": () => new Promise(() => undefined) });
+    renderRoute("/");
+    await screen.findByRole("banner");
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(screen.queryByRole("main")?.textContent ?? "").toBe("");
+  });
+
   it("links home and offers sign-in to visitors", async () => {
     open("/", null);
     const banner = await screen.findByRole("banner");

@@ -1,7 +1,13 @@
-import { leaderboard, playerStats, resolveRatingConfig } from "@mmr/core";
-import { screen, within } from "@testing-library/react";
+import {
+  leaderboard,
+  playerStats,
+  ratingSeries,
+  resolveRatingConfig,
+} from "@mmr/core";
+import { screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { SERIES } from "@/lib/charts";
 import type { GroupData } from "@/lib/groups";
 
 import { match, PLAYERS, snapshot } from "../../../../../test/fixtures";
@@ -14,6 +20,13 @@ const D = {
   role: "viewer",
   linked: false,
 } as const;
+
+// Recharts draws nothing in jsdom: render the props instead.
+vi.mock("@/components/charts/rating-chart", () => ({
+  RatingChart: (p: { label: string; series: unknown }) => (
+    <pre aria-label={p.label}>{JSON.stringify(p.series)}</pre>
+  ),
+}));
 
 function open(pid: string, data: GroupData) {
   stubApi({
@@ -106,7 +119,49 @@ describe(
       expect(value("Best streak")).toBe("W2");
     });
 
-    it("shows ties only when there are some, and a dash with no streak", async () => {
+    it("charts the player's rating", async () => {
+      vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+      open("a", data());
+      const chart = await screen.findByLabelText("Ann's rating over time");
+      expect(JSON.parse(chart.textContent)).toEqual([
+        {
+          id: "a",
+          name: "Ann",
+          color: SERIES[0],
+          points: ratingSeries(
+            MATCHES,
+            resolveRatingConfig(undefined),
+            NOW.toISOString(),
+          ).get("a"),
+        },
+      ]);
+    });
+
+    it("updates when the snapshot does", async () => {
+      const { queryClient } = open("a", data());
+      const record = within(
+        await screen.findByRole("region", { name: "Record" }),
+      );
+      const next = data([
+        ...MATCHES,
+        match("m5", 4, [
+          [["a", "b"], 1],
+          [["c", "d"], 2],
+        ]),
+      ]);
+      next.players = next.players.map((p) =>
+        p.id === "b" ? { ...p, displayName: "Bobby" } : p,
+      );
+      queryClient.setQueryData(["group", "g1"], next);
+      await waitFor(() => {
+        expect(
+          record.getByText("Matches").nextElementSibling?.textContent,
+        ).toBe("5");
+      });
+      expect(screen.getAllByText("Bobby").length).toBeGreaterThan(0);
+    });
+
+    it("shows ties only when there are some", async () => {
       open("b", data(MATCHES.slice(0, 2)));
       const record = within(
         await screen.findByRole("region", { name: "Record" }),

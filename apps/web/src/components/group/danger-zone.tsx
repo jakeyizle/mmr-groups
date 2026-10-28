@@ -45,6 +45,7 @@ function TransferOwnership({ data }: { data: GroupData }) {
   const queryClient = useQueryClient();
   const [playerId, setPlayerId] = useState<string>();
   // Ownership can only go to a linked player (GROUP-009).
+  // Stryker disable next-line OptionalChaining: only the owner sees this
   const candidates = players.filter((p) => p.linked && p.id !== me?.playerId);
   const target = candidates.find((p) => p.id === playerId);
 
@@ -103,6 +104,7 @@ function TransferOwnership({ data }: { data: GroupData }) {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
+                  // Stryker disable next-line ConditionalExpression: the dialog only opens with a target
                   if (target) transfer.mutate(target.id);
                 }}
               >

@@ -38,6 +38,7 @@ export function InviteSettings({ data }: { data: GroupData }) {
       unwrap(
         await client.groups[":gid"].invite.$put({
           param: { gid },
+          // Stryker disable next-line ConditionalExpression,StringLiteral: Number("never") is NaN, sent as null too
           json: { expiresInDays: expiry === "never" ? null : Number(expiry) },
         }),
       ),
@@ -82,9 +83,12 @@ export function InviteSettings({ data }: { data: GroupData }) {
           </div>
           <FieldDescription>
             Anyone with this link can join and claim an unclaimed player.{" "}
-            {invite?.expiresAt
-              ? `Expires ${dateFormat.format(new Date(invite.expiresAt))}.`
-              : "It doesn't expire."}
+            {
+              // Stryker disable next-line OptionalChaining: there's a URL only with an invite
+              invite?.expiresAt
+                ? `Expires ${dateFormat.format(new Date(invite.expiresAt))}.`
+                : "It doesn't expire."
+            }
           </FieldDescription>
         </Field>
       ) : (

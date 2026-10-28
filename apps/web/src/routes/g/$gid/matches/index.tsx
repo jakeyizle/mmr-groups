@@ -30,6 +30,7 @@ function Matches() {
 
 function History({ data }: { data: GroupData }) {
   const { player } = Route.useSearch();
+  // Stryker disable next-line ObjectLiteral: `from` only narrows the search type
   const navigate = useNavigate({ from: Route.fullPath });
   const actor = useGroupActor(data);
   const ratings = useReplay(data);
@@ -56,7 +57,10 @@ function History({ data }: { data: GroupData }) {
         <select
           aria-label="Filter by player"
           className="h-9 w-full rounded-md border border-input bg-transparent px-2"
-          value={player ?? ""}
+          value={
+            // Stryker disable next-line StringLiteral: an unmatched value shows the first option, Everyone, too
+            player ?? ""
+          }
           onChange={(e) => {
             const value = e.target.value;
             void navigate({ search: value ? { player: value } : {} });

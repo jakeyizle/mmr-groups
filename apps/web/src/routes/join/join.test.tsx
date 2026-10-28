@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -84,6 +84,7 @@ describe("joining", { tags: ["JOIN-005", "JOIN-006", "JOIN-007"] }, () => {
     await userEvent.type(name, "   ");
     expect(join).toHaveProperty("disabled", true);
     await userEvent.type(name, "{Enter}");
+    fireEvent.submit(name);
     expect(claims()).toEqual([]);
     await userEvent.clear(name);
     await userEvent.type(name, "Dee");
@@ -116,7 +117,7 @@ describe("joining", { tags: ["JOIN-005", "JOIN-006", "JOIN-007"] }, () => {
 describe("join problems", { tags: ["JOIN-009", "JOIN-013"] }, () => {
   it("offers what's left when someone else claimed the player first", async () => {
     let lost = false;
-    const { calls } = open({
+    const { calls, queryClient } = open({
       "GET /api/invites/abc": () =>
         offer(
           lost
@@ -128,10 +129,15 @@ describe("join problems", { tags: ["JOIN-009", "JOIN-013"] }, () => {
         return error(409, "claim_lost")();
       },
     });
-    await userEvent.click(await screen.findByRole("button", { name: /^Bob/ }));
+    const bob = await screen.findByRole("button", { name: /^Bob/ });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    await userEvent.click(bob);
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Someone else just claimed that player. Pick again.",
     );
+    expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toEqual([
+      ["invite", "abc"],
+    ]);
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /^Bob/ })).toBeNull();
     });

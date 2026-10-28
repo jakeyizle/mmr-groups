@@ -32,6 +32,7 @@ function issuesByRow(err: unknown): Issues | null {
   const out: Issues = {};
   for (const d of err.details as { path?: unknown[]; message?: string }[]) {
     const i = d.path?.[1];
+    // Stryker disable next-line ConditionalExpression: issues without a row index show on no row either way
     if (typeof i === "number") (out[i] ??= []).push(d.message ?? "Invalid");
   }
   return out;
@@ -65,6 +66,7 @@ export function BatchEntry({ data }: { data: GroupData }) {
           saveDraft(draftKey, values);
         },
       }),
+    // Stryker disable next-line ArrayDeclaration: both are fixed for this mount
     [form, draftKey],
   );
 

@@ -4,6 +4,7 @@ import { type ClientResponse, hc, type InferResponseType } from "hono/client";
 import type { SuccessStatusCode } from "hono/utils/http-status";
 
 /** Every request carries the CSRF headers the API requires on mutations (PLAN §7). */
+// Stryker disable next-line StringLiteral: hc joins base and path with a slash either way
 export const client = hc<AppType>("/", {
   headers: {
     "Content-Type": "application/json",

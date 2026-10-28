@@ -70,6 +70,17 @@ describe("group layout", { tags: ["VIS-003", "AUDIT-005"] }, () => {
     });
   });
 
+  it("keeps the heading's place while loading", async () => {
+    stubApi({
+      "GET /api/me": () => ({ user: null }),
+      "GET /api/groups/g1": () => new Promise(() => undefined),
+    });
+    renderRoute("/g/g1");
+    expect((await screen.findByRole("heading", { level: 1 })).textContent).toBe(
+      " ",
+    );
+  });
+
   it("explains a missing or private group", async () => {
     open(
       "/g/g1",
@@ -88,11 +99,14 @@ describe("group layout", { tags: ["VIS-003", "AUDIT-005"] }, () => {
   });
 
   it("keeps the layout for other errors", async () => {
-    open(
+    const { queryClient } = open(
       "/g/g1",
       Response.json({ error: { code: "x", message: "x" } }, { status: 500 }),
     );
     expect(await tabs()).toContain("Leaderboard");
+    await waitFor(() => {
+      expect(queryClient.getQueryState(["group", "g1"])?.status).toBe("error");
+    });
     expect(screen.queryByText(/doesn't exist/)).toBeNull();
   });
 });
@@ -156,7 +170,9 @@ describe(
       const row = (name: string) =>
         screen.getByRole("link", { name }).closest("li") as HTMLElement;
       expect(row("Ann").textContent).toContain("2W 1L 1T · 4 matches");
-      expect(row("Removed player").textContent).toContain("0W 1L · 1 match");
+      expect(
+        within(row("Removed player")).getByText(/W \d+L/).textContent,
+      ).toBe("0W 1L · 1 match");
       // Few matches: every rating here is still provisional.
       expect(within(row("Ann")).getByText("Provisional")).toBeTruthy();
     });
@@ -182,8 +198,10 @@ describe(
         NOW.toISOString(),
       ).map((e) => e.rankChange);
       expect(changes).toEqual([1, -1]);
-      expect(screen.getByLabelText("Up 1").textContent).toBe("▲ 1");
-      expect(screen.getByLabelText("Down 1").textContent).toBe("▼ 1");
+      const row = (name: string) =>
+        within(screen.getByRole("link", { name }).closest("li") as HTMLElement);
+      expect(row("Cy").getByLabelText("Up 1").textContent).toBe("▲ 1");
+      expect(row("Bob").getByLabelText("Down 1").textContent).toBe("▼ 1");
     });
 
     it("shows no movement for a player's first match", async () => {
@@ -201,6 +219,31 @@ describe(
       );
       await screen.findByRole("list", { name: "Leaderboard" });
       expect(screen.queryByLabelText(/^(Up|Down)/)).toBeNull();
+    });
+
+    it("shows no movement for a player who kept their place", async () => {
+      vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+      const kept = [
+        match("m1", 0, [
+          [["a"], 1],
+          [["b"], 2],
+        ]),
+        match("m2", 1, [
+          [["a"], 1],
+          [["c"], 2],
+        ]),
+      ];
+      open("/g/g1", snapshot({ matches: kept }));
+      await screen.findByRole("list", { name: "Leaderboard" });
+      const a = leaderboard(
+        kept,
+        resolveRatingConfig(undefined),
+        NOW.toISOString(),
+      ).find((e) => e.playerId === "a");
+      expect(a?.rankChange).toBe(0);
+      expect(screen.queryByLabelText(/^(Up|Down)/)).toBeNull();
+      // Everyone has played: no unrated section.
+      expect(screen.queryByRole("heading", { name: "Unrated" })).toBeNull();
     });
 
     it("invites recording when there are no matches", async () => {
@@ -289,8 +332,10 @@ describe("audit log", { tags: ["AUDIT-003", "AUDIT-005"] }, () => {
         nextCursor: null,
       }),
     });
-    renderRoute("/g/g1/audit");
+    const { queryClient } = renderRoute("/g/g1/audit");
     expect(await screen.findByText("Bob left the group")).toBeTruthy();
+    // Cached per group.
+    expect(queryClient.getQueryData(["audit", "g1"])).toBeDefined();
   });
 
   it("is only visible to members", async () => {
