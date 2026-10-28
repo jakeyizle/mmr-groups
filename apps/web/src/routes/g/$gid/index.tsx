@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+import { PlayerLink } from "@/components/player-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Can } from "@/lib/can";
@@ -47,13 +48,12 @@ function Board({ data }: { data: GroupData }) {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2">
-                  <Link
-                    to="/g/$gid/players/$pid"
-                    params={{ gid, pid: e.playerId }}
-                    className="truncate font-medium hover:underline"
-                  >
-                    {names.get(e.playerId) ?? "Removed player"}
-                  </Link>
+                  <PlayerLink
+                    gid={gid}
+                    id={e.playerId}
+                    names={names}
+                    className="truncate font-medium"
+                  />
                   {e.provisional && (
                     <Badge variant="outline" className="shrink-0">
                       Provisional
@@ -82,7 +82,9 @@ function Board({ data }: { data: GroupData }) {
           <ul aria-label="Unrated" className="flex flex-wrap gap-2">
             {unrated.map((p) => (
               <li key={p.id}>
-                <Badge variant="secondary">{p.displayName}</Badge>
+                <Badge variant="secondary" asChild>
+                  <PlayerLink gid={gid} id={p.id} names={names} />
+                </Badge>
               </li>
             ))}
           </ul>

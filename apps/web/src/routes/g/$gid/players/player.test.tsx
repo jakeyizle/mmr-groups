@@ -240,7 +240,9 @@ describe(
       expect(
         within(recent)
           .getAllByRole("link")
-          .map((a) => a.getAttribute("href")?.split("/").pop()),
+          .map((a) => a.getAttribute("href"))
+          .filter((href) => href?.includes("/matches/"))
+          .map((href) => href?.split("/").pop()),
       ).toEqual([
         "m12",
         "m11",

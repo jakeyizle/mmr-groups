@@ -5,6 +5,7 @@ import { useMemo } from "react";
 
 import { RatingChart } from "@/components/charts/rating-chart";
 import { MatchCard } from "@/components/match/match-card";
+import { PlayerLink } from "@/components/player-link";
 import { Badge } from "@/components/ui/badge";
 import { SERIES } from "@/lib/charts";
 import { type GroupData, groupQuery } from "@/lib/groups";
@@ -44,7 +45,6 @@ function Profile({
     () => new Map(data.players.map((p) => [p.id, p.displayName])),
     [data.players],
   );
-  const nameOf = (id: string) => names.get(id) ?? "Removed player";
   const board = useLeaderboard(data);
   const ratings = useReplay(data);
   const series = useRatingSeries(data);
@@ -127,17 +127,20 @@ function Profile({
           <PairList
             title="Best partners"
             pairs={stats.partners.best}
-            nameOf={nameOf}
+            gid={gid}
+            names={names}
           />
           <PairList
             title="Toughest partnerships"
             pairs={stats.partners.worst}
-            nameOf={nameOf}
+            gid={gid}
+            names={names}
           />
           <PairList
             title="Head to head"
             pairs={stats.headToHead}
-            nameOf={nameOf}
+            gid={gid}
+            names={names}
           />
 
           <section className="space-y-2">
@@ -174,11 +177,13 @@ function Profile({
 function PairList({
   title,
   pairs,
-  nameOf,
+  gid,
+  names,
 }: {
   title: string;
   pairs: PairRecord[];
-  nameOf: (id: string) => string;
+  gid: string;
+  names: Map<string, string>;
 }) {
   if (pairs.length === 0) return null;
   return (
@@ -190,7 +195,12 @@ function PairList({
             key={p.playerId}
             className="flex justify-between px-3 py-2 text-sm"
           >
-            <span className="truncate">{nameOf(p.playerId)}</span>
+            <PlayerLink
+              gid={gid}
+              id={p.playerId}
+              names={names}
+              className="truncate"
+            />
             <span className="shrink-0 tabular-nums text-muted-foreground">
               {wlt(p)} · {pct(p.winRate)}
             </span>

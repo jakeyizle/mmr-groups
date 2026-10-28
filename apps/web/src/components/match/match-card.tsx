@@ -1,6 +1,7 @@
 import { displayRating, type MatchTeam, type Rating } from "@mmr/core";
 import { Link } from "@tanstack/react-router";
 
+import { PlayerLink } from "@/components/player-link";
 import { cn } from "@/lib/utils";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, {
@@ -8,7 +9,11 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
   timeStyle: "short",
 });
 
-/** One match in a list: winners first, each player's displayed-rating change (BOARD-005). */
+/**
+ * One match in a list: winners first, each player's displayed-rating change (BOARD-005).
+ * The date links to the match and stretches over the card; names sit above it and link
+ * to profiles (STATS-013), since links can't nest.
+ */
 export function MatchCard({
   gid,
   match,
@@ -21,14 +26,14 @@ export function MatchCard({
   changes: Map<string, { before: Rating; after: Rating }> | undefined;
 }) {
   return (
-    <Link
-      to="/g/$gid/matches/$mid"
-      params={{ gid, mid: match.id }}
-      className="block space-y-2 rounded-lg border p-3 hover:bg-muted/30"
-    >
-      <p className="text-sm text-muted-foreground">
+    <div className="relative space-y-2 rounded-lg border p-3 hover:bg-muted/30">
+      <Link
+        to="/g/$gid/matches/$mid"
+        params={{ gid, mid: match.id }}
+        className="block text-sm text-muted-foreground after:absolute after:inset-0"
+      >
         {dateFormat.format(new Date(match.playedAt))}
-      </p>
+      </Link>
       {[...match.teams]
         .sort((a, b) => a.rank - b.rank)
         .map((t, i) => (
@@ -47,9 +52,12 @@ export function MatchCard({
                   : 0;
                 return (
                   <li key={pid} className="flex gap-2">
-                    <span className="truncate">
-                      {names.get(pid) ?? "Removed player"}
-                    </span>
+                    <PlayerLink
+                      gid={gid}
+                      id={pid}
+                      names={names}
+                      className="relative truncate"
+                    />
                     <Delta value={delta} />
                   </li>
                 );
@@ -60,7 +68,7 @@ export function MatchCard({
             </span>
           </div>
         ))}
-    </Link>
+    </div>
   );
 }
 

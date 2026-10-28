@@ -54,7 +54,12 @@ test("changing the winner updates the leaderboard", async ({ page }) => {
   await expect(board(page).nth(0)).toContainText("Ann");
 
   await page.getByRole("link", { name: "Matches", exact: true }).click();
-  await page.getByRole("list", { name: "Matches" }).getByRole("link").click();
+  // The first link in a card is its date, to the match; the rest are players.
+  await page
+    .getByRole("list", { name: "Matches" })
+    .getByRole("link")
+    .first()
+    .click();
   await page.getByRole("button", { name: "Edit" }).click();
   await page
     .getByRole("radiogroup", { name: "Match 1 winner" })

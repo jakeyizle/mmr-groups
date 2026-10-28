@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { MatchRowEditor } from "@/components/match/row-editor";
+import { PlayerLink } from "@/components/player-link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,7 +140,7 @@ function MatchView({ data, match }: { data: GroupData; match: Match }) {
                     : 0;
                   return (
                     <li key={pid} className="flex justify-between">
-                      <span>{names.get(pid) ?? "Removed player"}</span>
+                      <PlayerLink gid={data.group.id} id={pid} names={names} />
                       <span className="text-sm tabular-nums text-muted-foreground">
                         {delta >= 0 ? "+" : "−"}
                         {Math.abs(delta)}

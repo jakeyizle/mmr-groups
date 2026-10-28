@@ -146,6 +146,30 @@ describe(
       );
     });
 
+    it(
+      "links players in the lists to their profiles",
+      { tags: ["STATS-013"] },
+      async () => {
+        vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
+        open(data());
+        await screen.findByRole("heading", { name: "Best duos" });
+        const links = (label: string) =>
+          within(screen.getByRole("list", { name: label }))
+            .getAllByRole("link")
+            .map((a) => [a.textContent, a.getAttribute("href")]);
+        expect(links("Best duos")[0]).toEqual(["Ann", "/g/g1/players/a"]);
+        expect(links("Best duos")[1]).toEqual(["Bob", "/g/g1/players/b"]);
+        expect(links("Longest win streaks")[0]).toEqual([
+          "Ann",
+          "/g/g1/players/a",
+        ]);
+        expect(links("Most active, last 30 days")).toContainEqual([
+          "Cy",
+          "/g/g1/players/c",
+        ]);
+      },
+    );
+
     it("names both sides of an upset whichever team won", async () => {
       vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
       const flipped = DOUBLES.map((m) =>

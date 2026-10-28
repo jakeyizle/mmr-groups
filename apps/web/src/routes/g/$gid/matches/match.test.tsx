@@ -89,27 +89,39 @@ describe("match details", { tags: ["BOARD-005"] }, () => {
     expect(screen.getByText("Recorded by Bob")).toBeTruthy();
   });
 
-  it("shows unscored placements, removed players and no recorder for the public", async () => {
-    const unscored = match("m1", 0, [
-      [["a"], 1],
-      [["gone"], 2],
-      [["c"], 3],
-    ]);
-    open(null, {
-      data: () =>
-        snapshot({
-          role: null,
-          group: { teamFormat: { kind: "flexible" } },
-          matches: [unscored],
-        }),
-    });
-    const teams = await screen.findByRole("list", { name: "Teams" });
-    expect(
-      [...teams.children].map((li) => li.textContent.replace(/[+−]\d+$/, "")),
-    ).toEqual(["WinnerAnn", "Place 2Removed player", "Place 3Cy"]);
-    expect(screen.queryByText(/Recorded by/)).toBeNull();
-    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
-  });
+  it(
+    "shows unscored placements, removed players and no recorder for the public",
+    { tags: ["STATS-013"] },
+    async () => {
+      const unscored = match("m1", 0, [
+        [["a"], 1],
+        [["gone"], 2],
+        [["c"], 3],
+      ]);
+      open(null, {
+        data: () =>
+          snapshot({
+            role: null,
+            group: { teamFormat: { kind: "flexible" } },
+            matches: [unscored],
+          }),
+      });
+      const teams = await screen.findByRole("list", { name: "Teams" });
+      expect(
+        [...teams.children].map((li) => li.textContent.replace(/[+−]\d+$/, "")),
+      ).toEqual(["WinnerAnn", "Place 2Removed player", "Place 3Cy"]);
+      expect(screen.queryByText(/Recorded by/)).toBeNull();
+      expect(
+        within(teams)
+          .getAllByRole("link")
+          .map((l) => [l.textContent, l.getAttribute("href")]),
+      ).toEqual([
+        ["Ann", "/g/g1/players/a"],
+        ["Cy", "/g/g1/players/c"],
+      ]);
+      expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+    },
+  );
 
   it("shows an unchanged rating as +0", async () => {
     // Alternating wins and ties: by m18 one of Ann's changes rounds to zero.

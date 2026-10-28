@@ -34,7 +34,8 @@ const MATCHES = [
 const listed = async () =>
   within(await screen.findByRole("list", { name: "Matches" }))
     .getAllByRole("link")
-    .map((a) => a.getAttribute("href"));
+    .map((a) => a.getAttribute("href"))
+    .filter((href) => href?.includes("/matches/"));
 
 describe(
   "match history",
@@ -55,7 +56,7 @@ describe(
       // Every player in a rated match shows a change.
       const [first] = within(
         screen.getByRole("list", { name: "Matches" }),
-      ).getAllByRole("link");
+      ).getAllByRole("listitem");
       expect(first?.textContent).toMatch(/Cy[+−]\d+.*Ann[+−]\d+/);
     });
 

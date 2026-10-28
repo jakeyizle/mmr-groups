@@ -74,3 +74,15 @@ Definitions used below:
 - **Given** a group with rated players
 - **When** group stats are viewed
 - **Then** it shows a histogram of displayed ratings in buckets of 50
+
+### STATS-013: Player names lead to their profile
+
+- **Given** a player shown on the leaderboard, in a match, or in a stats list
+- **When** their name is selected
+- **Then** their profile opens
+
+### STATS-014: Members can open their own profile
+
+- **Given** a signed-in user linked to a player in the group
+- **When** they view the group
+- **Then** they can go directly to their own profile

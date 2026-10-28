@@ -8,10 +8,11 @@ import {
 } from "@mmr/core";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { type ReactNode, useMemo, useState } from "react";
+import { Fragment, type ReactNode, useMemo, useState } from "react";
 
 import { BarChart } from "@/components/charts/bar-chart";
 import { RatingChart } from "@/components/charts/rating-chart";
+import { PlayerLink } from "@/components/player-link";
 import { SERIES } from "@/lib/charts";
 import { type GroupData, groupQuery } from "@/lib/groups";
 import { useLeaderboard, useRatingSeries } from "@/lib/ratings";
@@ -48,6 +49,7 @@ function GroupStats({ data }: { data: GroupData }) {
     [data.players],
   );
   const nameOf = (id: string) => names.get(id) ?? "Removed player";
+  const linkTo = (id: string) => <PlayerLink gid={gid} id={id} names={names} />;
   const board = useLeaderboard(data);
   const series = useRatingSeries(data);
   const { version, ratingConfig } = data.group;
@@ -88,7 +90,7 @@ function GroupStats({ data }: { data: GroupData }) {
           empty="No matches in the last 30 days."
           items={derived.activity.mostActive.map((p) => ({
             key: p.playerId,
-            name: nameOf(p.playerId),
+            name: linkTo(p.playerId),
             value: `${String(p.matches)} ${p.matches === 1 ? "match" : "matches"}`,
           }))}
         />
@@ -101,7 +103,12 @@ function GroupStats({ data }: { data: GroupData }) {
           items={derived.duos.map((d) => ({
             // Stryker disable next-line StringLiteral: a React key
             key: d.playerIds.join("|"),
-            name: d.playerIds.map(nameOf).join(" & "),
+            name: d.playerIds.map((id, i) => (
+              <Fragment key={id}>
+                {i > 0 && " & "}
+                {linkTo(id)}
+              </Fragment>
+            )),
             value: `${String(d.wins)}–${String(d.losses)}${d.ties ? `–${String(d.ties)}` : ""} · ${pct(d.winRate)}`,
           }))}
         />
@@ -139,7 +146,7 @@ function GroupStats({ data }: { data: GroupData }) {
           empty="No wins yet."
           items={derived.streaks.map((s) => ({
             key: s.playerId,
-            name: nameOf(s.playerId),
+            name: linkTo(s.playerId),
             value: `${String(s.length)} in a row`,
           }))}
         />

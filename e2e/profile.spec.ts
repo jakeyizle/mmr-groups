@@ -44,3 +44,34 @@ test(
     await expect(page).toHaveURL(/player=/);
   },
 );
+
+test(
+  "members reach their own profile, and names lead to profiles",
+  { tag: ["@STATS-013", "@STATS-014"] },
+  async ({ page }) => {
+    const gid = await seeded(page);
+    await page.goto(`/g/${gid}/matches`);
+    await page
+      .getByRole("navigation")
+      .getByRole("link", { name: "Me", exact: true })
+      .click();
+    await expect(page.getByRole("heading", { name: "Ann" })).toBeVisible();
+
+    await page
+      .getByRole("list", { name: "Best partners" })
+      .getByRole("link", { name: "Bea" })
+      .click();
+    await expect(page.getByRole("heading", { name: "Bea" })).toBeVisible();
+
+    await page
+      .getByRole("navigation")
+      .getByRole("link", { name: "Matches", exact: true })
+      .click();
+    await page
+      .getByRole("list", { name: "Matches" })
+      .getByRole("link", { name: "Cal" })
+      .first()
+      .click();
+    await expect(page.getByRole("heading", { name: "Cal" })).toBeVisible();
+  },
+);

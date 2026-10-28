@@ -43,6 +43,7 @@ describe("group layout", { tags: ["VIS-003", "AUDIT-005"] }, () => {
       "Matches",
       "Stats",
       "Teams",
+      "Me",
       "Audit",
       "Settings",
     ]);
@@ -50,6 +51,18 @@ describe("group layout", { tags: ["VIS-003", "AUDIT-005"] }, () => {
       screen.getByRole("link", { name: "Matches" }).getAttribute("href"),
     ).toBe("/g/g1/matches");
   });
+
+  it(
+    "links members to their own profile",
+    { tags: ["STATS-014"] },
+    async () => {
+      open("/g/g1", snapshot({ role: "viewer" }));
+      await screen.findByRole("heading", { name: "Chess club" });
+      expect(
+        screen.getByRole("link", { name: "Me" }).getAttribute("href"),
+      ).toBe("/g/g1/players/a");
+    },
+  );
 
   it("hides member-only tabs from public visitors", async () => {
     open("/g/g1", snapshot({ role: null }), null);
@@ -113,7 +126,7 @@ describe("group layout", { tags: ["VIS-003", "AUDIT-005"] }, () => {
 
 describe(
   "leaderboard",
-  { tags: ["BOARD-001", "BOARD-002", "BOARD-003"] },
+  { tags: ["BOARD-001", "BOARD-002", "BOARD-003", "STATS-013"] },
   () => {
     const matches = [
       match("m1", 0, [
@@ -148,27 +161,29 @@ describe(
       rows.forEach((li, i) => {
         const e = expected[i];
         if (!e) throw new Error("missing entry");
-        const name = { a: "Ann", b: "Bob", gone: "Removed player" }[e.playerId];
-        expect(within(li).getByRole("link", { name })).toHaveProperty(
-          "pathname",
-          `/g/g1/players/${e.playerId}`,
-        );
+        const name = { a: "Ann", b: "Bob" }[e.playerId];
+        if (name)
+          expect(within(li).getByRole("link", { name })).toHaveProperty(
+            "pathname",
+            `/g/g1/players/${e.playerId}`,
+          );
+        else expect(within(li).queryByRole("link")).toBeNull();
         expect(li.textContent).toContain(String(e.rating));
         expect(li.textContent.startsWith(String(e.rank))).toBe(true);
       });
       expect(
         within(screen.getByRole("list", { name: "Unrated" }))
-          .getAllByRole("listitem")
-          .map((li) => li.textContent),
-      ).toEqual(["Cy"]);
+          .getAllByRole("link")
+          .map((a) => [a.textContent, a.getAttribute("href")]),
+      ).toEqual([["Cy", "/g/g1/players/c"]]);
     });
 
     it("shows records, ties only when there are some, and provisional players", async () => {
       vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
       open("/g/g1", snapshot({ matches }));
-      await screen.findByRole("list", { name: "Leaderboard" });
+      const board = await screen.findByRole("list", { name: "Leaderboard" });
       const row = (name: string) =>
-        screen.getByRole("link", { name }).closest("li") as HTMLElement;
+        within(board).getByText(name).closest("li") as HTMLElement;
       expect(row("Ann").textContent).toContain("2W 1L 1T · 4 matches");
       expect(
         within(row("Removed player")).getByText(/W \d+L/).textContent,

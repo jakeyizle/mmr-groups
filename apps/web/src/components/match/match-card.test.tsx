@@ -28,27 +28,40 @@ async function card(
       changes={changes}
     />,
   );
-  return screen.findByRole("link");
+  // The card is the date link's parent.
+  const [date] = await screen.findAllByRole("link");
+  const root = date?.parentElement;
+  if (!root) throw new Error("no card");
+  return root;
 }
 
 // Rows: [players…, result], winners first.
-const rows = (link: HTMLElement) =>
-  [...link.querySelectorAll(":scope > div")].map((d) => [
-    ...[...d.querySelectorAll("li > span:first-child")].map(
-      (s) => s.textContent,
-    ),
+const rows = (root: HTMLElement) =>
+  [...root.querySelectorAll(":scope > div")].map((d) => [
+    ...[...d.querySelectorAll("li > :first-child")].map((s) => s.textContent),
     d.querySelector(":scope > span")?.textContent,
   ]);
 
 describe("MatchCard", { tags: ["BOARD-005"] }, () => {
-  it("links to the match and shows when it was played", async () => {
-    const link = await card([team(["a"], 1), team(["b"], 2)]);
-    expect(link.getAttribute("href")).toBe("/g/g1/matches/m1");
+  it("links to the match by when it was played", async () => {
+    const root = await card([team(["a"], 1), team(["b"], 2)]);
     const when = new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date(PLAYED));
-    expect(within(link).getByText(when)).toBeTruthy();
+    expect(
+      within(root).getByRole("link", { name: when }).getAttribute("href"),
+    ).toBe("/g/g1/matches/m1");
+  });
+
+  it("links players to their profiles", { tags: ["STATS-013"] }, async () => {
+    const root = await card([team(["a"], 1), team(["gone"], 2)]);
+    expect(
+      within(root).getByRole("link", { name: "Ann" }).getAttribute("href"),
+    ).toBe("/g/g1/players/a");
+    expect(
+      within(root).queryByRole("link", { name: "Removed player" }),
+    ).toBeNull();
   });
 
   it("lists winners first, with scores, and names removed players", async () => {

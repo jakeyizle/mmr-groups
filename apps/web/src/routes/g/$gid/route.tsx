@@ -12,6 +12,8 @@ const TABS = [
   { to: "/g/$gid/matches", label: "Matches" },
   { to: "/g/$gid/stats", label: "Stats" },
   { to: "/g/$gid/teams", label: "Teams" },
+  // STATS-014: the signed-in member's own profile.
+  { to: "/g/$gid/players/$pid", label: "Me", mine: true },
   { to: "/g/$gid/audit", label: "Audit", members: true },
   { to: "/g/$gid/settings", label: "Settings", members: true },
 ] as const;
@@ -21,8 +23,10 @@ function GroupLayout() {
   const { data, error } = useQuery(groupQuery(gid));
   const actor = useGroupActor(data);
   // Public visitors don't get member-only tabs (VIS-003, AUDIT-005).
+  const me = data?.me;
   const tabs = TABS.filter(
-    (t) => !("members" in t) || can(actor, "group.view"),
+    (t) =>
+      (!("members" in t) || can(actor, "group.view")) && (!("mine" in t) || me),
   );
 
   if (error instanceof ApiError && error.status === 404) {
@@ -44,7 +48,7 @@ function GroupLayout() {
             <li key={tab.to}>
               <Link
                 to={tab.to}
-                params={{ gid }}
+                params={{ gid, pid: me?.playerId }}
                 activeOptions={{ exact: "exact" in tab }}
                 className="-mb-px block border-b-2 border-transparent py-2 text-muted-foreground"
                 // Stryker disable next-line ObjectLiteral: only styles the tab; aria-current marks it
