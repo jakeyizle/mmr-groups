@@ -13,4 +13,3 @@
 
 - Never push to `main`; it deploys to production. Branch (e.g. `t-012-batch-match-api`), push, open a PR.
 - PR CI also runs `mutation` and `preview`, which `main` skips. Wait for all checks, then `gh pr merge --rebase --delete-branch` (keeps history linear).
-- `gh` isn't on PATH: `"/c/Program Files/GitHub CLI/gh.exe"`.
