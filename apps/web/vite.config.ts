@@ -4,8 +4,32 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+/**
+ * Cloudflare Web Analytics (PLAN §12). The token is public (it ships in the page) but
+ * per site, so only the production deploy sets CF_BEACON_TOKEN; other builds omit it.
+ */
+function webAnalytics(token: string | undefined): Plugin {
+  return {
+    name: "web-analytics",
+    transformIndexHtml: () =>
+      token
+        ? [
+            {
+              tag: "script",
+              attrs: {
+                defer: true,
+                src: "https://static.cloudflareinsights.com/beacon.min.js",
+                "data-cf-beacon": JSON.stringify({ token, spa: true }),
+              },
+              injectTo: "body",
+            },
+          ]
+        : [],
+  };
+}
 
 // The Cloudflare plugin runs worker/ in workerd during `vite dev`.
 // Build for an environment with CLOUDFLARE_ENV=preview.
@@ -24,6 +48,7 @@ export default defineConfig(({ mode }) => {
       tanstackRouter({ target: "react", autoCodeSplitting: true }),
       react(),
       tailwindcss(),
+      webAnalytics(e2e ? undefined : process.env.CF_BEACON_TOKEN),
       VitePWA({
         // Tests run against a build without a service worker, so nothing is cached.
         disable: e2e,

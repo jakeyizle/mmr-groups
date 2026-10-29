@@ -358,14 +358,14 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 - **PR:** install → lint (ESLint) → typecheck → unit + API tests → `scenarios:check` → E2E → preview upload: `wrangler versions upload --env preview --preview-alias pr-<n>` to the `mmr-groups-preview` Worker (preview D1).
 - **main:** same checks → `wrangler d1 migrations apply --remote` (production, then preview) → seed demo on preview if missing → deploy production.
 - PRs never migrate the preview D1, so unmerged migrations can't leak into it. Preview deploys of PRs with new migrations may break; that's acceptable.
-- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (GitHub); `GOOGLE_CLIENT_ID/SECRET`, `SITE_ADMIN_EMAILS` (Worker secrets).
+- Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` (GitHub); `GOOGLE_CLIENT_ID/SECRET`, `SITE_ADMIN_EMAILS` (Worker secrets). `CF_BEACON_TOKEN` (GitHub variable, public): Web Analytics beacon, production build only.
 - Migrations: Drizzle Kit → `packages/api/migrations`; must be backward-compatible with the previously deployed code.
 - Google OAuth needs exact redirect URIs, so sign-in works only on production. Previews are for viewing the demo group.
 
 ## 12. Demo data & observability
 
 - `scripts/seed-demo.ts`: deterministic (fixed seed) public "Demo Pickleball League" with `is_demo = true`, no owner, no linked users: 12 players with hidden "true skill", 16 weeks of 2v2 matches with plausible scores. Read-only to everyone except site admins.
-- Structured JSON logs (request id, route, status, duration) via middleware. Cloudflare Web Analytics on the SPA.
+- Structured JSON logs (request id = `cf-ray`, matched route pattern, status, duration, error) via middleware, kept by Workers Logs (`observability` in `wrangler.jsonc`). Cloudflare Web Analytics on the SPA (beacon injected at build when `CF_BEACON_TOKEN` is set).
 
 ## 13. Documentation
 
