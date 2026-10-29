@@ -23,7 +23,7 @@ describe("request log", () => {
 
     expect(res.status).toBe(200);
     expect(logs()).toHaveLength(1);
-    const [entry] = logs();
+    const [entry] = logs() as [RequestLog];
     expect(Object.keys(entry).sort()).toEqual(
       ["durationMs", "method", "requestId", "route", "status"].sort(),
     );
