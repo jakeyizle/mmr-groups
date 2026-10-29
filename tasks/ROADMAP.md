@@ -110,6 +110,10 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Profile links from player names, own-profile entry
 - [x] Full match history on profile
 
+## M10 — Observability (PLAN §12)
+
+- [x] Request logs + Workers Logs, Web Analytics beacon
+
 ## Maintenance
 
 - [x] Fix flaky unsaved-batch e2e test

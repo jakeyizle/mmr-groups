@@ -35,6 +35,8 @@ jobs:
           CLOUDFLARE_ENV: preview
       - run: pnpm --filter @mmr/web exec wrangler deploy
       - run: pnpm build
+        env:
+          CF_BEACON_TOKEN: ${{ vars.CF_BEACON_TOKEN }}
       - run: pnpm --filter @mmr/web exec wrangler deploy
       - run: pnpm --filter @mmr/e2e smoke
         env:

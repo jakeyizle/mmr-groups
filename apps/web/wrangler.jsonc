@@ -8,6 +8,8 @@
     // Without this, navigating directly to /api/* would get index.html.
     "run_worker_first": ["/api/*"],
   },
+  // Workers Logs: keeps the API's JSON request lines (PLAN §12), queryable by field.
+  "observability": { "enabled": true },
   // Top level = production.
   "d1_databases": [
     {
