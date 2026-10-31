@@ -127,4 +127,4 @@ Each milestone ends deployed, with its scenarios passing.
 ## Maintenance
 
 - [x] Fix flaky unsaved-batch e2e test
-- [ ] Close scenario-mutant gaps from the M11 trial (JOIN-005, AUTH-006, GROUP-010, AUDIT-002) → T-059
+- [x] Close scenario-mutant gaps from the M11 trial (JOIN-005, AUTH-006, GROUP-010, AUDIT-002)

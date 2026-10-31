@@ -49,15 +49,22 @@ const cookies = (res: Response) =>
     }),
   );
 
-/** Runs the whole redirect flow; returns the callback response and its session token. */
-async function signInWithGoogle(claims: Claims, returnTo?: string) {
+/**
+ * Runs the whole redirect flow; returns the callback response and its session token.
+ * `tampered` replaces flow cookies before the callback, as a tampering client would.
+ */
+async function signInWithGoogle(
+  claims: Claims,
+  returnTo?: string,
+  tampered: Record<string, string> = {},
+) {
   const fetchSpy = stubGoogle(claims);
   const start = await request(
     `/api/auth/google${returnTo === undefined ? "" : `?returnTo=${encodeURIComponent(returnTo)}`}`,
   );
   expect(start.status).toBe(302);
   const authUrl = new URL(start.headers.get("Location") ?? "");
-  const flow = cookies(start);
+  const flow = { ...cookies(start), ...tampered };
 
   const callback = await request(
     `/api/auth/google/callback?code=abc&state=${authUrl.searchParams.get("state") ?? ""}`,
@@ -219,6 +226,15 @@ describe(
       const { location } = await signInWithGoogle(
         { sub: "g-external", email: "ext@example.com" },
         returnTo,
+      );
+      expect(location).toBe("/");
+    });
+
+    it("a return cookie changed after sign-in started goes home", async () => {
+      const { location } = await signInWithGoogle(
+        { sub: "g-external", email: "ext@example.com" },
+        "/groups",
+        { oauth_return: encodeURIComponent("https://evil.com") },
       );
       expect(location).toBe("/");
     });
