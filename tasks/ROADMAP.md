@@ -121,7 +121,7 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] `scenarios:check --strict` requires a Vitest tag per required scenario
 - [x] `scenarios:attribution`: scenario → source files, from `coveredBy`
 - [x] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step
-- [ ] Optional: round-trip: stripped tests → Given/When/Then, clause comparison, calibration → T-058
+- [ ] Deferred: round-trip: stripped tests → Given/When/Then, clause comparison; needs ~20 hand-labelled scenarios to calibrate (ticket T-058 in git history)
 - [x] Optional: sampled E2E strength: ~50 random Stryker mutants through the T-057 runner, Playwright only
 
 ## Maintenance
