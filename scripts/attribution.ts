@@ -1,4 +1,4 @@
-import type { Coverage, CoverageTest } from "./stryker-coverage.ts";
+import type { CoverageMutant, CoverageTest } from "./stryker-coverage.ts";
 
 /** A Vitest test with its scenario tags (a `describe`'s tags included). */
 export interface TaggedTest {
@@ -22,7 +22,13 @@ const at = (t: { file: string; line: number }) => `${t.file}:${String(t.line)}`;
  * its tests cover, most specific first. Static mutants are skipped: every test "covers" them.
  * `unmatched` are Stryker tests with no Vitest test at the same file and line.
  */
-export function attribute(coverage: Coverage, tagged: TaggedTest[]) {
+export function attribute(
+  coverage: {
+    tests: CoverageTest[];
+    mutants: Pick<CoverageMutant, "file" | "static" | "coveredBy">[];
+  },
+  tagged: TaggedTest[],
+) {
   const tagsAt = new Map(tagged.map((t) => [at(t), t.tags]));
   const unmatched: CoverageTest[] = [];
   const testsOf = new Map<string, string[]>();
@@ -33,7 +39,7 @@ export function attribute(coverage: Coverage, tagged: TaggedTest[]) {
       testsOf.set(tag, [...(testsOf.get(tag) ?? []), test.id]);
   }
 
-  const byFile = new Map<string, Coverage["mutants"]>();
+  const byFile = new Map<string, typeof coverage.mutants>();
   for (const m of coverage.mutants)
     if (!m.static) byFile.set(m.file, [...(byFile.get(m.file) ?? []), m]);
 

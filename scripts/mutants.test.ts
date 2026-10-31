@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { applyEdits, scenarioSection } from "./mutants.ts";
+import {
+  applyEdits,
+  sample,
+  scenarioSection,
+  spliceMutant,
+} from "./mutants.ts";
 
 describe("scenarioSection", () => {
   const text = [
@@ -55,5 +60,33 @@ describe("applyEdits", () => {
     expect(
       applyEdits(files, [{ file: "b.ts", find: "x", replace: "" }]),
     ).toEqual({ error: "unknown file b.ts" });
+  });
+});
+
+describe("spliceMutant", () => {
+  it("replaces a 0-based line/column range, across lines and CRLF", () => {
+    const text = "if (a) {\r\n  b();\r\n}\r\n";
+    expect(
+      spliceMutant(text, { start: [0, 4], end: [0, 5], replacement: "true" }),
+    ).toBe("if (true) {\r\n  b();\r\n}\r\n");
+    expect(
+      spliceMutant(text, { start: [0, 7], end: [2, 1], replacement: "{}" }),
+    ).toBe("if (a) {}\r\n");
+    expect(() =>
+      spliceMutant(text, { start: [9, 0], end: [9, 0], replacement: "" }),
+    ).toThrow("no line 9");
+  });
+});
+
+describe("sample", () => {
+  const items = Array.from({ length: 100 }, (_, i) => i);
+
+  it("picks n distinct items, the same ones for the same seed", () => {
+    const a = sample(items, 10, 1);
+    expect(a).toHaveLength(10);
+    expect(new Set(a).size).toBe(10);
+    expect(sample(items, 10, 1)).toEqual(a);
+    expect(sample(items, 10, 2)).not.toEqual(a);
+    expect(sample(items.slice(0, 3), 10, 1).sort()).toEqual([0, 1, 2]);
   });
 });

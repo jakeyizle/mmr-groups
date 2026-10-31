@@ -12,6 +12,7 @@
     "scenarios:check": "node scripts/check-scenarios.ts",
     "scenarios:attribution": "node scripts/scenarios-attribution.ts",
     "scenarios:mutants": "node scripts/scenario-mutants.ts",
+    "e2e:strength": "node scripts/e2e-strength.ts",
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @mmr/api db:generate",
     "db:migrate:local": "pnpm --filter @mmr/web exec wrangler d1 migrations apply DB --local",

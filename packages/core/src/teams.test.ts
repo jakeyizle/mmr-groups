@@ -238,7 +238,8 @@ describe("TEAMS-008: generation is fast", { tags: ["TEAMS-008"] }, () => {
     const s = ok(generateTeams(input));
     const ms = Date.now() - start;
     expect(s.matches).toHaveLength(3);
-    expect(ms).toBeLessThan(200);
+    // Stryker's instrumented code is slower than the test environment the budget is for.
+    if (!("__stryker__" in globalThis)) expect(ms).toBeLessThan(200);
   });
 });
 
