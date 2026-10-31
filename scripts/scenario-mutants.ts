@@ -14,6 +14,13 @@ import {
   verdictPrompt,
 } from "./mutants.ts";
 import { parseScenarios, ROOT, scanTests } from "./scenarios.ts";
+import {
+  playwright,
+  prepareWorktree,
+  resetWorktree,
+  run,
+  WT,
+} from "./worktree.ts";
 
 // Usage: pnpm scenarios:mutants <IDs…> [--count 3] [--model sonnet] [--no-e2e] [--patches file.json]
 // PLAN §10 "Scenario mutants". Patches apply to HEAD in a persistent worktree: commit first.
@@ -33,26 +40,8 @@ if (!ids.length) {
   process.exit(1);
 }
 
-// Beside Stryker's temp dir, which Stryker deletes: same ignores, own lifetime.
-const WT = join(ROOT, ".stryker-tmp-mutants");
 const FIDELITY = join(ROOT, "reports", "fidelity");
 const MAX_CONTEXT = 60_000;
-
-const run = (
-  cmd: string,
-  argv: string[],
-  cwd = WT,
-  env: Record<string, string> = {},
-) => {
-  const res = spawnSync(cmd, argv, {
-    cwd,
-    encoding: "utf8",
-    maxBuffer: 1 << 26,
-    env: { ...process.env, ...env },
-    shell: process.platform === "win32" && cmd !== "claude",
-  });
-  return { ok: res.status === 0, out: `${res.stdout}${res.stderr}` };
-};
 
 /** Structured output of a headless Claude Code call (the developer's subscription). */
 function claude(prompt: string, schema: object): unknown {
@@ -82,18 +71,7 @@ function claude(prompt: string, schema: object): unknown {
   return out.structured_output;
 }
 
-// One worktree, reused: install once, then reset to HEAD per run and per patch.
-const head = run("git", ["rev-parse", "HEAD"], ROOT).out.trim();
-if (!existsSync(WT))
-  run("git", ["worktree", "add", "--detach", WT, head], ROOT);
-run("git", ["checkout", "-q", "--detach", "--force", head]);
-run("git", ["clean", "-fdq"]);
-const install = run("pnpm", ["install", "--frozen-lockfile", "--offline"]);
-if (!install.ok) throw new Error(`worktree install failed:\n${install.out}`);
-const reset = () => {
-  run("git", ["checkout", "-q", "--", "."]);
-  run("git", ["clean", "-fdq"]);
-};
+prepareWorktree();
 
 const { scenarios } = parseScenarios();
 const refs = scanTests();
@@ -120,27 +98,7 @@ function testsFail(id: string, withE2e: boolean) {
     !run("pnpm", ["exec", "vitest", "run", ...files, `--tags-filter=${id}`]).ok
   )
     return "vitest";
-  // CI=1: never reuse a server already on :4173 (it would serve the unpatched build).
-  if (
-    withE2e &&
-    !run(
-      "pnpm",
-      [
-        "--filter",
-        "@mmr/e2e",
-        "exec",
-        "playwright",
-        "test",
-        "--grep",
-        `@${id}`,
-        "--project",
-        "pixel-7",
-      ],
-      WT,
-      { CI: "1" },
-    ).ok
-  )
-    return "e2e";
+  if (withE2e && !playwright(["--grep", `@${id}`])) return "e2e";
   return undefined;
 }
 
@@ -233,7 +191,7 @@ for (const id of ids) {
         reason: verdict.reason,
       };
     }
-    reset();
+    resetWorktree();
     results.push(result);
   }
   report[id] = results;

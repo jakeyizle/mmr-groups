@@ -124,3 +124,36 @@ export function verdictPrompt(scenario: string, mutant: Mutant) {
     "Does the changed application violate that clause for some input a real user or client could send? Answer false if the change is equivalent, unreachable, or only breaks something the scenario doesn't state.",
   ].join("\n\n");
 }
+
+/** Applies a Stryker mutant: `start`/`end` are 0-based [line, column], end exclusive. */
+export function spliceMutant(
+  text: string,
+  m: { start: [number, number]; end: [number, number]; replacement: string },
+) {
+  const lineStarts = [0];
+  for (let i = text.indexOf("\n"); i >= 0; i = text.indexOf("\n", i + 1))
+    lineStarts.push(i + 1);
+  const at = ([line, column]: [number, number]) => {
+    const start = lineStarts[line];
+    if (start === undefined) throw new Error(`no line ${String(line)}`);
+    return start + column;
+  };
+  return text.slice(0, at(m.start)) + m.replacement + text.slice(at(m.end));
+}
+
+/** `n` items picked uniformly without replacement; the same seed picks the same items. */
+export function sample<T>(items: readonly T[], n: number, seed: number) {
+  let s = seed >>> 0;
+  // mulberry32
+  const random = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), s | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
+  };
+  const pool = [...items];
+  const picked: T[] = [];
+  while (picked.length < n && pool.length)
+    picked.push(...pool.splice(Math.floor(random() * pool.length), 1));
+  return picked;
+}
