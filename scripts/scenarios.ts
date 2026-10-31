@@ -27,7 +27,6 @@ const SKIP_DIRS = new Set([
   "coverage",
   ".git",
   ".wrangler",
-  ".stryker-tmp",
   "scripts",
 ]);
 const TEST_FILE = /\.(test|spec)\.tsx?$/;
@@ -105,7 +104,9 @@ export function findTestFiles(dir = ROOT): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory())
-      return SKIP_DIRS.has(entry.name) ? [] : findTestFiles(path);
+      return SKIP_DIRS.has(entry.name) || entry.name.startsWith(".stryker-tmp")
+        ? []
+        : findTestFiles(path);
     return TEST_FILE.test(entry.name) ? [path] : [];
   });
 }
