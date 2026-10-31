@@ -265,43 +265,48 @@ describe("saving", { tags: ["MATCH-003"] }, () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("saves the batch, clears the draft and opens the history", async () => {
-    draft([filled("2026-10-12T18:05"), filled("2026-10-12T18:06", "b", "a")]);
-    const { posts, router, queryClient } = setup();
-    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Save 2 matches" }),
-    );
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/g/g1/matches");
-    });
-    const at = (local: string) => new Date(local).toISOString();
-    expect(posts("/api/groups/g1/matches")).toEqual([
-      {
-        matches: [
-          {
-            playedAt: at("2026-10-12T18:05"),
-            teams: [
-              { playerIds: ["a"], score: 11 },
-              { playerIds: ["b"], score: 7 },
-            ],
-          },
-          {
-            playedAt: at("2026-10-12T18:06"),
-            teams: [
-              { playerIds: ["b"], score: 11 },
-              { playerIds: ["a"], score: 7 },
-            ],
-          },
-        ],
-      },
-    ]);
-    expect(localStorage.getItem(KEY)).toBeNull();
-    expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toContainEqual([
-      "group",
-      "g1",
-    ]);
-  });
+  // The leaderboard renders from the group snapshot this invalidates.
+  it(
+    "saves the batch, clears the draft and opens the history",
+    { tags: ["BOARD-007"] },
+    async () => {
+      draft([filled("2026-10-12T18:05"), filled("2026-10-12T18:06", "b", "a")]);
+      const { posts, router, queryClient } = setup();
+      const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+      await userEvent.click(
+        await screen.findByRole("button", { name: "Save 2 matches" }),
+      );
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/g/g1/matches");
+      });
+      const at = (local: string) => new Date(local).toISOString();
+      expect(posts("/api/groups/g1/matches")).toEqual([
+        {
+          matches: [
+            {
+              playedAt: at("2026-10-12T18:05"),
+              teams: [
+                { playerIds: ["a"], score: 11 },
+                { playerIds: ["b"], score: 7 },
+              ],
+            },
+            {
+              playedAt: at("2026-10-12T18:06"),
+              teams: [
+                { playerIds: ["b"], score: 11 },
+                { playerIds: ["a"], score: 7 },
+              ],
+            },
+          ],
+        },
+      ]);
+      expect(localStorage.getItem(KEY)).toBeNull();
+      expect(invalidate.mock.calls.map(([f]) => f?.queryKey)).toContainEqual([
+        "group",
+        "g1",
+      ]);
+    },
+  );
 
   it("shows the server's issues on their rows", async () => {
     draft([filled("2026-10-12T18:05"), filled("2026-10-12T18:06")]);

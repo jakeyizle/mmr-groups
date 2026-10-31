@@ -27,6 +27,7 @@ const SKIP_DIRS = new Set([
   "coverage",
   ".git",
   ".wrangler",
+  ".stryker-tmp",
   "scripts",
 ]);
 const TEST_FILE = /\.(test|spec)\.tsx?$/;
