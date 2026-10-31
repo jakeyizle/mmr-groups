@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { type BatchForm, blankRow, toLocalInput } from "@/lib/batch";
 import type { GroupData } from "@/lib/groups";
 
-import { renderInRouter, stubApi } from "../../../test/render";
+import { user } from "../../../test/fixtures";
+import { renderInRouter, stubApi, type Stubs } from "../../../test/render";
 import { BatchEntry } from "./batch-entry";
 
 const KEY = "mmr:draft:g1";
@@ -34,12 +35,11 @@ const error = (status: number, body: object) => () =>
     { status },
   );
 
-function setup(
-  role = "recorder",
-  overrides: Record<string, (body: unknown) => unknown> = {},
-) {
+type Overridable =
+  "POST /api/groups/g1/matches" | "POST /api/groups/g1/players";
+function setup(role = "recorder", overrides: Partial<Stubs<Overridable>> = {}) {
   const calls = stubApi({
-    "GET /api/me": () => ({ user: { isSiteAdmin: false } }),
+    "GET /api/me": () => ({ user: user() }),
     "POST /api/groups/g1/matches": () => ({ matches: [] }),
     "POST /api/groups/g1/players": () => ({ players: [] }),
     ...overrides,

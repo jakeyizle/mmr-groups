@@ -2,9 +2,21 @@ import type { MatchTeam } from "@mmr/core";
 
 import type { GroupData } from "@/lib/groups";
 
+import type { StubBody } from "./render";
+
 type Group = GroupData["group"];
 type Player = GroupData["players"][number];
 type Match = GroupData["matches"][number];
+export type User = NonNullable<StubBody<"GET /api/me">["user"]>;
+
+/** The signed-in user as `/api/me` returns it. */
+export const user = (extra: Partial<User> = {}): User => ({
+  id: "u1",
+  name: "Ann",
+  email: "ann@example.com",
+  isSiteAdmin: false,
+  ...extra,
+});
 
 export const PLAYERS: Player[] = [
   { id: "a", displayName: "Ann", role: "owner", linked: true },

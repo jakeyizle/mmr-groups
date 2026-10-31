@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
+import { user } from "../../../test/fixtures";
 import { renderInRouter, stubApi } from "../../../test/render";
 import { DangerZone } from "./danger-zone";
 
@@ -22,9 +23,9 @@ const data = (role: string, players = [player("p1", "Me", true)]) =>
 
 const api = () =>
   stubApi({
-    "GET /api/me": () => ({ user: { isSiteAdmin: false } }),
-    "POST /api/groups/g1/transfer": () => ({}),
-    "DELETE /api/groups/g1": () => ({}),
+    "GET /api/me": () => ({ user: user() }),
+    "POST /api/groups/g1/transfer": () => ({ ok: true }),
+    "DELETE /api/groups/g1": () => ({ ok: true }),
   });
 const writes = (calls: ReturnType<typeof api>) =>
   calls

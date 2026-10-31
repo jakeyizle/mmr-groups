@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
+import { snapshot, user } from "../../../test/fixtures";
 import { renderWithQuery, stubApi } from "../../../test/render";
 import { IndexVisibility } from "./index-visibility";
 
@@ -14,7 +15,7 @@ const group = (hiddenFromIndex: boolean | undefined, visibility = "public") =>
   }) as unknown as GroupData;
 
 const me = (isSiteAdmin: boolean) => () => ({
-  user: { id: "u1", name: "U", isSiteAdmin },
+  user: user({ name: "U", isSiteAdmin }),
 });
 
 describe("IndexVisibility", { tags: ["VIS-013"] }, () => {
@@ -61,7 +62,7 @@ describe("IndexVisibility", { tags: ["VIS-013"] }, () => {
   it("lets site admins toggle the flag", async () => {
     const calls = stubApi({
       "GET /api/me": me(true),
-      "PATCH /api/groups/g1": () => ({}),
+      "PATCH /api/groups/g1": () => ({ group: snapshot().group }),
     });
     renderWithQuery(<IndexVisibility data={group(false)} />);
     const toggle = await screen.findByRole("switch", {
@@ -81,7 +82,7 @@ describe("IndexVisibility", { tags: ["VIS-013"] }, () => {
   it("refreshes the group and the index after a change", async () => {
     stubApi({
       "GET /api/me": me(true),
-      "PATCH /api/groups/g1": () => ({}),
+      "PATCH /api/groups/g1": () => ({ group: snapshot().group }),
     });
     const { queryClient } = renderWithQuery(
       <IndexVisibility data={group(false)} />,
@@ -99,7 +100,7 @@ describe("IndexVisibility", { tags: ["VIS-013"] }, () => {
   it("shows a site admin's hidden group as switched on, and unhides it", async () => {
     const calls = stubApi({
       "GET /api/me": me(true),
-      "PATCH /api/groups/g1": () => ({}),
+      "PATCH /api/groups/g1": () => ({ group: snapshot().group }),
     });
     renderWithQuery(<IndexVisibility data={group(true)} />);
     const toggle = await screen.findByRole("switch");

@@ -2,17 +2,20 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { renderRoute, stubApi } from "../../test/render";
+import { user, type User } from "../../test/fixtures";
+import { renderRoute, stubApi, type Stubs } from "../../test/render";
 
-const ANN = { id: "u1", name: "Ann Smith", isSiteAdmin: false };
+const ANN = user({ name: "Ann Smith" });
 
+type Overridable =
+  "GET /api/groups" | "GET /api/public-groups" | "POST /api/auth/logout";
 function open(
   path: string,
-  user: object | null,
-  overrides: Record<string, (body: unknown) => unknown> = {},
+  account: User | null,
+  overrides: Partial<Stubs<Overridable>> = {},
 ) {
   const calls = stubApi({
-    "GET /api/me": () => ({ user }),
+    "GET /api/me": () => ({ user: account }),
     "GET /api/groups": () => ({ groups: [] }),
     ...overrides,
   });
@@ -46,7 +49,7 @@ describe("header", { tags: ["AUTH-003", "AUTH-004"] }, () => {
 
   it("shows the signed-in user and signs them out", async () => {
     const { calls, router } = open("/groups", ANN, {
-      "POST /api/auth/logout": () => ({}),
+      "POST /api/auth/logout": () => ({ ok: true }),
       "GET /api/public-groups": () => ({ groups: [], nextCursor: null }),
     });
     const banner = await screen.findByRole("banner");
@@ -90,8 +93,13 @@ describe("home", { tags: ["GROUP-006", "VIS-005", "VIS-009"] }, () => {
     open("/", ANN, {
       "GET /api/groups": () => ({
         groups: [
-          { id: "g1", name: "Chess club", role: "owner" },
-          { id: "g2", name: "Go", role: "viewer" },
+          {
+            id: "g1",
+            name: "Chess club",
+            visibility: "private",
+            role: "owner",
+          },
+          { id: "g2", name: "Go", visibility: "public", role: "viewer" },
         ],
       }),
     });

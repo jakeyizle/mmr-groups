@@ -7,7 +7,10 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
+import type { AppType } from "@mmr/api";
 import { render } from "@testing-library/react";
+import type { ExtractSchema } from "hono/types";
+import type { SuccessStatusCode } from "hono/utils/http-status";
 import type { ReactElement, ReactNode } from "react";
 import { vi } from "vitest";
 
@@ -20,11 +23,66 @@ export interface Call {
   body: unknown;
 }
 
+type Schema = ExtractSchema<AppType>;
+type Route = Extract<keyof Schema, string>;
+type Segments<P extends string> = P extends `${infer H}/${infer T}`
+  ? [H, ...Segments<T>]
+  : [P];
+type SegmentsMatch<K extends string[], P extends string[]> = K extends [
+  infer k extends string,
+  ...infer ks extends string[],
+]
+  ? P extends [infer p extends string, ...infer ps extends string[]]
+    ? (
+        p extends `:${string}`
+          ? k extends ""
+            ? false
+            : true
+          : k extends p
+            ? true
+            : false
+      ) extends true
+      ? SegmentsMatch<ks, ps>
+      : false
+    : false
+  : P extends []
+    ? true
+    : false;
+/** Route patterns (`/api/groups/:gid`) that a concrete path (`/api/groups/g1`) matches. */
+type RouteOf<Path extends string> = {
+  [R in Route]: SegmentsMatch<Segments<Path>, Segments<R>> extends true
+    ? R
+    : never;
+}[Route];
+type EndpointOf<Key extends string> = Key extends `${infer M} ${infer Path}`
+  ? {
+      [R in RouteOf<Path>]: Schema[R][`$${Lowercase<M>}` & keyof Schema[R]];
+    }[RouteOf<Path>]
+  : never;
+// As `unwrap`'s `SuccessBody`: a variant whose status can be 2xx (`c.json` without one is any code).
+type SuccessOutput<E> = E extends {
+  output: infer O;
+  status: infer S;
+  outputFormat: "json";
+}
+  ? [Extract<S, SuccessStatusCode>] extends [never]
+    ? never
+    : O
+  : never;
+/** The JSON body the real route sends on success; `never` for an unknown route or method. */
+export type StubBody<Key extends string> = SuccessOutput<EndpointOf<Key>>;
+export type StubHandler<Key extends string> = (
+  body: unknown,
+) => StubBody<Key> | Response | Promise<StubBody<Key> | Response>;
+
 /**
- * Stubs `fetch` for the API client. Handlers are keyed `"GET /api/me"`; each returns (or resolves to)
- * a JSON body, or a `Response` for other statuses. Unhandled requests fail the test with a 500.
+ * Stubs `fetch` for the API client. Handlers are keyed `"GET /api/groups/g1"`; each returns (or
+ * resolves to) the real route's success body, or a `Response` for other statuses and malformed
+ * bodies. Unhandled requests fail the test with a 500.
  */
-export function stubApi(handlers: Record<string, (body: unknown) => unknown>) {
+export type Stubs<K extends string> = { [Key in K]: StubHandler<Key> };
+
+export function stubApi<K extends string>(handlers: Partial<Stubs<K>>) {
   const calls: Call[] = [];
   vi.stubGlobal(
     "fetch",
@@ -42,7 +100,9 @@ export function stubApi(handlers: Record<string, (body: unknown) => unknown>) {
         query: Object.fromEntries(url.searchParams),
         body,
       });
-      const handler = handlers[`${method} ${url.pathname}`];
+      const handler = (
+        handlers as Record<string, StubHandler<string> | undefined>
+      )[`${method} ${url.pathname}`];
       if (!handler) return new Response("unhandled", { status: 500 });
       const result = await handler(body);
       return result instanceof Response ? result : Response.json(result);

@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SERIES } from "@/lib/charts";
 import type { GroupData } from "@/lib/groups";
 
-import { match, PLAYERS, snapshot } from "../../../../test/fixtures";
+import { match, PLAYERS, snapshot, user } from "../../../../test/fixtures";
 import { renderRoute, stubApi } from "../../../../test/render";
 
 // Recharts draws nothing in jsdom: render the props instead.
@@ -41,7 +41,7 @@ const D = {
 
 function open(data: GroupData) {
   stubApi({
-    "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+    "GET /api/me": () => ({ user: user() }),
     "GET /api/groups/g1": () => data,
   });
   return renderRoute("/g/g1/stats");

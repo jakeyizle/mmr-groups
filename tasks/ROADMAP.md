@@ -116,7 +116,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 ## M11 — Scenario fidelity (PLAN §10)
 
-- [ ] Type `stubApi` handlers from `AppType`; fix stubs that drifted → T-054
+- [x] Type `stubApi` handlers from `AppType`; fix stubs that drifted
 - [ ] `scenarios:check --strict` requires a Vitest tag per required scenario → T-055
 - [ ] `scenarios:attribution`: scenario → source files, from `coveredBy` → T-056
 - [ ] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step → T-057

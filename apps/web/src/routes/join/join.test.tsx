@@ -2,10 +2,16 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { snapshot } from "../../../test/fixtures";
-import { renderRoute, stubApi } from "../../../test/render";
+import { snapshot, user, type User } from "../../../test/fixtures";
+import {
+  renderRoute,
+  stubApi,
+  type StubBody,
+  type Stubs,
+} from "../../../test/render";
 
-const offer = (extra: object = {}) => ({
+type Offer = StubBody<"GET /api/invites/abc">;
+const offer = (extra: Partial<Offer> = {}): Offer => ({
   group: { id: "g1", name: "Chess club" },
   member: false,
   players: [
@@ -19,14 +25,16 @@ const error =
   () =>
     Response.json({ error: { code, message } }, { status });
 
+type Overridable =
+  "GET /api/invites/abc" | "POST /api/invites/abc/claim" | "GET /api/groups/g1";
 function open(
-  overrides: Record<string, (body: unknown) => unknown> = {},
-  user: object | null = { id: "u1", name: "Dee" },
+  overrides: Partial<Stubs<Overridable>> = {},
+  account: User | null = user({ name: "Dee" }),
 ) {
   const calls = stubApi({
-    "GET /api/me": () => ({ user }),
+    "GET /api/me": () => ({ user: account }),
     "GET /api/invites/abc": () => offer(),
-    "POST /api/invites/abc/claim": () => ({}),
+    "POST /api/invites/abc/claim": () => ({ groupId: "g1", playerId: "p2" }),
     "GET /api/groups/g1": () => snapshot(),
     ...overrides,
   });
@@ -101,7 +109,7 @@ describe("joining", { tags: ["JOIN-005", "JOIN-006", "JOIN-007"] }, () => {
       "POST /api/invites/abc/claim": () =>
         new Promise((resolve) => {
           release = () => {
-            resolve({});
+            resolve({ groupId: "g1", playerId: "p2" });
           };
         }),
     });

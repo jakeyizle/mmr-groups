@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
-import { match, snapshot } from "../../../../../test/fixtures";
+import { match, snapshot, user } from "../../../../../test/fixtures";
 import { renderRoute, stubApi } from "../../../../../test/render";
 
 function open(path: string, data: GroupData, signedIn = true) {
   stubApi({
     "GET /api/me": () => ({
-      user: signedIn ? { id: "u1", name: "Ann" } : null,
+      user: signedIn ? user() : null,
     }),
     "GET /api/groups/g1": () => data,
   });

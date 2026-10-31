@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { renderRoute, stubApi } from "../../../test/render";
+import { type Call, renderRoute, stubApi } from "../../../test/render";
 
 const row = (id: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -24,7 +24,7 @@ function setup(
   path: string,
   pages: (q: Record<string, string>) => Page | Promise<Page>,
 ) {
-  const calls = stubApi({
+  const calls: Call[] = stubApi({
     "GET /api/me": () => ({ user: null }),
     "GET /api/public-groups": () => pages(lastIndexCall().query),
   });

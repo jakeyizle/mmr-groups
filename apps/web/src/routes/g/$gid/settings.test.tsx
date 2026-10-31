@@ -3,15 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
-import { snapshot } from "../../../../test/fixtures";
+import { snapshot, user, type User } from "../../../../test/fixtures";
 import { renderRoute, stubApi } from "../../../../test/render";
 
-function open(
-  data: GroupData,
-  user: object | null = { id: "u1", name: "Ann" },
-) {
+function open(data: GroupData, account: User | null = user()) {
   stubApi({
-    "GET /api/me": () => ({ user }),
+    "GET /api/me": () => ({ user: account }),
     "GET /api/groups/g1": () => data,
   });
   return renderRoute("/g/g1/settings");

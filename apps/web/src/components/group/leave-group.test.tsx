@@ -34,7 +34,9 @@ describe("LeaveGroup", { tags: ["JOIN-010", "JOIN-011"] }, () => {
   });
 
   it("confirms, can be cancelled, and leaves to the home page", async () => {
-    const calls = stubApi({ "POST /api/groups/g1/leave": () => ({}) });
+    const calls = stubApi({
+      "POST /api/groups/g1/leave": () => ({ ok: true }),
+    });
     const { router, queryClient } = renderInRouter(
       <LeaveGroup data={data({ role: "recorder" })} />,
     );
