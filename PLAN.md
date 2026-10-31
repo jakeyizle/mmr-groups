@@ -351,6 +351,13 @@ Vite, React, TanStack Router, TanStack Query, Hono RPC client, React Hook Form +
 - Known gaps: deleted lines (incl. deleted tests) aren't checked; a mutant only partly overlapping a changed range is skipped.
 - One-time audit brings every file to zero unresolved survivors (M8); until then, a PR inherits old survivors on lines it touches.
 
+**Scenario fidelity (M11).** Tags and a mutation gate show a scenario's tests exist and are strong, not that they check what the scenario says. An LLM proposes; execution decides: no LLM output fails CI or a ticket on its own.
+
+- **Attribution** (`scenarios:attribution`): joins a full Stryker run's per-test `coveredBy` with test tags. Per scenario: the source files its tagged tests cover, ranked by how few tests cover each (route-level web tests cover most of the app). It locates a scenario's implementation; it says nothing about clauses (`killedBy` wouldn't either: it shows a test kills something, and needs `disableBail`).
+- **Scenario mutants** (`scenarios:mutants`): an LLM writes a few plausible patches to the attributed files, each breaking one clause. One persistent worktree runs each patch: `git apply --check` (LF diffs), apply, typecheck, the scenario's tagged Vitest tests, then Playwright on a fresh server (never a reused one on :4173), then reset. A survivor the LLM judges non-equivalent goes to review; a real one is a test gap. Run locally on a ticket's scenarios when finishing it; advisory, not in CI. No cache until runs prove slow.
+- **Round-trip** (optional, `scenarios:roundtrip`): an LLM sees only a scenario's tagged tests, with test titles, `describe` names and comments stripped, plus the helpers they call, and writes the Given/When/Then they verify, citing assertion lines; a second call marks each real Then/And clause verified, partial or missing. The same model family writes and judges the tests, so these are hypotheses: they pick which clauses scenario mutants target first.
+- **E2E seam**: `scenarios:check --strict` requires a Vitest-tagged test for every required scenario, so none is invisible to Stryker. What Stryker can't see is the web↔API seam: web tests stub `fetch` with `stubApi` handlers that could drift from real responses, so handlers are typed from `AppType` (success status). Stryker driving Playwright is out of scope: there is no Playwright runner, and the e2e build would need instrumented code in both the browser and workerd bundles. Optional instead: feed a random sample of Stryker mutants to the scenario-mutant runner, Playwright only, to estimate the E2E suite's strength.
+
 ---
 
 ## 11. CI/CD (GitHub Actions)
