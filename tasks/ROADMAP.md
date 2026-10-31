@@ -118,7 +118,7 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Type `stubApi` handlers from `AppType`; fix stubs that drifted
 - [x] `scenarios:check --strict` requires a Vitest tag per required scenario
-- [ ] `scenarios:attribution`: scenario → source files, from `coveredBy` → T-056
+- [x] `scenarios:attribution`: scenario → source files, from `coveredBy`
 - [ ] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step → T-057
 - [ ] Optional: round-trip: stripped tests → Given/When/Then, clause comparison, calibration → T-058
 - [ ] Optional: sampled E2E strength: ~50 random Stryker mutants through the T-057 runner, Playwright only
