@@ -117,3 +117,19 @@ export function scanTests(root = ROOT): TagRef[] {
     ),
   );
 }
+
+/**
+ * Required scenarios with no tagged test, and those tagged only in `e2e/`: Stryker runs Vitest
+ * alone, so an E2E-only scenario has no mutation evidence (PLAN §10).
+ */
+export function coverageGaps(scenarios: Scenario[], refs: TagRef[]) {
+  const tagged = new Set(refs.map((r) => r.id));
+  const inVitest = new Set(
+    refs.filter((r) => !r.file.startsWith("e2e/")).map((r) => r.id),
+  );
+  const required = scenarios.filter((s) => !s.stretch);
+  return {
+    uncovered: required.filter((s) => !tagged.has(s.id)),
+    e2eOnly: required.filter((s) => tagged.has(s.id) && !inVitest.has(s.id)),
+  };
+}
