@@ -8,6 +8,7 @@
 - **IDs:** `T-NNN`, next = highest in `tickets/` or `LOG.md` + 1.
 - **Tickets never restate requirements.** Reference scenario IDs and `PLAN.md` sections; add only approach, files, and gotchas. If needed behavior isn't in a scenario, add the scenario first.
 - **Finishing a ticket**, in one commit (`T-012: <summary>`, see `CLAUDE.md`): delete the ticket file, append to `LOG.md`, tick the item here and drop its ticket link.
+- **Scenario mutants** (advisory, PLAN §10): before finishing a ticket that lists scenarios, commit, then run `pnpm scenarios:mutants <its IDs>` (needs a logged-in `claude` CLI; ~1–5 min per scenario). A gap (a surviving patch judged to break its clause) gets a test in the ticket, or a Maintenance item.
 
 Ticket template:
 
@@ -119,10 +120,11 @@ Each milestone ends deployed, with its scenarios passing.
 - [x] Type `stubApi` handlers from `AppType`; fix stubs that drifted
 - [x] `scenarios:check --strict` requires a Vitest tag per required scenario
 - [x] `scenarios:attribution`: scenario → source files, from `coveredBy`
-- [ ] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step → T-057
+- [x] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step
 - [ ] Optional: round-trip: stripped tests → Given/When/Then, clause comparison, calibration → T-058
 - [ ] Optional: sampled E2E strength: ~50 random Stryker mutants through the T-057 runner, Playwright only
 
 ## Maintenance
 
 - [x] Fix flaky unsaved-batch e2e test
+- [ ] Close scenario-mutant gaps from the M11 trial (JOIN-005, AUTH-006, GROUP-010, AUDIT-002) → T-059
