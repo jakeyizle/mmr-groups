@@ -6,8 +6,13 @@ import { describe, expect, it, vi } from "vitest";
 import { toLocalInput } from "@/lib/batch";
 import type { GroupData } from "@/lib/groups";
 
-import { match, snapshot } from "../../../../../test/fixtures";
-import { type Call, renderRoute, stubApi } from "../../../../../test/render";
+import { match, snapshot, user } from "../../../../../test/fixtures";
+import {
+  type Call,
+  renderRoute,
+  type StubHandler,
+  stubApi,
+} from "../../../../../test/render";
 
 const M1 = match(
   "m1",
@@ -27,16 +32,16 @@ function open(
   role: string | null,
   opts: {
     data?: () => GroupData;
-    patch?: (body: unknown) => unknown;
-    del?: () => unknown;
+    patch?: StubHandler<"PATCH /api/groups/g1/matches/m1">;
+    del?: StubHandler<"DELETE /api/groups/g1/matches/m1">;
   } = {},
 ) {
   const data = opts.data ?? (() => snapshot({ role, matches: [OTHER, M1] }));
   const calls: Call[] = stubApi({
-    "GET /api/me": () => ({ user: role ? { id: "u1", name: "Ann" } : null }),
+    "GET /api/me": () => ({ user: role ? user() : null }),
     "GET /api/groups/g1": data,
-    "PATCH /api/groups/g1/matches/m1": opts.patch ?? (() => ({})),
-    "DELETE /api/groups/g1/matches/m1": opts.del ?? (() => ({})),
+    "PATCH /api/groups/g1/matches/m1": opts.patch ?? (() => ({ match: M1 })),
+    "DELETE /api/groups/g1/matches/m1": opts.del ?? (() => ({ ok: true })),
   });
   const writes = () =>
     calls.filter((c) => c.method !== "GET").map((c) => [c.method, c.body]);
@@ -140,7 +145,7 @@ describe("match details", { tags: ["BOARD-005"] }, () => {
     const c = matches.get("m18")?.get("a");
     expect(c && displayRating(c.after) - displayRating(c.before)).toBe(0);
     stubApi({
-      "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+      "GET /api/me": () => ({ user: user() }),
       "GET /api/groups/g1": () =>
         snapshot({
           role: "viewer",

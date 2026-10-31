@@ -12,8 +12,10 @@ const data = (invite: { code: string; expiresAt: string | null } | null) =>
 
 const api = () =>
   stubApi({
-    "PUT /api/groups/g1/invite": () => ({}),
-    "DELETE /api/groups/g1/invite": () => ({}),
+    "PUT /api/groups/g1/invite": () => ({
+      invite: { code: "abc", expiresAt: null },
+    }),
+    "DELETE /api/groups/g1/invite": () => ({ invite: null }),
   });
 
 const sent = (calls: ReturnType<typeof api>) =>

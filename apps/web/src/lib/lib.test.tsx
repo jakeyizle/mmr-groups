@@ -2,6 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { user } from "../../test/fixtures";
 import { renderWithQuery, stubApi } from "../../test/render";
 import { ApiError, client, meQuery, unwrap } from "./api";
 import { requireUser } from "./auth";
@@ -61,15 +62,36 @@ describe("unwrap", () => {
   });
 });
 
+describe("stubApi", () => {
+  it("types handlers by the real route's success body", () => {
+    const calls = stubApi({
+      // @ts-expect-error -- /api/me's user has every field
+      "GET /api/me": () => ({ user: { id: "u1" } }),
+      // @ts-expect-error -- no such route, so only a Response fits
+      "GET /api/nope": () => ({}),
+      "GET /api/groups/g1/audit": () => new Response("oops", { status: 502 }),
+    });
+    expect(calls).toEqual([]);
+  });
+});
+
 describe("queries", () => {
   it("reads the signed-in user and their groups", async () => {
+    const groups = [
+      {
+        id: "g1",
+        name: "Chess club",
+        visibility: "private" as const,
+        role: "owner" as const,
+      },
+    ];
     stubApi({
-      "GET /api/me": () => ({ user: { id: "u1" } }),
-      "GET /api/groups": () => ({ groups: [{ id: "g1" }] }),
+      "GET /api/me": () => ({ user: user() }),
+      "GET /api/groups": () => ({ groups }),
     });
     const qc = new QueryClient();
-    expect(await qc.query(meQuery)).toEqual({ id: "u1" });
-    expect(await qc.query(groupsQuery)).toEqual([{ id: "g1" }]);
+    expect(await qc.query(meQuery)).toEqual(user());
+    expect(await qc.query(groupsQuery)).toEqual(groups);
     expect(meQuery.staleTime).toBe(300_000);
   });
 
@@ -82,10 +104,10 @@ describe("queries", () => {
 
 describe("requireUser", { tags: ["AUTH-005"] }, () => {
   it("returns the signed-in user", async () => {
-    stubApi({ "GET /api/me": () => ({ user: { id: "u1" } }) });
+    stubApi({ "GET /api/me": () => ({ user: user() }) });
     const context = { queryClient: new QueryClient() };
     expect(await requireUser({ context, location: { href: "/x" } })).toEqual({
-      me: { id: "u1" },
+      me: user(),
     });
   });
 
@@ -102,7 +124,7 @@ describe("requireUser", { tags: ["AUTH-005"] }, () => {
   });
 
   it("asks the API only once per session", async () => {
-    const calls = stubApi({ "GET /api/me": () => ({ user: { id: "u1" } }) });
+    const calls = stubApi({ "GET /api/me": () => ({ user: user() }) });
     const context = { queryClient: new QueryClient() };
     await requireUser({ context, location: { href: "/" } });
     await requireUser({ context, location: { href: "/" } });
@@ -154,7 +176,7 @@ describe("formatLabel", () => {
 
 describe("useGroupActor", () => {
   it("combines the group role with site-admin status", async () => {
-    stubApi({ "GET /api/me": () => ({ user: { isSiteAdmin: true } }) });
+    stubApi({ "GET /api/me": () => ({ user: user({ isSiteAdmin: true }) }) });
     const data = { me: { role: "recorder", playerId: "p1" } } as GroupData;
     const seen: unknown[] = [];
     function Probe() {

@@ -5,18 +5,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
-import { match, snapshot } from "../../../../test/fixtures";
-import { renderRoute, stubApi } from "../../../../test/render";
+import { match, snapshot, user, type User } from "../../../../test/fixtures";
+import { type Call, renderRoute, stubApi } from "../../../../test/render";
 
 const NOW = new Date("2026-10-20T12:00:00.000Z");
 
 function open(
   path: string,
   data: GroupData | Response,
-  user: object | null = { id: "u1", name: "Ann", isSiteAdmin: false },
+  account: User | null = user(),
 ) {
   const calls = stubApi({
-    "GET /api/me": () => ({ user }),
+    "GET /api/me": () => ({ user: account }),
     "GET /api/groups/g1": () => data,
     "GET /api/groups/g1/audit": () => ({ events: [], nextCursor: null }),
   });
@@ -287,6 +287,7 @@ describe("audit log", { tags: ["AUDIT-003", "AUDIT-005"] }, () => {
   const event = (id: string, createdAt: string) => ({
     id,
     action: "group.created",
+    entityType: "group",
     entityId: "g1",
     actorName: "Ann",
     before: null,
@@ -295,8 +296,8 @@ describe("audit log", { tags: ["AUDIT-003", "AUDIT-005"] }, () => {
   });
 
   it("describes events with their time, loading older ones on demand", async () => {
-    const calls = stubApi({
-      "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+    const calls: Call[] = stubApi({
+      "GET /api/me": () => ({ user: user() }),
       "GET /api/groups/g1": () => snapshot(),
       "GET /api/groups/g1/audit": () =>
         calls.at(-1)?.query.cursor === "c1"
@@ -334,7 +335,7 @@ describe("audit log", { tags: ["AUDIT-003", "AUDIT-005"] }, () => {
 
   it("uses current player names", async () => {
     stubApi({
-      "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+      "GET /api/me": () => ({ user: user() }),
       "GET /api/groups/g1": () => snapshot(),
       "GET /api/groups/g1/audit": () => ({
         events: [
@@ -355,7 +356,7 @@ describe("audit log", { tags: ["AUDIT-003", "AUDIT-005"] }, () => {
 
   it("is only visible to members", async () => {
     stubApi({
-      "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+      "GET /api/me": () => ({ user: user() }),
       "GET /api/groups/g1": () => snapshot({ role: null }),
       "GET /api/groups/g1/audit": () =>
         Response.json(

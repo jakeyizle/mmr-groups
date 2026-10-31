@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
-import { renderWithQuery, stubApi } from "../../../test/render";
+import { user } from "../../../test/fixtures";
+import { renderWithQuery, stubApi, type Stubs } from "../../../test/render";
 import { PlayersSettings } from "./players-settings";
 
 interface P {
@@ -33,9 +34,15 @@ const data = (role: string | null, players: P[] = ROSTER) =>
 const error = (message: string) => () =>
   Response.json({ error: { code: "bad", message } }, { status: 400 });
 
-function api(overrides: Record<string, (body: unknown) => unknown> = {}) {
+type Overridable =
+  | "POST /api/groups/g1/players"
+  | "PATCH /api/groups/g1/players/p3"
+  | "POST /api/groups/g1/players/p3/unlink"
+  | "DELETE /api/groups/g1/players/p3"
+  | "DELETE /api/groups/g1/players/p4";
+function api(overrides: Partial<Stubs<Overridable>> = {}) {
   return stubApi({
-    "GET /api/me": () => ({ user: { isSiteAdmin: false } }),
+    "GET /api/me": () => ({ user: user() }),
     "POST /api/groups/g1/players": () => ({ players: [] }),
     ...overrides,
   });
@@ -159,7 +166,11 @@ describe(
     });
 
     it("renames once the name changes", async () => {
-      const calls = api({ "PATCH /api/groups/g1/players/p3": () => ({}) });
+      const calls = api({
+        "PATCH /api/groups/g1/players/p3": () => ({
+          player: { id: "p3", displayName: "Cy" },
+        }),
+      });
       const { queryClient } = renderWithQuery(
         <PlayersSettings data={data("admin")} />,
       );
@@ -197,7 +208,11 @@ describe(
     });
 
     it("lets the owner make claimed players admins", async () => {
-      const calls = api({ "PATCH /api/groups/g1/players/p3": () => ({}) });
+      const calls = api({
+        "PATCH /api/groups/g1/players/p3": () => ({
+          player: { id: "p3", displayName: "Cy" },
+        }),
+      });
       renderWithQuery(<PlayersSettings data={data("owner")} />);
       await edit("Rita");
       const role = screen.getByRole("combobox", { name: "Role" });
@@ -266,8 +281,10 @@ describe(
   () => {
     it("unlinks and removes claimed players", async () => {
       const calls = api({
-        "POST /api/groups/g1/players/p3/unlink": () => ({}),
-        "DELETE /api/groups/g1/players/p3": () => ({}),
+        "POST /api/groups/g1/players/p3/unlink": () => ({
+          player: { id: "p3", displayName: "Cy" },
+        }),
+        "DELETE /api/groups/g1/players/p3": () => ({ ok: true }),
       });
       const { queryClient } = renderWithQuery(
         <PlayersSettings data={data("admin")} />,

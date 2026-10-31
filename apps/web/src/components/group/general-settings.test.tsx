@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { GroupData } from "@/lib/groups";
 
-import { renderWithQuery, stubApi } from "../../../test/render";
+import { snapshot, user } from "../../../test/fixtures";
+import {
+  renderWithQuery,
+  type StubHandler,
+  stubApi,
+} from "../../../test/render";
 import { GeneralSettings } from "./general-settings";
 
 const data = (role: string, group: Record<string, unknown> = {}) =>
@@ -23,9 +28,13 @@ const data = (role: string, group: Record<string, unknown> = {}) =>
     me: { role, playerId: "p1" },
   }) as unknown as GroupData;
 
-const api = (patch: (body: unknown) => unknown = () => ({})) =>
+const api = (
+  patch: StubHandler<"PATCH /api/groups/g1"> = () => ({
+    group: snapshot().group,
+  }),
+) =>
   stubApi({
-    "GET /api/me": () => ({ user: { isSiteAdmin: false } }),
+    "GET /api/me": () => ({ user: user() }),
     "PATCH /api/groups/g1": patch,
   });
 

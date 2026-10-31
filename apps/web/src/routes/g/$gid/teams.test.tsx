@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { type BatchForm, nextMinute, toLocalInput } from "@/lib/batch";
 import type { GroupData } from "@/lib/groups";
 
-import { match, snapshot } from "../../../../test/fixtures";
+import { match, snapshot, user } from "../../../../test/fixtures";
 import { renderRoute, stubApi } from "../../../../test/render";
 
 const KEY = "mmr:attendees:g1";
@@ -36,7 +36,7 @@ const MATCHES = [
 
 function open(data: GroupData) {
   stubApi({
-    "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+    "GET /api/me": () => ({ user: user() }),
     "GET /api/groups/g1": () => data,
   });
   return renderRoute("/g/g1/teams");

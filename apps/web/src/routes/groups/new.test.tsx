@@ -2,15 +2,18 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { snapshot } from "../../../test/fixtures";
-import { renderRoute, stubApi } from "../../../test/render";
+import { snapshot, user, type User } from "../../../test/fixtures";
+import { renderRoute, type StubHandler, stubApi } from "../../../test/render";
 
 function open(
-  create: (body: unknown) => unknown = () => ({ id: "g9", playerId: "p1" }),
-  user: object | null = { id: "u1", name: "Ann" },
+  create: StubHandler<"POST /api/groups"> = () => ({
+    id: "g9",
+    playerId: "p1",
+  }),
+  account: User | null = user(),
 ) {
   const calls = stubApi({
-    "GET /api/me": () => ({ user }),
+    "GET /api/me": () => ({ user: account }),
     "POST /api/groups": create,
     "GET /api/groups/g9": () => snapshot({ group: { id: "g9" } }),
   });

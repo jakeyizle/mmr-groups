@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SERIES } from "@/lib/charts";
 import type { GroupData } from "@/lib/groups";
 
-import { match, PLAYERS, snapshot } from "../../../../../test/fixtures";
+import { match, PLAYERS, snapshot, user } from "../../../../../test/fixtures";
 import { renderRoute, stubApi } from "../../../../../test/render";
 
 const NOW = new Date("2026-10-20T12:00:00.000Z");
@@ -31,7 +31,7 @@ vi.mock("@/components/charts/rating-chart", () => ({
 
 function open(pid: string, data: GroupData) {
   stubApi({
-    "GET /api/me": () => ({ user: { id: "u1", name: "Ann" } }),
+    "GET /api/me": () => ({ user: user() }),
     "GET /api/groups/g1": () => data,
   });
   return renderRoute(`/g/g1/players/${pid}`);
