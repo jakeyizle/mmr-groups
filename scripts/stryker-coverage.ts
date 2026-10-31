@@ -30,6 +30,8 @@ export interface CoverageMutant {
   line: number;
   static: boolean;
   coveredBy: string[];
+  /** Known before any run: "Ignored" (the noise ignorer) or "NoCoverage". */
+  status?: string;
   mutator: string;
   replacement: string;
   /** 0-based [line, column], end exclusive. */
@@ -72,6 +74,7 @@ export const strykerPlugins = [
         line: mutant.location.start.line + 1,
         static: mutant.static ?? false,
         coveredBy: mutant.coveredBy ?? [],
+        status: mutant.status,
         mutator: mutant.mutatorName,
         replacement: mutant.replacement,
         start: [mutant.location.start.line, mutant.location.start.column],

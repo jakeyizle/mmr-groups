@@ -33,6 +33,8 @@ interface Result extends Pick<
   "file" | "line" | "mutator" | "replacement"
 > {
   status: Status;
+  /** Whether any Vitest test runs the mutated code. */
+  vitest: boolean;
   seconds: number;
 }
 
@@ -48,7 +50,10 @@ if (stale.length)
     `warn: ${String(stale.length)} file(s) changed since coverage.json; their mutants are skipped. Rerun pnpm scenarios:attribution`,
   );
 const picked = sample(
-  coverage.mutants.filter((m) => !stale.includes(m.file)),
+  // Ignored mutants are noise by design (PLAN §10), as in `pnpm mutate`.
+  coverage.mutants.filter(
+    (m) => m.status !== "Ignored" && !stale.includes(m.file),
+  ),
   size,
   seed,
 );
@@ -71,7 +76,8 @@ for (const [i, m] of picked.entries()) {
   resetWorktree();
   const { file, line, mutator, replacement } = m;
   const seconds = Math.round((Date.now() - started) / 1000);
-  results.push({ file, line, mutator, replacement, status, seconds });
+  const vitest = m.static || m.coveredBy.length > 0;
+  results.push({ file, line, mutator, replacement, status, vitest, seconds });
   console.log(
     `${String(i + 1)}/${String(picked.length)} ${status}: ${file}:${String(line)} ${mutator}`,
   );
@@ -87,6 +93,6 @@ console.log(
 );
 for (const r of results.filter((x) => x.status === "survived"))
   console.log(
-    `  survived: ${r.file}:${String(r.line)} ${r.mutator} → ${JSON.stringify(r.replacement)}`,
+    `  survived: ${r.file}:${String(r.line)} ${r.mutator} → ${JSON.stringify(r.replacement)}${r.vitest ? "" : " (no Vitest test runs it either)"}`,
   );
 console.log("wrote reports/fidelity/e2e-strength.json");
