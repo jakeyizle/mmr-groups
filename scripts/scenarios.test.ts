@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  coverageGaps,
   parseScenarioFile,
   parseScenarios,
   scanTestFile,
@@ -87,5 +88,37 @@ describe("scanTestFile", () => {
       "FOO-001",
       "FOO-002",
     ]);
+  });
+});
+
+describe("coverageGaps", () => {
+  const scenario = (id: string, stretch = false) => ({
+    id,
+    title: id,
+    file: "foo.md",
+    stretch,
+  });
+  const ref = (id: string, file: string) => ({ id, file, line: 1 });
+
+  it("finds required scenarios that are untagged or tagged only in e2e", () => {
+    const gaps = coverageGaps(
+      [
+        scenario("FOO-001"),
+        scenario("FOO-002"),
+        scenario("FOO-003"),
+        scenario("FOO-004"),
+        scenario("FOO-005", true),
+      ],
+      [
+        ref("FOO-001", "packages/core/src/a.test.ts"),
+        ref("FOO-002", "e2e/a.spec.ts"),
+        ref("FOO-002", "e2e/b.spec.ts"),
+        ref("FOO-004", "e2e/a.spec.ts"),
+        ref("FOO-004", "apps/web/src/a.test.tsx"),
+        ref("FOO-005", "e2e/a.spec.ts"),
+      ],
+    );
+    expect(gaps.uncovered.map((s) => s.id)).toEqual(["FOO-003"]);
+    expect(gaps.e2eOnly.map((s) => s.id)).toEqual(["FOO-002"]);
   });
 });
