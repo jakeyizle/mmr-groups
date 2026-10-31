@@ -117,7 +117,8 @@ describe(
   { tags: ["JOIN-005"] },
   () => {
     it("is linked immediately with the pre-assigned role and sees the player's matches", async () => {
-      const { gid, dave, code } = await setup();
+      // A default unlike Dave's role, so the claim must keep his.
+      const { gid, dave, code } = await setup({ defaultRole: "viewer" });
       const j = await joiner();
       const res = await claim(code, j.session, { playerId: dave });
       expect(res.status).toBe(200);

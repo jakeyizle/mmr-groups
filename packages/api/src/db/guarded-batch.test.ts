@@ -68,7 +68,8 @@ async function state() {
   return { match, groupVersion: group?.version, audits };
 }
 
-describe("guardedBatch", () => {
+// AUDIT-002: a rejected (stale) change leaves no audit row; a committed one has all of its.
+describe("guardedBatch", { tags: ["AUDIT-002"] }, () => {
   it("applies the write, audit row and group bump when the version is current", async () => {
     expect(await editMatch(1, "fixed score")).toBe(true);
     const s = await state();
@@ -110,6 +111,22 @@ describe("guardedBatch", () => {
     const before = await state();
     expect(await editMatch(1, "too late")).toBe(false);
     expect(await state()).toEqual(before);
+  });
+
+  it("writes every audit row of a committed change, and none of a stale one", async () => {
+    const edit = (expectedVersion: number) =>
+      guardedBatch(
+        db,
+        db
+          .update(matches)
+          .set({ version: sql`${matches.version} + 1` })
+          .where(matchAt(expectedVersion)),
+        [audit("match.updated"), audit("player.renamed")],
+      );
+    expect(await edit(1)).toBe(true);
+    expect(await state()).toMatchObject({ groupVersion: 2, audits: 2 });
+    expect(await edit(1)).toBe(false);
+    expect(await state()).toMatchObject({ groupVersion: 2, audits: 2 });
   });
 
   it("conditions follow-ups on the commit, whatever their row counts", async () => {
