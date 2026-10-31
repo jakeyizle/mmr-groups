@@ -8,6 +8,7 @@ Depends on: T-056
 ## Notes
 
 - PLAN §10 "Scenario fidelity", Scenario mutants. `pnpm scenarios:mutants <IDs…>`; results to `reports/fidelity/`. Load the `claude-api` skill before writing the client code; `ANTHROPIC_API_KEY` from env.
+- Attribution misses module-level code (static mutants are skipped), e.g. zod schemas in `packages/core/src/schemas.ts` behind GROUP-010; let the LLM name extra files from the scenario text, and expect low shares (<0.05) for scenarios tagged only on broad API tests.
 - Generate: scenario text + top-ranked T-056 files (+ T-058 flagged clauses when present) → a few unified diffs, each naming the clause it breaks. Write diffs LF (`.gitattributes` is `eol=lf`, local `core.autocrlf=true`).
 - One persistent worktree (`pnpm install --frozen-lockfile --offline` once). Per patch: `git apply --check` (count failures separately), apply, typecheck (fail → discard), `vitest --tags-filter=<ID>`, then Playwright `--grep @<ID>` if the scenario has E2E tags, then `git checkout -- . && git clean -fd`.
 - Playwright must not reuse a running server: `reuseExistingServer` is `!ci` and `e2e/serve.ts` hard-codes :4173. Set `CI=1` or a port override, and check the served build is the patched one (one patch's change visible, or a build stamp). Sequential runs only.
