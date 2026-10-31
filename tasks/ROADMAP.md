@@ -114,6 +114,15 @@ Each milestone ends deployed, with its scenarios passing.
 
 - [x] Request logs + Workers Logs, Web Analytics beacon
 
+## M11 — Scenario fidelity (PLAN §10)
+
+- [ ] Type `stubApi` handlers from `AppType`; fix stubs that drifted → T-054
+- [ ] `scenarios:check --strict` requires a Vitest tag per required scenario → T-055
+- [ ] `scenarios:attribution`: scenario → source files, from `coveredBy` → T-056
+- [ ] Scenario mutants: patch generation, worktree runner (Vitest + Playwright), ticket-finish step → T-057
+- [ ] Optional: round-trip: stripped tests → Given/When/Then, clause comparison, calibration → T-058
+- [ ] Optional: sampled E2E strength: ~50 random Stryker mutants through the T-057 runner, Playwright only
+
 ## Maintenance
 
 - [x] Fix flaky unsaved-batch e2e test
